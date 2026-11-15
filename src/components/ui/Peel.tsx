@@ -22,6 +22,7 @@ export function Peel({ children, label = "Peek under the sticker" }: PeelProps) 
       <button
         type="button"
         className="peel__corner"
+        data-cursor-label="OPEN"
         aria-label={label}
         aria-expanded={open}
         aria-controls={id}

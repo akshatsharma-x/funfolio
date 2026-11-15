@@ -12,6 +12,30 @@ const eslintConfig = defineConfig([
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
       ],
+      // R2 — the cursor must always be locatable.
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@react-three/drei",
+              importNames: ["useCursor"],
+              message: "R2: drei's useCursor writes document.body.style.cursor and wipes the pixel cursors — use useGameCursor() from @/lib/hooks/useGameCursor.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Property[key.name='cursor'][value.value='none']",
+          message: "R2: never hide the cursor (no \"none\" cursor value).",
+        },
+        {
+          selector: "AssignmentExpression[left.property.name='cursor']",
+          message: "R2: don't write element.style.cursor — use data-cursor attributes or useGameCursor().",
+        },
+      ],
     },
   },
   // Override default ignores of eslint-config-next.

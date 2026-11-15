@@ -1,6 +1,7 @@
 "use client";
 
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
+import type { CursorLabel } from "@/components/cursor/skins";
 import { cn } from "@/lib/cn";
 import { sfx, type SfxName } from "@/lib/sfx";
 import { PixelIcon, type PixelIconName } from "./PixelIcon";
@@ -20,6 +21,8 @@ type BaseProps = {
   loading?: boolean;
   /** Sound on click (silent until PART 3; sound is OFF by default). `false` = no sound. */
   sfx?: SfxName | false;
+  /** Context word shown under the cursor follower after 120ms hover (PART 2 vocabulary). */
+  cursorLabel?: CursorLabel;
   className?: string;
   children?: ReactNode;
 };
@@ -38,6 +41,7 @@ export function ArcadeButton(props: ArcadeButtonProps) {
     iconRight,
     loading = false,
     sfx: sound = "click",
+    cursorLabel,
     className,
     children,
     ...native
@@ -48,6 +52,7 @@ export function ArcadeButton(props: ArcadeButtonProps) {
     "data-variant": variant === "primary" ? undefined : variant,
     "data-size": size === "md" ? undefined : size,
     "data-shape": shape === "circle" ? "circle" : undefined,
+    "data-cursor-label": cursorLabel,
   };
   const iconSize = shape === "circle" && size === "lg" ? 32 : 16;
   const content = loading ? (

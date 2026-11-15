@@ -2,6 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, JetBrains_Mono, Pixelify_Sans, Unbounded } from "next/font/google";
 import "lenis/dist/lenis.css";
 import "./globals.css";
+import "./cursors.generated.css";
+import "./cursors.css";
+import { CursorLayer } from "@/components/cursor/CursorLayer";
 import { InlineScript } from "@/components/system/InlineScript";
 import { SmoothScroll } from "@/components/system/SmoothScroll";
 import { player } from "@/content/content";
@@ -38,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${display.variable} ${pixel.variable} ${body.variable} ${mono.variable}`}
     >
       <head>
-        {/* Sets data-theme/fx/mode/cursor/world on <html> before first paint (docs/DECISIONS.md #5). */}
+        {/* Sets data-theme/fx/mode/cursor(-skin/-size)/world on <html> before first paint (docs/DECISIONS.md #5). */}
         <InlineScript html={PREPAINT_SCRIPT} />
       </head>
       <body>
@@ -47,6 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </a>
         <SmoothScroll />
         {children}
+        <CursorLayer />
       </body>
     </html>
   );

@@ -85,7 +85,7 @@ export function Emblem({ text }: { text: string }) {
 export function LinkOrSoon({ href, children }: { href: string; children: ReactNode }) {
   if (!known(href)) return <Soon />;
   return (
-    <a href={href} className="font-semibold underline">
+    <a href={href} data-cursor-label="OPEN" className="font-semibold underline">
       {children}
     </a>
   );
@@ -104,7 +104,7 @@ export function SaveFileButton({ href, available, size = "lg" }: { href: string;
     );
   }
   return (
-    <ArcadeButton href={href} download variant="secondary" size={size} icon="chest">
+    <ArcadeButton href={href} download variant="secondary" size={size} icon="chest" cursorLabel="OPEN">
       Save file · Résumé
     </ArcadeButton>
   );

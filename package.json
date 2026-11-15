@@ -10,7 +10,8 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "check": "npm run lint && npm run typecheck",
-    "images": "node scripts/optimize-images.mjs"
+    "images": "node scripts/optimize-images.mjs",
+    "cursors": "node --experimental-strip-types --no-warnings scripts/build-cursors.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

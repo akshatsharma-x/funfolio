@@ -10,7 +10,7 @@ export function ModalDemo() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <ArcadeButton icon="chest" onClick={() => setOpen(true)}>
+      <ArcadeButton icon="chest" cursorLabel="OPEN" onClick={() => setOpen(true)}>
         Open save file
       </ArcadeButton>
       <Modal
@@ -41,6 +41,7 @@ export function LoadingDemo() {
   return (
     <ArcadeButton
       variant="secondary"
+      cursorLabel="LAUNCH"
       loading={loading}
       onClick={() => {
         setLoading(true);

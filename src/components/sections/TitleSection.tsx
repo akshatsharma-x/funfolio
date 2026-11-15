@@ -43,7 +43,7 @@ export function TitleSection({ resumeAvailable }: { resumeAvailable: boolean }) 
           </li>
         </ul>
         <div className="flex flex-wrap gap-4 pt-2">
-          <ArcadeButton href="#profile" size="lg" icon="controller">
+          <ArcadeButton href="#profile" size="lg" icon="controller" cursorLabel="PLAY">
             Press start
           </ArcadeButton>
           <SaveFileButton href={player.resumeUrl} available={resumeAvailable} />

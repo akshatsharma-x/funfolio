@@ -131,6 +131,7 @@
   --muted: #b9b2d9;
   --ink: #07060f;
   --gloss: rgb(255 255 255 / 0.2);
+  --rim: rgb(255 255 255 / 0.14); /* faint die-cut rim so ink outlines read on the dark canvas */
   --fill-violet: #8b5cf6;
   --fg-pink: #ff3d8b;
   --fg-cyan: #22d3ee;
@@ -154,6 +155,7 @@
   --muted: #5b5375;
   --ink: #1b1530;
   --gloss: rgb(255 255 255 / 0.55);
+  --rim: transparent;
   --fill-violet: #a78bfa; /* day ink on #8B5CF6 is only 4.14:1 */
   --fg-pink: #d6146a;
   --fg-cyan: #0e7490;
@@ -511,15 +513,15 @@ html[data-theme="retro"]::after {
   }
 
   /* Skip link */
-  .skip-link {
+  .arcade-btn.skip-link {
     position: fixed;
     left: 16px;
     top: 16px;
     z-index: 100;
     translate: 0 -200%;
   }
-  .skip-link:focus,
-  .skip-link:focus-visible {
+  .arcade-btn.skip-link:focus,
+  .arcade-btn.skip-link:focus-visible {
     translate: 0 0;
   }
 
@@ -532,8 +534,10 @@ html[data-theme="retro"]::after {
     background: var(--sticker-bg, var(--surface));
     color: var(--text);
     box-shadow:
-      0 6px 0 var(--ink),
       inset 0 2px 0 var(--gloss),
+      0 6px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      0 6px 0 1px var(--rim),
       var(--ring);
     transition:
       translate calc(var(--motion) * 140ms) var(--ease-pop),
@@ -577,8 +581,10 @@ html[data-theme="retro"]::after {
   .sticker[data-pressable]:active {
     translate: 0 4px;
     box-shadow:
-      0 2px 0 var(--ink),
       inset 0 2px 0 var(--gloss),
+      0 2px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      0 2px 0 1px var(--rim),
       var(--ring);
   }
   .sticker[data-tilt] {
@@ -606,7 +612,6 @@ html[data-theme="retro"]::after {
     width: 44px;
     height: 44px;
     border-bottom-right-radius: var(--radius-sticker);
-    cursor: pointer;
   }
   .peel__corner::before {
     content: "";
@@ -668,10 +673,14 @@ html[data-theme="retro"]::after {
     text-align: center;
     text-wrap: balance;
     max-width: 100%; /* long labels wrap on small phones instead of overflowing (WCAG reflow) */
-    cursor: pointer;
     user-select: none;
+    /* --mx/--my: magnetic lean from the cursor engine (≤ 6px) · --lift: hover/press offset */
+    --lift: 0px;
+    translate: var(--mx, 0px) calc(var(--my, 0px) + var(--lift));
     box-shadow:
       0 6px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      0 6px 0 1px var(--rim),
       var(--ring);
     transition:
       translate calc(var(--motion) * 120ms) var(--ease-pop),
@@ -690,16 +699,20 @@ html[data-theme="retro"]::after {
     pointer-events: none;
   }
   .arcade-btn:hover {
-    translate: 0 -2px;
+    --lift: -2px;
     box-shadow:
       0 8px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      0 8px 0 1px var(--rim),
       var(--ring);
   }
   .arcade-btn:active {
-    translate: 0 4px;
+    --lift: 4px;
     scale: 1.04 0.92;
     box-shadow:
       0 2px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      0 2px 0 1px var(--rim),
       var(--ring);
     transition-duration: calc(var(--motion) * 60ms);
   }
@@ -754,12 +767,14 @@ html[data-theme="retro"]::after {
   }
   .arcade-btn:disabled,
   .arcade-btn[aria-disabled="true"] {
-    cursor: not-allowed;
     opacity: 0.6;
+    --lift: 0px;
     translate: none;
     scale: none;
     box-shadow:
       0 6px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      0 6px 0 1px var(--rim),
       var(--ring);
   }
   .arcade-btn[data-variant="ghost"]:disabled,
@@ -997,7 +1012,6 @@ html[data-theme="retro"]::after {
     font-weight: 600;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    cursor: pointer;
     border-radius: 8px 8px 0 0;
   }
   .tabs__tab:hover {

@@ -24,21 +24,21 @@ export function LobbySection({ resumeAvailable }: { resumeAvailable: boolean }) 
             <li className="flex flex-wrap items-center gap-3">
               <PixelIcon name="mail" size={32} />
               <span className="font-pixel text-sm uppercase tracking-wider text-muted">Email</span>
-              <a href={`mailto:${player.email}`} className="break-all font-semibold underline">
+              <a href={`mailto:${player.email}`} data-cursor-label="OPEN" className="break-all font-semibold underline">
                 {player.email}
               </a>
             </li>
             <li className="flex flex-wrap items-center gap-3">
               <PixelIcon name="map" size={32} />
               <span className="font-pixel text-sm uppercase tracking-wider text-muted">LinkedIn</span>
-              <a href={player.links.linkedin} rel="me noreferrer" className="break-all font-semibold underline">
+              <a href={player.links.linkedin} rel="me noreferrer" data-cursor-label="OPEN" className="break-all font-semibold underline">
                 {display(player.links.linkedin)}
               </a>
             </li>
             <li className="flex flex-wrap items-center gap-3">
               <PixelIcon name="gear" size={32} />
               <span className="font-pixel text-sm uppercase tracking-wider text-muted">GitHub</span>
-              <a href={player.links.github} rel="me noreferrer" className="break-all font-semibold underline">
+              <a href={player.links.github} rel="me noreferrer" data-cursor-label="OPEN" className="break-all font-semibold underline">
                 {display(player.links.github)}
               </a>
             </li>

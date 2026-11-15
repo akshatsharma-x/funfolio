@@ -12,6 +12,7 @@ no server, no API keys, no runtime third-party requests.
 | `npm run preview` | Serves `out/` at http://localhost:4173 |
 | `npm run check` | ESLint + TypeScript |
 | `npm run images` | Pre-builds AVIF/WebP variants from `assets/images/` into `public/img/` |
+| `npm run cursors` | Rebuilds the pixel cursors (6 skins × 3 sizes × 7 variants) and their CSS |
 
 ## Editing content
 

@@ -42,6 +42,30 @@ change an entry only when the decision itself changes.
     `[data-theme]` / `[data-world]` scope, so themes and worlds nest correctly (the playground renders all three
     themes side by side). `--world` / `--world-fg` are registered `<color>` properties and animate over 600ms.
 14. **Reduced motion.** Honored via the media query and a future in-app switch: PART 3 only has to set
-    `data-motion="reduce"` on `<html>`; CSS (`reduce-motion:` variant) and `useReducedMotion()` already read it.
+    `data-motion="reduce"` on `<html>`; CSS (the `--motion` / `--play` switches) and `useReducedMotion()` already read it.
 15. **`/playground` is noindex via a meta tag**, never a robots.txt `Disallow` (which hides the noindex from crawlers
     and advertises the path).
+
+## PART 2 — Cursor system
+
+16. **Three cursor attributes on `<html>`:** `data-cursor` = variant (always `default` at load; only
+    `useGameCursor()` / `claimCursor()` change it, stack-safe), `data-cursor-skin`, `data-cursor-size`. Skin and size
+    live in `funfolio:prefs` until PART 3's store owns them; the store should call `setCursorSkin()` /
+    `setCursorSize()` from `src/lib/cursor.ts`.
+17. **Cursor art = 16×16 masks** (`src/components/cursor/cursor-art.ts`); the build adds the dual outline. The 32/48/64
+    sizes are exact 2×/3×/4× renders, so outlines are 2/3/4px. Generated SVG/PNG + CSS are committed — rerun
+    `npm run cursors` after editing skins or art (URLs carry a cache key).
+18. **Global variant semantics:** `html[data-cursor≠default]` forces that cursor everywhere, links and text fields
+    included (drags, games, 3D hovers). Element-level variants use `[data-cursor]` attributes.
+19. **The follower lives in the top layer** (`popover="manual"`) and re-raises itself whenever a dialog or popover
+    opens, so it is never under a modal. Locked skins are previewable in `/playground`; PART 11's Prize Counter gates them.
+20. **Hotkey L lives in the cursor engine for now.** It is ignored while typing, inside an open dialog, or inside
+    `[data-keyboard="exclusive"]` (games). PART 3's keyboard manager may take it over and call `locateCursor()`.
+21. **Shake-to-find emits `cursor:shake`** on `src/lib/bus.ts`; PART 3 listens to unlock "Shaky Hands". Re-entry pings
+    fire only after a real exit — the first pointer move after load is not a re-entry.
+22. **Magnetic lean:** `.arcade-btn` and `[data-magnetic]` move ≤ 6px toward the pointer (3px in CHILL, off under
+    reduced motion); the pointer never moves.
+23. **Trail:** its own canvas for now, max 6/10/14 squares by `data-fx`, with an ink rim so squares read on light
+    backgrounds. PART 4 moves it onto the shared FX canvas.
+24. **Night rim (from the PART 1 look check):** `--rim` (14% white) outlines cards, buttons and their hard shadows on
+    night/retro; transparent on day.

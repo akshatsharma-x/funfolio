@@ -1,0 +1,260 @@
+/* Cursor system (PART 2 · Bible R2 "always locatable").
+   TRUTH LAYER — native CSS cursors: zero latency, drawn by the OS, unaffected by a busy main thread, 3D or canvases.
+   The url() lists come from cursors.generated.css (--cur-*: SVG first, PNG fallback); a system keyword is always last.
+   These rules are deliberately UNLAYERED so they beat Tailwind preflight and every component layer.
+   BANNED anywhere: hiding the pointer (the "none" cursor value) and drei's useCursor — both also enforced by ESLint
+   and scripts/check-export.mjs. */
+
+/* Zero specificity everywhere, so a global variant on <html> (below) can win on <html> itself. */
+:where(html) {
+  cursor: var(--cur-default), default;
+}
+html {
+  --cursor-scale: 1;
+}
+html[data-cursor-size="large"] {
+  --cursor-scale: 1.5;
+}
+html[data-cursor-size="xl"] {
+  --cursor-scale: 2;
+}
+
+:where(
+    a[href],
+    area[href],
+    button:not(:disabled),
+    [role="button"],
+    [role="tab"],
+    [role="link"],
+    [role="menuitem"],
+    [role="option"],
+    [role="switch"],
+    [role="checkbox"],
+    [role="radio"],
+    summary,
+    label[for],
+    select,
+    input:is([type="button"], [type="submit"], [type="reset"], [type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]),
+    [data-cursor="hand"]
+  ) {
+  cursor: var(--cur-hand), pointer;
+}
+
+/* Text fields keep the native I-beam (the follower fades out over them). */
+:where(
+    input:not([type="button"], [type="submit"], [type="reset"], [type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="image"]),
+    textarea,
+    [contenteditable]:not([contenteditable="false"])
+  ) {
+  cursor: text;
+}
+
+:where(:disabled, [aria-disabled="true"], [data-cursor="not-allowed"]) {
+  cursor: var(--cur-not-allowed), not-allowed;
+}
+:where([data-cursor="default"]) {
+  cursor: var(--cur-default), default;
+}
+:where([data-cursor="grab"]) {
+  cursor: var(--cur-grab), grab;
+}
+:where([data-cursor="grabbing"], [data-cursor="grab"]:active) {
+  cursor: var(--cur-grabbing), grabbing;
+}
+:where([data-cursor="crosshair"]) {
+  cursor: var(--cur-crosshair), crosshair;
+}
+:where([data-cursor="pull"]) {
+  cursor: var(--cur-pull), grabbing;
+}
+
+/* Global variant: useGameCursor() sets <html data-cursor="…"> → that cursor everywhere (drags, games, 3D hovers). */
+html[data-cursor]:not([data-cursor="default"]) :where(*) {
+  cursor: inherit !important;
+}
+
+/* ── FUN LAYER — decorative follower. Never replaces, hides or displaces the native pointer. ─────────────────────── */
+.cursor-fx {
+  --fx-size: 1;
+  --fx-glow: var(--world);
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: visible;
+  background: transparent;
+  color: #fff;
+  pointer-events: none;
+  z-index: 2147483647;
+  contain: layout style;
+}
+.cursor-fx__trail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.cursor-fx__pos {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  will-change: transform;
+}
+.cursor-fx[data-visible] .cursor-fx__pos {
+  opacity: 1;
+}
+.cursor-fx[data-mode="text"] .cursor-fx__pos {
+  opacity: 0;
+}
+.cursor-fx__bounce {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.cursor-fx__ring {
+  position: absolute;
+  left: -100px;
+  top: -100px;
+  width: 200px;
+  height: 200px;
+  overflow: visible;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--fx-glow) 75%, transparent));
+}
+.cursor-fx__ring circle {
+  fill: none;
+  r: calc(14px * var(--fx-size) * var(--cursor-scale));
+  transition:
+    r calc(var(--motion) * 170ms) var(--ease-pop),
+    stroke 120ms ease,
+    opacity 120ms ease;
+}
+.cursor-fx__ring .ring-ink {
+  stroke: #07060f;
+  stroke-width: 6px;
+}
+.cursor-fx__ring .ring-white {
+  stroke: #ffffff;
+  stroke-width: 2px;
+}
+.cursor-fx__ring .ring-fill {
+  fill: var(--fx-glow);
+  stroke: none;
+  opacity: 0;
+}
+.cursor-fx__ring .ring-slash {
+  fill: none;
+  stroke: #ff4d4d;
+  stroke-width: 3px;
+  stroke-linecap: square;
+  vector-effect: non-scaling-stroke;
+  scale: calc(var(--fx-size) * var(--cursor-scale));
+  opacity: 0;
+}
+.cursor-fx[data-mode="hover"] {
+  --fx-size: 1.5714; /* 28px → 44px */
+}
+.cursor-fx[data-mode="hover"] .ring-fill {
+  opacity: 0.15;
+}
+.cursor-fx[data-mode="drag"] {
+  --fx-size: 1.3;
+}
+.cursor-fx[data-mode="drag"] .ring-white {
+  stroke-dasharray: 6 5;
+}
+.cursor-fx[data-mode="drag"] .cursor-fx__ring {
+  animation: fx-spin 1.6s linear infinite;
+  animation-play-state: var(--play);
+}
+.cursor-fx[data-mode="disabled"] .ring-white {
+  stroke: #ff4d4d;
+}
+.cursor-fx[data-mode="disabled"] .ring-slash {
+  opacity: 1;
+}
+.cursor-fx[data-locate="shake"] {
+  --fx-size: 3;
+}
+/* Reduced motion: no spring, trail or pulses — a static high-contrast halo; "found" = a bigger halo, no animation. */
+.cursor-fx[data-motion="reduce"] .ring-ink {
+  stroke-width: 9px;
+}
+.cursor-fx[data-motion="reduce"] .ring-white {
+  stroke-width: 3px;
+}
+.cursor-fx[data-locate="static"] {
+  --fx-size: 2.2;
+}
+
+.cursor-fx__label {
+  position: absolute;
+  left: 0;
+  top: calc(14px * var(--fx-size) * var(--cursor-scale) + 12px);
+  translate: -50% 0;
+  padding: 4px 8px 3px;
+  border: 2px solid #ffffff;
+  border-radius: 6px;
+  background: #07060f;
+  box-shadow: 0 0 0 2px #07060f;
+  color: #fff4e0;
+  font-family: var(--font-pixel);
+  font-size: calc(11px * var(--cursor-scale));
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  scale: 0.8;
+  transition:
+    opacity 120ms ease,
+    scale calc(var(--motion) * 160ms) var(--ease-pop),
+    top calc(var(--motion) * 170ms) var(--ease-pop);
+}
+.cursor-fx[data-label] .cursor-fx__label {
+  opacity: 1;
+  scale: 1;
+}
+
+.cursor-fx__radar,
+.cursor-fx__beacon {
+  position: absolute;
+  left: 0;
+  top: 0;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  opacity: 0;
+  scale: 0;
+}
+.cursor-fx__radar {
+  width: calc(120px * var(--cursor-scale));
+  border: 3px solid #ffffff;
+  box-shadow:
+    0 0 0 2px #07060f,
+    inset 0 0 0 2px #07060f,
+    0 0 18px color-mix(in srgb, var(--fx-glow) 60%, transparent);
+}
+.cursor-fx__beacon {
+  width: calc(96px * var(--cursor-scale));
+  border: 2px solid color-mix(in srgb, var(--fx-glow) 85%, #ffffff);
+  box-shadow: 0 0 0 2px rgb(7 6 15 / 0.6);
+}
+
+@keyframes fx-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* Magnetic targets lean toward the pointer (≤ 6px) — the pointer itself never moves. --mx/--my are set by the engine. */
+[data-magnetic] {
+  translate: var(--mx, 0px) var(--my, 0px);
+  transition: translate calc(var(--motion) * 140ms) var(--ease-pop);
+}

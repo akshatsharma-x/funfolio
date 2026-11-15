@@ -1,21 +1,9 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { ArcadeButton } from "@/components/ui/ArcadeButton";
 import { WORLDS } from "@/content/worlds";
+import { useHtmlAttribute } from "@/lib/hooks/useHtmlAttribute";
 import { setTheme, THEMES } from "@/lib/prefs";
-
-function useHtmlAttribute(name: string, fallback: string): string {
-  return useSyncExternalStore(
-    (onChange) => {
-      const observer = new MutationObserver(onChange);
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: [name] });
-      return () => observer.disconnect();
-    },
-    () => document.documentElement.getAttribute(name) ?? fallback,
-    () => fallback,
-  );
-}
 
 const PREVIEW_WORLDS = WORLDS.filter((w) => w.id !== "launchpad" && w.id !== "credits");
 

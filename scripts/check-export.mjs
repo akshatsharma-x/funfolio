@@ -57,13 +57,26 @@ for (const file of htmlFiles) {
   }
 }
 
+const cursorAssets = new Set();
 for (const file of cssFiles) {
   const css = await readFile(file, "utf8");
   for (const re of [/url\(\s*["']?((?:https?:)?\/\/[^"')\s]+)/i, /@import\s+(?:url\()?\s*["']?((?:https?:)?\/\/[^"')\s]+)/i]) {
     const m = css.match(re);
     if (m) errors.push(`R10 ${rel(file)}: third-party url ${m[1]}`);
   }
+  // R2 — the pointer may never be hidden, and every cursor image the CSS points at must exist
+  const hidden = css.match(/cursor\s*:\s*none/i);
+  if (hidden) errors.push(`R2  ${rel(file)}: hidden cursor (value none) → …${snippet(css, hidden.index)}…`);
+  for (const [, url] of css.matchAll(/url\(\s*["']?(\/cursors\/[^"')\s?]+)/g)) cursorAssets.add(url);
 }
+for (const url of cursorAssets) {
+  try {
+    await readFile(join(OUT, url));
+  } catch {
+    errors.push(`R2  cursor asset missing from the export: ${url}`);
+  }
+}
+if (cursorAssets.size === 0) errors.push("R2  no pixel cursor assets referenced by the CSS (did cursors.generated.css load?)");
 
 // ── §10: initial JS budget for the home page ──
 const index = await readFile(join(OUT, "index.html"), "utf8");
@@ -86,4 +99,4 @@ if (errors.length > 0) {
   for (const e of errors) console.error(`  ${e}`);
   process.exit(1);
 }
-console.log(`✓ Export checks passed: ${htmlFiles.length} pages — R1 (no raw TODO/undefined/NaN), R10 (no third-party assets), §10 JS budget.`);
+console.log(`✓ Export checks passed: ${htmlFiles.length} pages — R1 (no raw TODO/undefined/NaN), R2 (no hidden cursor, ${cursorAssets.size} cursor assets present), R10 (no third-party assets), §10 JS budget.`);
