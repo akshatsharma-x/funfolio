@@ -1,0 +1,105 @@
+"use client";
+
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
+import { cn } from "@/lib/cn";
+import { sfx, type SfxName } from "@/lib/sfx";
+import { PixelIcon, type PixelIconName } from "./PixelIcon";
+
+type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Size = "sm" | "md" | "lg";
+
+type BaseProps = {
+  /** primary = world color · secondary = surface · ghost = outline · danger = red */
+  variant?: Variant;
+  size?: Size;
+  /** circle = icon-only (give it an aria-label). */
+  shape?: "pill" | "circle";
+  icon?: PixelIconName;
+  iconRight?: PixelIconName;
+  /** Shows "LOADING" + pixel dots, sets aria-busy and blocks clicks. */
+  loading?: boolean;
+  /** Sound on click (silent until PART 3; sound is OFF by default). `false` = no sound. */
+  sfx?: SfxName | false;
+  className?: string;
+  children?: ReactNode;
+};
+
+type NativeButton = Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseProps> & { href?: undefined };
+type NativeLink = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof BaseProps> & { href: string };
+export type ArcadeButtonProps = BaseProps & (NativeButton | NativeLink);
+
+/** Chunky pill/circle arcade button: 3px outline, glossy top half, squash on press (Bible §3). */
+export function ArcadeButton(props: ArcadeButtonProps) {
+  const {
+    variant = "primary",
+    size = "md",
+    shape = "pill",
+    icon,
+    iconRight,
+    loading = false,
+    sfx: sound = "click",
+    className,
+    children,
+    ...native
+  } = props;
+
+  const data = {
+    className: cn("arcade-btn", className),
+    "data-variant": variant === "primary" ? undefined : variant,
+    "data-size": size === "md" ? undefined : size,
+    "data-shape": shape === "circle" ? "circle" : undefined,
+  };
+  const iconSize = shape === "circle" && size === "lg" ? 32 : 16;
+  const content = loading ? (
+    <>
+      <span>Loading</span>
+      <span className="pixel-dots" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </span>
+    </>
+  ) : (
+    <>
+      {icon ? <PixelIcon name={icon} size={iconSize} mono /> : null}
+      {children}
+      {iconRight ? <PixelIcon name={iconRight} size={iconSize} mono /> : null}
+    </>
+  );
+  const onHover = () => sfx.play("hover");
+  const play = () => {
+    if (sound) sfx.play(sound);
+  };
+
+  if (typeof native.href === "string") {
+    const { onClick, ...anchor } = native as NativeLink;
+    const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
+      play();
+      onClick?.(e);
+    };
+    return (
+      <a {...anchor} {...data} onClick={handleClick} onPointerEnter={onHover}>
+        {content}
+      </a>
+    );
+  }
+
+  const { onClick, type = "button", disabled, ...button } = native as NativeButton;
+  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
+    play();
+    onClick?.(e);
+  };
+  return (
+    <button
+      {...button}
+      {...data}
+      type={type}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      onClick={handleClick}
+      onPointerEnter={onHover}
+    >
+      {content}
+    </button>
+  );
+}

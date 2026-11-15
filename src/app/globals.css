@@ -1,0 +1,1150 @@
+/* AKSHAT.EXE — Neo-Arcade Pop tokens (Bible §3) ──────────────────────────────────────────────────────────────
+   Layering:
+   1. @theme          static tokens (palette, radii, type scale, easing) → Tailwind utilities
+   2. @theme inline   theme-dependent tokens that resolve where they're used (so nested [data-theme] panels work)
+   3. [data-theme]    semantic colors per theme · [data-world] lead color per world → --world / --world-fg
+   4. base · textures · components
+   Contrast rules (docs/DECISIONS.md #4): fills use bright values + ink text; colored text uses --*-fg / --world-fg. */
+
+@import "tailwindcss";
+
+/* ── Registered properties (animatable) ─────────────────────────────────────────────────────────────────────── */
+@property --world {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffc83d;
+}
+@property --world-fg {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #ffc83d;
+}
+@property --holo-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+/* Focus halo; not inherited so a focused parent never paints rings on its children. */
+@property --ring {
+  syntax: "*";
+  inherits: false;
+  initial-value: 0 0 #0000;
+}
+
+/* ── 1. Static tokens ────────────────────────────────────────────────────────────────────────────────────────── */
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+
+  /* Bright palette — fills (always with ink text) and night-theme accent text */
+  --color-pink: #ff3d8b;
+  --color-cyan: #22d3ee;
+  --color-lime: #b6ff3b;
+  --color-yellow: #ffd23f;
+  --color-orange: #ff8a1f;
+  --color-mint: #2ee59d;
+  --color-red: #ff4d4d;
+  --color-gold: #ffc83d;
+  --color-gold-hi: #fff1a8;
+  --color-gold-lo: #c98a00;
+  --color-violet-hi: #a78bfa;
+  --color-cream: #fff4e0;
+
+  /* Deep palette — day-theme accent text */
+  --color-pink-deep: #d6146a;
+  --color-cyan-deep: #0e7490;
+  --color-lime-deep: #4d7c0f;
+  --color-yellow-deep: #a16207;
+  --color-orange-deep: #c2410c;
+  --color-violet-deep: #6d28d9;
+  --color-mint-deep: #047857;
+  --color-red-deep: #b91c1c;
+
+  --radius-sticker: 20px;
+  --radius-chip: 10px;
+
+  /* Fluid scale: xs 12 · sm 14 · base 16–18 · lg 20–22 · xl 28–32 · 2xl 40–48 · hero 72–152 (DECISIONS #11) */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.4;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.5;
+  --text-base: clamp(1rem, 0.9286rem + 0.3571vw, 1.125rem);
+  --text-base--line-height: 1.6;
+  --text-lg: clamp(1.25rem, 1.1667rem + 0.4167vw, 1.375rem);
+  --text-lg--line-height: 1.45;
+  --text-xl: clamp(1.75rem, 1.5833rem + 0.8333vw, 2rem);
+  --text-xl--line-height: 1.15;
+  --text-2xl: clamp(2.5rem, 2.1667rem + 1.6667vw, 3rem);
+  --text-2xl--line-height: 1.05;
+  /* "SHARMA" is 5.85em wide in Unbounded Black: 72px+ from ~490px viewports up, never wider than the screen below. */
+  --text-hero: clamp(2.5rem, calc((100vw - 64px) / 5.9), 9.5rem);
+  --text-hero--line-height: 0.92;
+
+  /* Easing (Bible §4): pop ≈ back.out(1.7) · smooth · camera ≈ expo.inOut */
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-camera: cubic-bezier(0.87, 0, 0.13, 1);
+}
+
+/* ── 2. Theme-dependent tokens ───────────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-ink: var(--ink);
+  --color-world: var(--world);
+  --color-world-fg: var(--world-fg);
+  --color-violet: var(--fill-violet);
+
+  --color-pink-fg: var(--fg-pink);
+  --color-cyan-fg: var(--fg-cyan);
+  --color-lime-fg: var(--fg-lime);
+  --color-yellow-fg: var(--fg-yellow);
+  --color-orange-fg: var(--fg-orange);
+  --color-violet-fg: var(--fg-violet);
+  --color-mint-fg: var(--fg-mint);
+  --color-red-fg: var(--fg-red);
+  --color-gold-fg: var(--fg-gold);
+
+  --font-display: var(--font-unbounded), "Arial Black", ui-sans-serif, system-ui, sans-serif;
+  --font-pixel: var(--font-pixelify), ui-monospace, monospace;
+  --font-body: var(--font-dmsans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-dmsans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+/* ── 3a. Themes ──────────────────────────────────────────────────────────────────────────────────────────────── */
+:root,
+[data-theme="night"],
+[data-theme="retro"] {
+  color-scheme: dark;
+  --night: 1;
+  --bg: #0e0b1e;
+  --surface: #1a1535;
+  --surface-2: #251e4a;
+  --line: rgb(255 255 255 / 0.08);
+  --text: #fff4e0;
+  --muted: #b9b2d9;
+  --ink: #07060f;
+  --gloss: rgb(255 255 255 / 0.2);
+  --fill-violet: #8b5cf6;
+  --fg-pink: #ff3d8b;
+  --fg-cyan: #22d3ee;
+  --fg-lime: #b6ff3b;
+  --fg-yellow: #ffd23f;
+  --fg-orange: #ff8a1f;
+  --fg-violet: #a78bfa;
+  --fg-mint: #2ee59d;
+  --fg-red: #ff4d4d;
+  --fg-gold: #ffc83d;
+}
+
+[data-theme="day"] {
+  color-scheme: light;
+  --night: 0;
+  --bg: #fff4e0;
+  --surface: #ffffff;
+  --surface-2: #ffe9c7;
+  --line: rgb(27 21 48 / 0.1);
+  --text: #1b1530;
+  --muted: #5b5375;
+  --ink: #1b1530;
+  --gloss: rgb(255 255 255 / 0.55);
+  --fill-violet: #a78bfa; /* day ink on #8B5CF6 is only 4.14:1 */
+  --fg-pink: #d6146a;
+  --fg-cyan: #0e7490;
+  --fg-lime: #4d7c0f;
+  --fg-yellow: #a16207;
+  --fg-orange: #c2410c;
+  --fg-violet: #6d28d9;
+  --fg-mint: #047857;
+  --fg-red: #b91c1c;
+  --fg-gold: #a16207;
+}
+
+/* Nested theme scopes (playground panels) paint their own canvas. */
+[data-theme]:not(html) {
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* ── 3b. Worlds: one lead color each (R8). n = night/retro value, d = day value ─────────────────────────────── */
+:root,
+[data-world="title"],
+[data-world="arcade"],
+[data-world="credits"] {
+  --w-fill-n: #ffc83d;
+  --w-fill-d: #ffc83d;
+  --w-fg-n: #ffc83d;
+  --w-fg-d: #a16207;
+}
+[data-world="profile"] {
+  --w-fill-n: #22d3ee;
+  --w-fill-d: #22d3ee;
+  --w-fg-n: #22d3ee;
+  --w-fg-d: #0e7490;
+}
+[data-world="launchpad"],
+[data-world="quests"] {
+  --w-fill-n: #b6ff3b;
+  --w-fill-d: #b6ff3b;
+  --w-fg-n: #b6ff3b;
+  --w-fg-d: #4d7c0f;
+}
+[data-world="lab"] {
+  --w-fill-n: #8b5cf6;
+  --w-fill-d: #a78bfa;
+  --w-fg-n: #a78bfa;
+  --w-fg-d: #6d28d9;
+}
+[data-world="vault"] {
+  --w-fill-n: #ff3d8b;
+  --w-fill-d: #ff3d8b;
+  --w-fg-n: #ff3d8b;
+  --w-fg-d: #d6146a;
+}
+[data-world="skills"] {
+  --w-fill-n: #ffd23f;
+  --w-fill-d: #ffd23f;
+  --w-fg-n: #ffd23f;
+  --w-fg-d: #a16207;
+}
+[data-world="trophies"] {
+  --w-fill-n: #ff8a1f;
+  --w-fill-d: #ff8a1f;
+  --w-fg-n: #ff8a1f;
+  --w-fg-d: #c2410c;
+}
+[data-world="lobby"] {
+  --w-fill-n: #2ee59d;
+  --w-fill-d: #2ee59d;
+  --w-fg-n: #2ee59d;
+  --w-fg-d: #047857;
+}
+
+/* Re-derived on every scope where an input can change, so worlds and themes nest in any order. */
+:root,
+[data-theme],
+[data-world] {
+  --world: color-mix(in srgb, var(--w-fill-n) calc(var(--night) * 100%), var(--w-fill-d));
+  --world-fg: color-mix(in srgb, var(--w-fg-n) calc(var(--night) * 100%), var(--w-fg-d));
+}
+
+/* ── 3c. Motion + FX switches (read by CSS; JS reads the attributes) ────────────────────────────────────────── */
+:root {
+  --motion: 1; /* 0 under reduced motion: multiplies transition durations */
+  --play: running; /* paused under reduced motion: idle loops */
+  --fx: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion: 0;
+    --play: paused;
+  }
+}
+:root[data-motion="reduce"] {
+  --motion: 0;
+  --play: paused;
+}
+:root[data-fx="chill"] {
+  --fx: 0.5;
+}
+:root[data-fx="chaos"] {
+  --fx: 1.6;
+}
+
+/* Stepped (pixel) corners — generated: 2px×2 and 4px×3 steps */
+:root {
+  --px-sm: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 2px, calc(100% - 2px) 2px, calc(100% - 2px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 2px), 2px calc(100% - 2px), 2px calc(100% - 4px), 0 calc(100% - 4px));
+  --px-md: polygon(0 12px, 4px 12px, 4px 8px, 8px 8px, 8px 4px, 12px 4px, 12px 0, calc(100% - 12px) 0, calc(100% - 12px) 4px, calc(100% - 8px) 4px, calc(100% - 8px) 8px, calc(100% - 4px) 8px, calc(100% - 4px) 12px, 100% 12px, 100% calc(100% - 12px), calc(100% - 4px) calc(100% - 12px), calc(100% - 4px) calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) calc(100% - 4px), calc(100% - 12px) calc(100% - 4px), calc(100% - 12px) 100%, 12px 100%, 12px calc(100% - 4px), 8px calc(100% - 4px), 8px calc(100% - 8px), 4px calc(100% - 8px), 4px calc(100% - 12px), 0 calc(100% - 12px));
+  --holo: conic-gradient(from var(--holo-angle), #ff3d8b, #ffd23f, #b6ff3b, #22d3ee, #a78bfa, #ff3d8b);
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── 4. Base ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    scrollbar-gutter: stable;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      --world 600ms var(--ease-smooth),
+      --world-fg 600ms var(--ease-smooth),
+      background-color 300ms ease,
+      color 300ms ease;
+  }
+  html[data-scroll-lock] {
+    overflow: hidden;
+  }
+  body {
+    min-height: 100dvh;
+    font-size: var(--text-base);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
+  }
+  a {
+    color: inherit;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.18em;
+  }
+  ::selection {
+    background-color: var(--world);
+    color: var(--ink);
+  }
+  /* Focus: 3px dashed world-colored outline + ink halo → visible on any background (R5) */
+  :focus-visible {
+    outline: 3px dashed var(--world);
+    outline-offset: 3px;
+    --ring: 0 0 0 8px var(--ink);
+  }
+  :where(:focus-visible) {
+    box-shadow: var(--ring);
+  }
+  /* Containers focused programmatically after an in-page jump (lib/scroll.ts) don't need a ring. */
+  [data-scroll-target]:focus {
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+/* Pixel-style scrollbar: square, world-colored thumb */
+@supports not selector(::-webkit-scrollbar) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--world) var(--bg);
+  }
+}
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--world);
+  border: 3px solid var(--bg);
+  border-radius: 0;
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.4);
+}
+
+/* ── Textures: faint pixel grid + 3% grain, behind all content (PART 4 replaces the grid with the living canvas) ── */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+body::before {
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 35%, #000 25%, transparent 90%);
+}
+body::after {
+  background-image: var(--noise);
+  opacity: 0.03;
+}
+
+/* ── Retro "CRT": scanlines + vignette over the screen, pixel headings with phosphor + chromatic split ──────── */
+html[data-theme="retro"]::after,
+[data-theme="retro"]:not(html)::after {
+  content: "";
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 90% at 50% 45%, transparent 60%, rgb(0 0 0 / 0.5) 100%);
+}
+html[data-theme="retro"]::after {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+}
+[data-theme="retro"]:not(html) {
+  position: relative;
+  isolation: isolate;
+}
+[data-theme="retro"]:not(html)::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+[data-theme="retro"] :is(h1, h2, h3, .font-display) {
+  font-family: var(--font-pixel);
+  letter-spacing: 0;
+}
+[data-theme="retro"] :is(h1, h2, h3):not(.text-rainbow) {
+  text-shadow:
+    -1px 0 rgb(255 61 139 / 0.55),
+    1px 0 rgb(34 211 238 / 0.55),
+    0 0 10px color-mix(in srgb, currentColor 35%, transparent);
+}
+
+/* ── Keyframes ───────────────────────────────────────────────────────────────────────────────────────────────── */
+@keyframes holo-spin {
+  to {
+    --holo-angle: 360deg;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes pop-out {
+  to {
+    opacity: 0;
+    scale: 0.94;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes tip-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+    scale: 0.96;
+  }
+}
+@keyframes dots {
+  0%,
+  20% {
+    opacity: 0.2;
+  }
+  40%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes soft-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ── 5. Components ───────────────────────────────────────────────────────────────────────────────────────────── */
+@layer components {
+  .shell {
+    width: 100%;
+    max-width: 1280px;
+    margin-inline: auto;
+    padding-inline: 24px;
+  }
+  @media (max-width: 40rem) {
+    .shell {
+      padding-inline: 16px;
+    }
+  }
+  .read {
+    max-width: 68ch;
+  }
+  .clip-px-sm {
+    clip-path: var(--px-sm);
+  }
+  .clip-px-md {
+    clip-path: var(--px-md);
+  }
+
+  /* Tones: [data-tone] picks a fill (bright; violet follows the theme) */
+  [data-tone="pink"] { --tone: #ff3d8b; }
+  [data-tone="cyan"] { --tone: #22d3ee; }
+  [data-tone="lime"] { --tone: #b6ff3b; }
+  [data-tone="yellow"] { --tone: #ffd23f; }
+  [data-tone="orange"] { --tone: #ff8a1f; }
+  [data-tone="violet"] { --tone: var(--fill-violet); }
+  [data-tone="mint"] { --tone: #2ee59d; }
+  [data-tone="red"] { --tone: #ff4d4d; }
+  [data-tone="gold"] { --tone: #ffc83d; }
+  [data-tone="world"] { --tone: var(--world); }
+
+  .text-rainbow {
+    background-image: linear-gradient(90deg, var(--fg-pink), var(--fg-orange), var(--fg-yellow), var(--fg-lime), var(--fg-cyan), var(--fg-violet));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  @media (forced-colors: active) {
+    .text-rainbow {
+      background: none;
+      color: CanvasText;
+    }
+  }
+
+  /* Skip link */
+  .skip-link {
+    position: fixed;
+    left: 16px;
+    top: 16px;
+    z-index: 100;
+    translate: 0 -200%;
+  }
+  .skip-link:focus,
+  .skip-link:focus-visible {
+    translate: 0 0;
+  }
+
+  /* ── StickerCard ── */
+  .sticker {
+    position: relative;
+    display: block;
+    border: 3px solid var(--ink);
+    border-radius: var(--radius-sticker);
+    background: var(--sticker-bg, var(--surface));
+    color: var(--text);
+    box-shadow:
+      0 6px 0 var(--ink),
+      inset 0 2px 0 var(--gloss),
+      var(--ring);
+    transition:
+      translate calc(var(--motion) * 140ms) var(--ease-pop),
+      box-shadow calc(var(--motion) * 140ms) var(--ease-pop),
+      transform calc(var(--motion) * 240ms) var(--ease-smooth);
+  }
+  .sticker__body {
+    position: relative;
+    height: 100%;
+    padding: var(--sticker-pad, 1.25rem);
+    border-radius: calc(var(--radius-sticker) - 3px);
+  }
+  .sticker[data-variant="world"] {
+    --sticker-bg: var(--world);
+    --text: var(--ink);
+    --muted: var(--ink);
+    --gloss: rgb(255 255 255 / 0.45);
+    color: var(--ink);
+  }
+  .sticker[data-variant="holo"] {
+    padding: 5px;
+    background: var(--holo);
+    animation: holo-spin calc(8s / var(--fx)) linear infinite;
+    animation-play-state: var(--play);
+  }
+  .sticker[data-variant="holo"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: var(--noise);
+    mix-blend-mode: overlay;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .sticker[data-variant="holo"] > .sticker__body {
+    background: var(--surface);
+    border-radius: calc(var(--radius-sticker) - 8px);
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+  .sticker[data-pressable]:active {
+    translate: 0 4px;
+    box-shadow:
+      0 2px 0 var(--ink),
+      inset 0 2px 0 var(--gloss),
+      var(--ring);
+  }
+  .sticker[data-tilt] {
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  }
+  .sticker[data-tilt]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(circle at var(--gx, 50%) var(--gy, 0%), rgb(255 255 255 / 0.2), transparent 60%);
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+  .sticker[data-tilt]:hover::after {
+    opacity: 1;
+  }
+
+  /* Peel (basic; PART 4 adds the curl) */
+  .peel__corner {
+    position: absolute;
+    right: -3px;
+    bottom: -3px;
+    width: 44px;
+    height: 44px;
+    border-bottom-right-radius: var(--radius-sticker);
+    cursor: pointer;
+  }
+  .peel__corner::before {
+    content: "";
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    width: 26px;
+    height: 26px;
+    background: linear-gradient(135deg, var(--color-cream) 0 46%, var(--ink) 46% 54%, transparent 54%);
+    border-top-left-radius: 6px;
+    filter: drop-shadow(-2px -2px 0 rgb(0 0 0 / 0.25));
+    transition: width calc(var(--motion) * 180ms) var(--ease-pop), height calc(var(--motion) * 180ms) var(--ease-pop);
+  }
+  .peel__corner:hover::before,
+  .peel[data-open] .peel__corner::before {
+    width: 34px;
+    height: 34px;
+  }
+  .peel__secret {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 2;
+    max-width: min(80%, 320px);
+    padding: 0.75rem 0.9rem;
+    border: 3px solid var(--ink);
+    border-radius: 12px 12px 4px 12px;
+    background: var(--color-cream);
+    color: #1b1530;
+    box-shadow: 0 4px 0 var(--ink);
+    font-size: var(--text-sm);
+    animation: pop-in calc(var(--motion) * 220ms + 1ms) var(--ease-pop) both;
+  }
+
+  /* ── ArcadeButton ── */
+  .arcade-btn {
+    --btn-fill: var(--world);
+    --btn-fg: var(--ink);
+    --btn-h: 44px;
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55em;
+    min-height: var(--btn-h);
+    padding: 0.35rem 1.25rem;
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    background: var(--btn-fill);
+    color: var(--btn-fg);
+    font-family: var(--font-pixel);
+    font-size: var(--text-base);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    text-align: center;
+    text-wrap: balance;
+    max-width: 100%; /* long labels wrap on small phones instead of overflowing (WCAG reflow) */
+    cursor: pointer;
+    user-select: none;
+    box-shadow:
+      0 6px 0 var(--ink),
+      var(--ring);
+    transition:
+      translate calc(var(--motion) * 120ms) var(--ease-pop),
+      scale calc(var(--motion) * 120ms) var(--ease-pop),
+      box-shadow calc(var(--motion) * 120ms) var(--ease-pop),
+      background-color 150ms ease;
+  }
+  .arcade-btn::before {
+    /* glossy top half */
+    content: "";
+    position: absolute;
+    inset: 3px 12px 50% 12px;
+    z-index: -1;
+    border-radius: 999px 999px 24px 24px;
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0.08));
+    pointer-events: none;
+  }
+  .arcade-btn:hover {
+    translate: 0 -2px;
+    box-shadow:
+      0 8px 0 var(--ink),
+      var(--ring);
+  }
+  .arcade-btn:active {
+    translate: 0 4px;
+    scale: 1.04 0.92;
+    box-shadow:
+      0 2px 0 var(--ink),
+      var(--ring);
+    transition-duration: calc(var(--motion) * 60ms);
+  }
+  .arcade-btn[data-variant="secondary"] {
+    --btn-fill: var(--surface-2);
+    --btn-fg: var(--text);
+  }
+  .arcade-btn[data-variant="secondary"]::before {
+    background: linear-gradient(to bottom, rgb(255 255 255 / 0.18), rgb(255 255 255 / 0.02));
+  }
+  .arcade-btn[data-variant="ghost"] {
+    --btn-fill: transparent;
+    --btn-fg: var(--text);
+    border-color: color-mix(in srgb, var(--text) 45%, transparent);
+    box-shadow: var(--ring);
+  }
+  .arcade-btn[data-variant="ghost"]::before {
+    display: none;
+  }
+  .arcade-btn[data-variant="ghost"]:hover {
+    border-color: var(--text);
+    box-shadow: var(--ring);
+  }
+  .arcade-btn[data-variant="ghost"]:active {
+    box-shadow: var(--ring);
+  }
+  .arcade-btn[data-variant="danger"] {
+    --btn-fill: var(--color-red);
+  }
+  .arcade-btn[data-size="sm"] {
+    --btn-h: 36px;
+    padding-inline: 0.9rem;
+    font-size: var(--text-sm);
+  }
+  .arcade-btn[data-size="sm"]::after {
+    /* keeps the touch target ≥ 44px */
+    content: "";
+    position: absolute;
+    inset: -5px;
+  }
+  .arcade-btn[data-size="lg"] {
+    --btn-h: 56px;
+    padding-inline: 1.75rem;
+    font-size: var(--text-lg);
+  }
+  .arcade-btn[data-shape="circle"] {
+    width: var(--btn-h);
+    padding: 0;
+  }
+  .arcade-btn[data-shape="circle"]::before {
+    inset: 3px 8px 50% 8px;
+  }
+  .arcade-btn:disabled,
+  .arcade-btn[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.6;
+    translate: none;
+    scale: none;
+    box-shadow:
+      0 6px 0 var(--ink),
+      var(--ring);
+  }
+  .arcade-btn[data-variant="ghost"]:disabled,
+  .arcade-btn[data-variant="ghost"][aria-disabled="true"] {
+    box-shadow: var(--ring);
+  }
+  .pixel-dots {
+    display: inline-flex;
+    gap: 3px;
+  }
+  .pixel-dots > i {
+    width: 5px;
+    height: 5px;
+    background: currentColor;
+    animation: dots 1.2s steps(1) infinite;
+    animation-play-state: var(--play);
+  }
+  .pixel-dots > i:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .pixel-dots > i:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  /* ── PixelFrame (stepped-corner dialog frame) ── */
+  .pixel-frame {
+    filter: drop-shadow(0 6px 0 var(--ink));
+  }
+  .pixel-frame__outline {
+    clip-path: var(--px-md);
+    background: var(--ink);
+    padding: 3px;
+  }
+  .pixel-frame__inner {
+    clip-path: var(--px-md);
+    background: var(--frame-bg, var(--surface));
+    color: var(--text);
+    padding: 1.25rem 1.25rem 1.4rem;
+  }
+  .pixel-frame__title {
+    display: inline-block;
+    margin-bottom: 0.85rem;
+    padding: 0.3rem 0.7rem;
+    clip-path: var(--px-sm);
+    background: var(--world);
+    color: var(--ink);
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ── Chip ── */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    min-height: 28px;
+    max-width: 100%;
+    padding: 0.15em 0.6em;
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-chip);
+    background: var(--chip-bg, var(--surface-2));
+    color: var(--chip-fg, var(--text));
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.25;
+    box-shadow: 0 2px 0 var(--ink);
+    overflow-wrap: anywhere;
+  }
+  .chip[data-tone] {
+    --chip-bg: var(--tone);
+    --chip-fg: var(--ink);
+  }
+  .chip[data-holo] {
+    border-color: transparent;
+    background:
+      linear-gradient(var(--chip-bg, var(--surface-2)), var(--chip-bg, var(--surface-2))) padding-box,
+      var(--holo) border-box;
+    animation: holo-spin calc(6s / var(--fx)) linear infinite;
+    animation-play-state: var(--play);
+  }
+
+  /* ── Badge (pixel corners) ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.35em 0.7em;
+    clip-path: var(--px-sm);
+    background: var(--badge-bg, var(--surface-2));
+    color: var(--badge-fg, var(--text));
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .badge[data-tone] {
+    --badge-bg: var(--tone);
+    --badge-fg: var(--ink);
+  }
+
+  /* ── Coming soon (R1: never a raw TODO) ── */
+  .soon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    padding: 0.25em 0.6em;
+    border: 2px dashed color-mix(in srgb, var(--muted) 60%, transparent);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .soon-panel {
+    display: grid;
+    gap: 0.5rem;
+    padding: 1.25rem 1.5rem;
+    border: 3px dashed color-mix(in srgb, var(--world) 70%, transparent);
+    border-radius: var(--radius-sticker);
+    background: color-mix(in srgb, var(--surface) 70%, transparent);
+  }
+  .soon-panel__title {
+    font-family: var(--font-pixel);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--world-fg);
+  }
+
+  /* ── Tooltip (game-item card; Popover API → top layer) ── */
+  .tooltip {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    display: none;
+    width: max-content;
+    max-width: min(280px, calc(100vw - 16px));
+    padding: 0.6rem 0.8rem 0.7rem;
+    overflow: visible;
+    border: 3px solid var(--ink);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 4px 0 var(--ink);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+  }
+  .tooltip[data-open] {
+    display: block;
+    animation: tip-in calc(var(--motion) * 160ms + 1ms) var(--ease-pop) both;
+  }
+  .tooltip__title {
+    display: block;
+    font-family: var(--font-pixel);
+    font-size: var(--text-base);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .tooltip__type {
+    display: block;
+    margin-top: 0.1rem;
+    color: var(--world-fg);
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  .tooltip__body {
+    display: block;
+    margin-top: 0.4rem;
+  }
+
+  /* ── Modal (<dialog>) ── */
+  .modal {
+    width: min(560px, calc(100vw - 32px));
+    max-width: none;
+    max-height: calc(100dvh - 48px);
+    margin: auto;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+  }
+  .modal::backdrop {
+    background: rgb(7 6 15 / 0.6);
+    backdrop-filter: blur(6px);
+  }
+  .modal[open] {
+    animation: pop-in calc(var(--motion) * 280ms + 1ms) var(--ease-pop) both;
+  }
+  .modal[open]::backdrop {
+    animation: fade-in 200ms ease-out both;
+  }
+  .modal[data-closing] {
+    animation: pop-out calc(var(--motion) * 150ms + 1ms) ease-in both;
+  }
+  .modal[data-closing]::backdrop {
+    animation: fade-out 150ms ease-in both;
+  }
+  .modal__body {
+    max-height: calc(100dvh - 220px);
+    overflow: auto;
+    padding: 0.25rem 0.5rem 0.5rem 0.25rem;
+  }
+
+  /* ── Tabs ── */
+  .tabs__list {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    border-bottom: 3px solid var(--line);
+  }
+  .tabs__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    min-height: 44px;
+    padding: 0.5rem 0.9rem;
+    color: var(--muted);
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+  }
+  .tabs__tab:hover {
+    color: var(--text);
+  }
+  .tabs__tab[aria-selected="true"] {
+    color: var(--text);
+  }
+  .tabs__indicator {
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    width: var(--tab-w, 0px);
+    height: 6px;
+    translate: var(--tab-x, 0px) 0;
+    background: repeating-linear-gradient(90deg, var(--world) 0 6px, transparent 6px 8px);
+    transition:
+      translate calc(var(--motion) * 300ms) var(--ease-pop),
+      width calc(var(--motion) * 300ms) var(--ease-pop);
+  }
+  .tabs__indicator:not([data-ready]) {
+    transition: none;
+  }
+  .tabs__panel {
+    padding-top: 1.25rem;
+  }
+
+  /* ── Meter (segmented pixel bar) ── */
+  .meter {
+    display: flex;
+    gap: 3px;
+    padding: 3px;
+    border: 3px solid var(--ink);
+    background: var(--surface-2);
+    clip-path: var(--px-sm);
+  }
+  .meter__seg {
+    flex: 1;
+    height: 12px;
+    border: 2px dashed color-mix(in srgb, var(--muted) 45%, transparent);
+  }
+  .meter__seg[data-on] {
+    border: 2px solid var(--ink);
+    background: var(--meter-fill, var(--world));
+    box-shadow: inset 0 3px 0 rgb(255 255 255 / 0.35);
+  }
+
+  /* ── NumberRoll ─ the real digits never leave the DOM or the accessibility tree: during the ~1s roll they only turn
+     transparent while CSS-generated strips spin over them. clip-path (not overflow:hidden) keeps the text baseline. ── */
+  .nr {
+    --nr-lh: 1.15em;
+    display: inline;
+    font-variant-numeric: tabular-nums;
+  }
+  .nr__d {
+    position: relative;
+    display: inline-block;
+    line-height: var(--nr-lh);
+    clip-path: inset(0 -0.1em);
+  }
+  .nr__d::after {
+    content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9\A 0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    white-space: pre;
+    line-height: var(--nr-lh);
+    visibility: hidden; /* hidden = also out of the accessibility tree */
+    transform: translateY(calc(var(--pos, 0) * var(--nr-lh) * -1));
+  }
+  @supports (content: "x" / "") {
+    .nr__d::after {
+      /* empty alt text: screen readers stay silent even while the strip is visible */
+      content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9\A 0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9" / "";
+    }
+  }
+  .nr[data-state="rolling"] .nr__d > span {
+    opacity: 0;
+  }
+  .nr[data-state="rolling"] .nr__d {
+    --pos: calc(10 + var(--d));
+  }
+  .nr[data-state="rolling"] .nr__d::after {
+    visibility: visible;
+    transition: transform 900ms cubic-bezier(0.2, 0.9, 0.25, 1.05) calc(var(--i) * 55ms);
+  }
+
+  /* ── PixelIcon ── */
+  .pixel-icon {
+    display: inline-block;
+    flex: none;
+    vertical-align: -0.15em;
+    shape-rendering: crispEdges;
+  }
+
+  /* ── WorldHeader ── */
+  .world-header {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+  }
+  .world-header__kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--muted);
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .world-header__title {
+    margin: 0;
+    font-size: var(--text-2xl);
+    font-weight: 900;
+  }
+  .world-header__game {
+    color: var(--world-fg);
+    text-transform: uppercase;
+  }
+  .world-header__plain {
+    display: block;
+    margin-top: 0.4rem;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  [data-theme="retro"] .world-header__plain {
+    font-family: var(--font-body);
+    text-shadow: none;
+  }
+
+  /* Status dot: soft 0.5Hz pulse (never a flash — R5) */
+  .status-dot {
+    display: inline-block;
+    width: 0.6em;
+    height: 0.6em;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--color-mint);
+    animation: soft-pulse 2s ease-in-out infinite;
+    animation-play-state: var(--play);
+  }
+}
