@@ -4,6 +4,7 @@
 // like a native jump — skip links keep working for keyboard and screen-reader users.
 
 import type Lenis from "lenis";
+import { warp } from "./warp";
 
 let instance: Lenis | null = null;
 const listeners = new Set<() => void>();
@@ -25,9 +26,15 @@ export function subscribeLenis(fn: () => void): () => void {
 
 /** Moves focus to an in-page target without a second jump (adds tabindex=-1 when the target isn't focusable). */
 function focusTarget(el: HTMLElement) {
-  if (!el.matches("a[href], button, input, select, textarea, [tabindex]")) el.setAttribute("tabindex", "-1");
+  if (!el.matches("a[href], button, input, select, textarea, [tabindex]")) {
+    el.setAttribute("tabindex", "-1");
+    el.setAttribute("data-scroll-target", "");
+  }
   el.focus({ preventScroll: true });
 }
+
+/** Space kept clear for the fixed HUD (56px) when jumping to a target. */
+export const HUD_OFFSET = 64;
 
 /** Smoothly scrolls to an element (or instantly when Lenis is off), then focuses it. */
 export function scrollToElement(el: HTMLElement, opts: { focus?: boolean } = {}) {
@@ -35,7 +42,7 @@ export function scrollToElement(el: HTMLElement, opts: { focus?: boolean } = {})
     if (opts.focus) focusTarget(el);
   };
   if (instance) {
-    instance.scrollTo(el, { onComplete: done });
+    instance.scrollTo(el, { offset: -HUD_OFFSET, onComplete: done });
   } else {
     el.scrollIntoView({ block: "start" });
     done();
@@ -51,6 +58,7 @@ function onAnchorClick(event: MouseEvent) {
   if (!target) return;
   event.preventDefault();
   history.pushState(null, "", `#${id}`);
+  if (link.hasAttribute("data-warp")) warp();
   scrollToElement(target, { focus: true });
 }
 

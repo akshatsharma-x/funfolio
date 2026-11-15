@@ -3,6 +3,7 @@
 
 import { z } from "zod";
 import * as content from "./content";
+import { resolveHighlight } from "./derived";
 
 const todo = z.literal("TODO");
 const text = z.string().trim().min(1);
@@ -141,6 +142,11 @@ const schema = z
     skills,
   })
   .superRefine((c, ctx) => {
+    for (const tile of content.speedrun.highlights) {
+      for (const ref of tile.refs) {
+        if (!resolveHighlight(ref)) ctx.addIssue({ code: "custom", message: `speedrun highlight points at a missing fact: ${JSON.stringify(ref)}`, path: ["speedrun"] });
+      }
+    }
     const all = new Set([c.skills.weapons, c.skills.spells, c.skills.gear, c.skills.gadgets, c.skills.runes].flatMap((s) => s.items));
     for (const s of c.skills.signature) {
       if (!all.has(s)) ctx.addIssue({ code: "custom", message: `signature skill "${s}" is not in any skill category`, path: ["skills", "signature"] });

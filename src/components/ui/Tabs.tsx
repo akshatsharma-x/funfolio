@@ -12,7 +12,11 @@ type TabsProps = {
   /** Accessible name of the tab list. */
   label: string;
   defaultTab?: string;
+  /** Controlled mode: the selected tab id (pair with onChange). */
+  value?: string;
   onChange?: (id: string) => void;
+  /** vertical = side menu (pause menu); arrows follow the orientation. */
+  orientation?: "horizontal" | "vertical";
   className?: string;
 };
 
@@ -20,15 +24,17 @@ type TabsProps = {
  * WAI-ARIA tabs with a sliding pixel underline. Arrow keys / Home / End move and select. Inactive panels stay in the
  * DOM (hidden), so their content is still server-rendered for SEO and assistive tech (R3).
  */
-export function Tabs({ tabs, label, defaultTab, onChange, className }: TabsProps) {
+export function Tabs({ tabs, label, defaultTab, value, onChange, orientation = "horizontal", className }: TabsProps) {
   const base = useId();
-  const [active, setActive] = useState(defaultTab ?? tabs[0]?.id);
+  const [internal, setInternal] = useState(defaultTab ?? tabs[0]?.id);
+  const active = value ?? internal;
+  const vertical = orientation === "vertical";
   const listRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLSpanElement>(null);
 
   const select = (id: string, focus = false) => {
     if (id !== active) sfx.play("blip");
-    setActive(id);
+    setInternal(id);
     onChange?.(id);
     if (focus) document.getElementById(`${base}-tab-${id}`)?.focus();
   };
@@ -42,6 +48,8 @@ export function Tabs({ tabs, label, defaultTab, onChange, className }: TabsProps
       if (!tab) return;
       bar.style.setProperty("--tab-x", `${tab.offsetLeft}px`);
       bar.style.setProperty("--tab-w", `${tab.offsetWidth}px`);
+      bar.style.setProperty("--tab-y", `${tab.offsetTop}px`);
+      bar.style.setProperty("--tab-h", `${tab.offsetHeight}px`);
       // enable the slide only after the first placement (no slide-in on load)
       requestAnimationFrame(() => bar.setAttribute("data-ready", ""));
     };
@@ -54,8 +62,10 @@ export function Tabs({ tabs, label, defaultTab, onChange, className }: TabsProps
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const i = tabs.findIndex((t) => t.id === active);
     let next = -1;
-    if (e.key === "ArrowRight") next = (i + 1) % tabs.length;
-    else if (e.key === "ArrowLeft") next = (i - 1 + tabs.length) % tabs.length;
+    const forward = vertical ? "ArrowDown" : "ArrowRight";
+    const backward = vertical ? "ArrowUp" : "ArrowLeft";
+    if (e.key === forward) next = (i + 1) % tabs.length;
+    else if (e.key === backward) next = (i - 1 + tabs.length) % tabs.length;
     else if (e.key === "Home") next = 0;
     else if (e.key === "End") next = tabs.length - 1;
     if (next < 0) return;
@@ -64,8 +74,8 @@ export function Tabs({ tabs, label, defaultTab, onChange, className }: TabsProps
   };
 
   return (
-    <div className={cn("tabs", className)}>
-      <div ref={listRef} role="tablist" aria-label={label} className="tabs__list" onKeyDown={onKeyDown}>
+    <div className={cn("tabs", className)} data-orientation={orientation}>
+      <div ref={listRef} role="tablist" aria-label={label} aria-orientation={orientation} className="tabs__list" onKeyDown={onKeyDown}>
         {tabs.map((t) => {
           const selected = t.id === active;
           return (

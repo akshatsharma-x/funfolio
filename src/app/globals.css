@@ -252,6 +252,15 @@
   --motion: 0;
   --play: paused;
 }
+/* Settings → "Full motion" overrides the OS preference (declared after the media query on purpose). */
+:root[data-motion="full"] {
+  --motion: 1;
+  --play: running;
+}
+/* Pause menu open: idle loops freeze (games listen to the bus). */
+:root[data-paused] {
+  --play: paused;
+}
 :root[data-fx="chill"] {
   --fx: 0.5;
 }
@@ -274,6 +283,7 @@
     color: var(--text);
     font-family: var(--font-body);
     scrollbar-gutter: stable;
+    scroll-padding-top: 64px; /* the fixed HUD never covers an anchor target */
     -webkit-tap-highlight-color: transparent;
     transition:
       --world 600ms var(--ease-smooth),

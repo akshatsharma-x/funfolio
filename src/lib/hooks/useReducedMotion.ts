@@ -2,10 +2,13 @@ import { useSyncExternalStore } from "react";
 
 const QUERY = "(prefers-reduced-motion: reduce)";
 
-/** OS setting OR the in-app switch (PART 3 sets data-motion="reduce" on <html>). Usable outside React too. */
+/** In-app override first (Settings → Reduced motion sets data-motion="reduce" | "full" on <html>), else the OS. */
 export function prefersReducedMotion(): boolean {
   if (typeof window === "undefined") return false;
-  return window.matchMedia(QUERY).matches || document.documentElement.getAttribute("data-motion") === "reduce";
+  const override = document.documentElement.getAttribute("data-motion");
+  if (override === "reduce") return true;
+  if (override === "full") return false;
+  return window.matchMedia(QUERY).matches;
 }
 
 function subscribe(onChange: () => void) {

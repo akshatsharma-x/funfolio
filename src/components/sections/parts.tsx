@@ -104,7 +104,7 @@ export function SaveFileButton({ href, available, size = "lg" }: { href: string;
     );
   }
   return (
-    <ArcadeButton href={href} download variant="secondary" size={size} icon="chest" cursorLabel="OPEN">
+    <ArcadeButton href={href} download variant="secondary" size={size} icon="chest" cursorLabel="OPEN" command={{ type: "download", what: "resume" }}>
       Save file · Résumé
     </ArcadeButton>
   );

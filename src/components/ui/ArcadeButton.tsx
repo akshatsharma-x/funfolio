@@ -3,6 +3,7 @@
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
 import type { CursorLabel } from "@/components/cursor/skins";
 import { cn } from "@/lib/cn";
+import { command as runCommand, type Command } from "@/lib/commands";
 import { sfx, type SfxName } from "@/lib/sfx";
 import { PixelIcon, type PixelIconName } from "./PixelIcon";
 
@@ -23,6 +24,8 @@ type BaseProps = {
   sfx?: SfxName | false;
   /** Context word shown under the cursor follower after 120ms hover (PART 2 vocabulary). */
   cursorLabel?: CursorLabel;
+  /** Game-runtime command(s) to run on click — plain objects, so Server Components can pass them. */
+  command?: Command | Command[];
   className?: string;
   children?: ReactNode;
 };
@@ -42,6 +45,7 @@ export function ArcadeButton(props: ArcadeButtonProps) {
     loading = false,
     sfx: sound = "click",
     cursorLabel,
+    command,
     className,
     children,
     ...native
@@ -72,14 +76,21 @@ export function ArcadeButton(props: ArcadeButtonProps) {
     </>
   );
   const onHover = () => sfx.play("hover");
-  const play = () => {
+  const play = (target: HTMLElement) => {
     if (sound) sfx.play(sound);
+    if (!command) return;
+    const r = target.getBoundingClientRect();
+    const origin = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    // attach the click origin so "+XP" ghosts fly from the button
+    const withOrigin = (c: Command): Command =>
+      c.type === "cta" || c.type === "xp" || c.type === "coin" || c.type === "theme" ? { ...c, origin } : c;
+    runCommand(...(Array.isArray(command) ? command : [command]).map(withOrigin));
   };
 
   if (typeof native.href === "string") {
     const { onClick, ...anchor } = native as NativeLink;
     const handleClick = (e: MouseEvent<HTMLAnchorElement>) => {
-      play();
+      play(e.currentTarget);
       onClick?.(e);
     };
     return (
@@ -91,7 +102,7 @@ export function ArcadeButton(props: ArcadeButtonProps) {
 
   const { onClick, type = "button", disabled, ...button } = native as NativeButton;
   const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
-    play();
+    play(e.currentTarget);
     onClick?.(e);
   };
   return (

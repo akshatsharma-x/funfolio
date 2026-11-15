@@ -49,9 +49,9 @@ change an entry only when the decision itself changes.
 ## PART 2 — Cursor system
 
 16. **Three cursor attributes on `<html>`:** `data-cursor` = variant (always `default` at load; only
-    `useGameCursor()` / `claimCursor()` change it, stack-safe), `data-cursor-skin`, `data-cursor-size`. Skin and size
-    live in `funfolio:prefs` until PART 3's store owns them; the store should call `setCursorSkin()` /
-    `setCursorSize()` from `src/lib/cursor.ts`.
+    `useGameCursor()` / `claimCursor()` change it, stack-safe), `data-cursor-skin`, `data-cursor-size`. Since PART 3
+    skin and size live in the save (`inventory.equipped.cursorSkin`, `settings.cursorSize`); `src/lib/apply.ts` calls
+    `setCursorSkin()` / `setCursorSize()` from `src/lib/cursor.ts`.
 17. **Cursor art = 16×16 masks** (`src/components/cursor/cursor-art.ts`); the build adds the dual outline. The 32/48/64
     sizes are exact 2×/3×/4× renders, so outlines are 2/3/4px. Generated SVG/PNG + CSS are committed — rerun
     `npm run cursors` after editing skins or art (URLs carry a cache key).
@@ -59,8 +59,8 @@ change an entry only when the decision itself changes.
     included (drags, games, 3D hovers). Element-level variants use `[data-cursor]` attributes.
 19. **The follower lives in the top layer** (`popover="manual"`) and re-raises itself whenever a dialog or popover
     opens, so it is never under a modal. Locked skins are previewable in `/playground`; PART 11's Prize Counter gates them.
-20. **Hotkey L lives in the cursor engine for now.** It is ignored while typing, inside an open dialog, or inside
-    `[data-keyboard="exclusive"]` (games). PART 3's keyboard manager may take it over and call `locateCursor()`.
+20. **Hotkey L** is ignored while typing, inside an open dialog, or inside `[data-keyboard="exclusive"]` (games).
+    Since PART 3 it lives in the keyboard manager (#28), which calls `locateCursor()`.
 21. **Shake-to-find emits `cursor:shake`** on `src/lib/bus.ts`; PART 3 listens to unlock "Shaky Hands". Re-entry pings
     fire only after a real exit — the first pointer move after load is not a re-entry.
 22. **Magnetic lean:** `.arcade-btn` and `[data-magnetic]` move ≤ 6px toward the pointer (3px in CHILL, off under
@@ -69,3 +69,55 @@ change an entry only when the decision itself changes.
     backgrounds. PART 4 moves it onto the shared FX canvas.
 24. **Night rim (from the PART 1 look check):** `--rim` (14% white) outlines cards, buttons and their hard shadows on
     night/retro; transparent on day.
+
+## PART 3 — Game engine & HUD
+
+25. **One save, versioned.** localStorage `funfolio-save` (zustand `persist`, version 1). `migrateSave()` is a
+    ladder (one step per version), then `normalizeSave()` sanitizes everything: unknown achievement/coin/prize ids are
+    dropped, numbers clamped, retro needs ownership, a corrupted or future save never crashes. The PART 1–2 key
+    `funfolio:prefs` seeds a new save once and is then removed. URL overrides (`?theme=`, `?fx=`, `?speedrun`) stay
+    session-only and never touch the save. Reset erases progress but keeps settings (retro → night).
+26. **The game layer loads after hydration.** Store, registries, HUD, toasts and shortcuts are one lazy client chunk
+    (`GameRuntimeLoader`, `next/dynamic` with `ssr: false`); the pause menu is another, fetched on first open.
+    Server-rendered islands (PRESS START, SAVE FILE, Speedrun buttons) send plain-object commands through
+    `src/lib/commands.ts`, queued until the runtime is ready. Measured: initial JS 149.1 KB gzip, runtime +69.5 KB
+    after hydration, pause menu +10 KB on first open.
+27. **XP rules.** First visit of each world +50 (the world in view at load counts), details +10, CTA +5, coin +25,
+    achievement = its own XP. One-time reasons (`visit:` / `open:` / `cta:` / `coin:` / `achievement:` + id) pay
+    once per save; game XP is capped at 200 per session. Level rewards: LV3 party hat, LV5 Retro Green cursor,
+    LV7 Retro CRT theme, LV10 Rainbow cursor. Achievements live in `src/content/achievements.ts` (35; secret ones show
+    "???"), coins in `coins.ts` (12), prizes in `prizes.ts`, thresholds in `levels.ts`.
+28. **One keyboard manager** (`useKeyboardShortcuts` in `src/components/hud/useGameRuntime.ts`) — no other global
+    keydown shortcuts. 0–8 worlds · Esc pause · M map · L locate cursor · Shift+S sound · Shift+D day/night ·
+    Shift+R Speedrun · `` ` `` terminal (PART 16) · ? controls. Nothing fires while typing; inside a dialog or
+    `[data-keyboard="exclusive"]` only Esc is global; every other single letter is reserved for typed easter eggs
+    (PART 16). Esc is layered: a tooltip opened by keyboard focus consumes the first Esc (WCAG 1.4.13), a hovered one
+    doesn't.
+29. **Speedrun Mode is CSS on the same DOM** (`html[data-mode="speedrun"]`): the server-rendered SpeedrunSummary
+    shows; `.title-play`, `#launchpad`, `#arcade`, `[data-byte]` and `[data-speedrun="hide"]` hide; sections condense;
+    FX → chill; World 2 jumps to the Quest Log. Toggles: Title button, HUD bolt / Shift+R, Pause → Settings, the
+    "▶ Back to Play Mode" pill (boot toggle: PART 5). Toasts sit top-right (phones: a slim toast over the HUD) and the
+    level-up banner is hidden on phones, so nothing covers the summary. The whole summary fits the first screen at
+    1280×800 and 390×844.
+30. **Speedrun highlights are references, not copies.** `speedrun.highlights` in content.ts points at existing stats
+    (`{ from: "experience" | "project", id, stat }` or `{ from: "honor", id }`; two refs share a tile);
+    `resolveHighlight()` reads the value and the schema
+    fails the build on a dangling reference (R1).
+31. **Sound.** ZzFX (and its AudioContext) loads only after the first gesture and only while sound is on. The
+    first-gesture listener is installed at startup, so the click or Shift+S that turns sound on counts as that
+    gesture; up to 3 sounds requested while ZzFX loads are queued (600ms TTL).
+32. **Pause menu = native `<dialog>`.** Tab / Shift+Tab move explicitly through the reachable controls and wrap
+    (Safari's default Tab skips buttons, so edge-only trapping leaked there). Announcements made while a dialog is
+    open go to the dialog's own live region (everything outside a modal is inert). Open → `html[data-paused]`
+    (idle loops freeze) + `game:pause` / `game:resume` on the bus.
+33. **Themes.** Day/night uses a View Transition: a circular clip-path sweep from the toggle (instant without the
+    API, without an origin or under reduced motion). Retro is earned (LV7, Cheat Code, Prize Counter); `?theme=retro`
+    remains a session-only preview. Lights Out unlocks on the first switch, Pixel Perfect on retro.
+34. **HUD.** Rendered before `<main>` so Tab order matches the screen (skip link → HUD → content). 56px on the Title
+    Screen, 44px after; its bottom edge (64px) equals `scroll-padding-top` / `HUD_OFFSET`. Glass at 84% opacity keeps
+    HUD text ≥ 4.5:1 over anything underneath. Narrow screens drop the brand, world label, trophies chip and map
+    button (all reachable in the pause menu); the level-select rail hides below 768px (Pause → Map instead).
+35. **Tooltips follow their trigger one frame after a scroll** (rAF). Repositioning inside the scroll event is a
+    scroll-linked effect — janky with async panning (Firefox warns).
+36. **Cross-engine QA.** Besides system Chrome, Playwright's bundled WebKit (Safari engine) and Firefox run the
+    cursor, HUD, pause menu, theme, persistence, Speedrun and axe checks.

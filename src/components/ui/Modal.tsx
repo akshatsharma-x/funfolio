@@ -16,16 +16,31 @@ type ModalProps = {
   footer?: ReactNode;
   /** Close by clicking the backdrop (default true; games may turn it off). */
   dismissOnBackdrop?: boolean;
+  /** md = 560px dialogs · lg = 900px (pause menu). */
+  size?: "md" | "lg";
   className?: string;
 };
 
-const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])";
+const FOCUSABLE = "a[href], button, input, select, textarea, [tabindex]";
+
+/** What Tab can reach: no tabindex=-1 (roving tabs), nothing disabled, hidden (inactive tab panels) or unrendered,
+ * and only the checked radio of a group that has one. */
+function tabbable(root: HTMLElement): HTMLElement[] {
+  return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => {
+    if (el.tabIndex < 0 || el.matches(":disabled") || el.closest("[hidden], [inert]") || el.getClientRects().length === 0) return false;
+    if (el instanceof HTMLInputElement && el.type === "radio" && !el.checked && el.name) {
+      const group = root.querySelectorAll<HTMLInputElement>(`input[type="radio"][name="${CSS.escape(el.name)}"]`);
+      if (Array.from(group).some((r) => r.checked)) return false;
+    }
+    return true;
+  });
+}
 
 /**
  * Native <dialog> modal: top layer (never covers the cursor — R2), focus trap + restore, Esc, scroll lock that keeps
  * Lenis in sync, pop-in from 0.9 + blurred backdrop (fade only under reduced motion).
  */
-export function Modal({ open, onClose, title, description, children, footer, dismissOnBackdrop = true, className }: ModalProps) {
+export function Modal({ open, onClose, title, description, children, footer, dismissOnBackdrop = true, size = "md", className }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const locked = useRef(false);
@@ -83,25 +98,35 @@ export function Modal({ open, onClose, title, description, children, footer, dis
     if (dismissOnBackdrop && e.target === e.currentTarget) onClose();
   };
 
+  // Focus trap: Tab / Shift+Tab move through the dialog's controls explicitly and wrap at the ends. Explicit (not
+  // just at the edges) so every engine behaves the same — Safari's default Tab skips buttons and links, which would
+  // otherwise make the first/last guess wrong and let focus slip out to the browser UI.
   const trapTab = (e: KeyboardEvent<HTMLDialogElement>) => {
-    if (e.key !== "Tab") return;
-    const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE));
+    if (e.key !== "Tab" || e.altKey || e.ctrlKey || e.metaKey) return;
+    const dialog = e.currentTarget;
+    const items = tabbable(dialog);
     if (items.length === 0) return;
-    const first = items[0];
-    const last = items[items.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first.focus();
+    const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const forward = !e.shiftKey;
+    const i = active ? items.indexOf(active) : -1;
+    let target: HTMLElement | undefined;
+    if (i >= 0) target = items[(i + (forward ? 1 : -1) + items.length) % items.length];
+    else if (active && dialog.contains(active) && active !== dialog) {
+      // focus sits on something outside the list (e.g. a panel's child) — continue from its place in the DOM
+      target = forward
+        ? items.find((el) => active.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)
+        : items.findLast((el) => active.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING);
     }
+    target ??= forward ? items[0] : items[items.length - 1];
+    e.preventDefault();
+    target.focus();
   };
 
   return (
     <dialog
       ref={ref}
       className={cn("modal", className)}
+      data-size={size}
       aria-labelledby={titleId}
       aria-describedby={description ? descId : undefined}
       onCancel={handleCancel}
@@ -125,6 +150,8 @@ export function Modal({ open, onClose, title, description, children, footer, dis
           </p>
         ) : null}
         <div className="modal__body">{children}</div>
+        {/* Game announcements while this dialog is open land here — everything outside a modal dialog is inert. */}
+        <div data-announcer="" role="status" aria-live="polite" className="sr-only" />
         {footer ? <div className="mt-5 flex flex-wrap justify-end gap-3">{footer}</div> : null}
       </PixelFrame>
     </dialog>

@@ -379,3 +379,21 @@ export const skills: Skills = {
   runes: { label: "Core CS & SE", items: ["DSA", "Operating Systems", "Relational DBMS", "OOP", "Computer Networks", "SDLC", "Agile", "Unit Testing", "Debugging", "JWT"] },
   signature: [], // TODO: Akshat picks 5–8 for holo-foil (e.g. Python, LangGraph, RAG, Next.js, Java, FastAPI)
 };
+
+/* ───────────────────────── Recruiter Speedrun Mode ───────────────────────── */
+
+/** A pointer to an existing fact above — never a copy (R1). Resolved in derived.ts; schema.ts fails the build if one breaks. */
+export type HighlightRef =
+  | { from: "experience"; id: string; stat: string }
+  | { from: "project"; id: string; stat: string }
+  | { from: "honor"; id: string };
+
+/** Which existing facts lead the Speedrun Summary (curation only). One tile per entry; 2 refs share a tile. */
+export const speedrun: { highlights: { refs: HighlightRef[] }[] } = {
+  highlights: [
+    { refs: [{ from: "experience", id: "united", stat: "Inference cost" }] },
+    { refs: [{ from: "experience", id: "truechip", stat: "Test coverage" }] },
+    { refs: [{ from: "project", id: "churn", stat: "Accuracy" }, { from: "project", id: "churn", stat: "ROC-AUC" }] },
+    { refs: [{ from: "honor", id: "sci-2026" }] },
+  ],
+};

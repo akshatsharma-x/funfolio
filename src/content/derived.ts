@@ -8,6 +8,7 @@ import {
   projects,
   research,
   skills,
+  type HighlightRef,
   type ItemType,
   type ProjectCategory,
 } from "./content";
@@ -57,3 +58,17 @@ export const counts = {
   honors: honors.length,
   certificates: certificates.length,
 } as const;
+
+export type ResolvedStat = { value: string; label: string; context: string };
+
+/** Resolves a Speedrun highlight reference to the real fact, or null if it no longer exists (schema.ts fails the build). */
+export function resolveHighlight(ref: HighlightRef): ResolvedStat | null {
+  if (ref.from === "honor") {
+    const h = honors.find((x) => x.id === ref.id);
+    return h ? { value: h.title, label: h.org, context: h.year } : null;
+  }
+  const owner = ref.from === "experience" ? experience.find((x) => x.id === ref.id) : projects.find((x) => x.id === ref.id);
+  const stat = owner?.stats.find((s) => s.label === ref.stat);
+  if (!owner || !stat) return null;
+  return { value: stat.value, label: stat.label, context: "company" in owner ? owner.company : owner.title };
+}

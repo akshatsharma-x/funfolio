@@ -14,6 +14,22 @@ no server, no API keys, no runtime third-party requests.
 | `npm run images` | Pre-builds AVIF/WebP variants from `assets/images/` into `public/img/` |
 | `npm run cursors` | Rebuilds the pixel cursors (6 skins × 3 sizes × 7 variants) and their CSS |
 
+## Playing
+
+Progress (XP, levels, coins, achievements, settings) is saved in this browser only (`localStorage`, key
+`funfolio-save`) — Pause → Reset save erases it. Recruiter link: `/?speedrun` shows the whole résumé summary first.
+
+| Key | Action |
+|---|---|
+| `0`–`8` | Jump to a world |
+| `Esc` | Pause menu / resume |
+| `M` | Map |
+| `L` | Locate the cursor (or shake the mouse) |
+| `Shift`+`S` / `Shift`+`D` / `Shift`+`R` | Sound · day/night · Recruiter Speedrun Mode |
+| `?` | Controls |
+
+Shortcuts never fire while typing; inside a game or a dialog only `Esc` is global.
+
 ## Editing content
 
 All facts live in `src/content/content.ts`. Anything set to `"TODO"` renders as "Coming soon"; counts (internships,

@@ -1,0 +1,1187 @@
+/* Game layer (PART 3): HUD, level-select rail, toasts, level-up, pause-menu controls, theme sweep, Speedrun Mode.
+   Plain CSS on the globals.css tokens. Component styles join Tailwind's `components` layer; the Speedrun Mode layout
+   and the view-transition rules stay unlayered so they beat utilities. Loops use --play (paused under reduced motion
+   and while the pause menu is open); transition times scale by --motion. */
+
+@layer theme, base, components, utilities; /* same order as Tailwind's — harmless if this file ever loads first */
+
+@keyframes hud-in {
+  from {
+    translate: 0 -14px;
+    opacity: 0;
+  }
+}
+@keyframes xp-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+/* pixel-sprite flip: 8 held frames, the "edge" frames keep a sliver so the coin never vanishes */
+@keyframes coin-spin {
+  0%,
+  100% {
+    scale: 1 1;
+  }
+  12.5% {
+    scale: 0.65 1;
+  }
+  25% {
+    scale: 0.2 1;
+  }
+  37.5% {
+    scale: -0.65 1;
+  }
+  50% {
+    scale: -1 1;
+  }
+  62.5% {
+    scale: -0.65 1;
+  }
+  75% {
+    scale: -0.2 1;
+  }
+  87.5% {
+    scale: 0.65 1;
+  }
+}
+@keyframes toast-rise {
+  from {
+    translate: 0 45%;
+  }
+}
+@keyframes byte-bob {
+  50% {
+    translate: 0 -2px;
+  }
+}
+@keyframes rail-bounce {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  40% {
+    translate: 0 -4px;
+  }
+  60% {
+    translate: 0 1px;
+  }
+}
+@keyframes toast-drop {
+  0% {
+    translate: 0 -150%;
+    rotate: -5deg;
+  }
+  60% {
+    translate: 0 8%;
+    rotate: 1.5deg;
+  }
+  80% {
+    translate: 0 -2%;
+    rotate: -0.5deg;
+  }
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+}
+@keyframes toast-leave {
+  to {
+    translate: 0 -120%;
+  }
+}
+@keyframes levelup-in {
+  0% {
+    scale: 0.4;
+    rotate: -6deg;
+  }
+  70% {
+    scale: 1.08;
+    rotate: 1deg;
+  }
+  100% {
+    scale: 1;
+    rotate: 0deg;
+  }
+}
+@keyframes warp-streak {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 190vh;
+  }
+}
+
+@layer components {
+  /* ── HUD ─────────────────────────────────────────────────────────────────────────────────────────────────────── */
+  .hud {
+    --hud-h: 56px;
+    position: fixed;
+    inset: 8px 8px auto; /* bottom edge = 64px = scroll-padding-top / HUD_OFFSET */
+    z-index: 60;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    height: var(--hud-h);
+    padding-inline: 10px;
+    border: 1px solid color-mix(in srgb, var(--text) 16%, transparent);
+    border-radius: 14px;
+    /* glass, but opaque enough that HUD text keeps ≥ 4.5:1 over anything scrolling underneath */
+    background: color-mix(in srgb, var(--surface) 84%, transparent);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    color: var(--text);
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--ink) 55%, transparent);
+    font-family: var(--font-pixel);
+    animation: hud-in calc(var(--motion) * 420ms + 1ms) var(--ease-pop) both;
+    transition: height calc(var(--motion) * 260ms) var(--ease-smooth);
+  }
+  .hud[data-compact] {
+    --hud-h: 44px;
+  }
+  /* pixel corner brackets in the world color */
+  .hud::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    pointer-events: none;
+    --b: var(--world);
+    background:
+      linear-gradient(var(--b) 0 0) top left / 14px 3px,
+      linear-gradient(var(--b) 0 0) top left / 3px 14px,
+      linear-gradient(var(--b) 0 0) top right / 14px 3px,
+      linear-gradient(var(--b) 0 0) top right / 3px 14px,
+      linear-gradient(var(--b) 0 0) bottom left / 14px 3px,
+      linear-gradient(var(--b) 0 0) bottom left / 3px 14px,
+      linear-gradient(var(--b) 0 0) bottom right / 14px 3px,
+      linear-gradient(var(--b) 0 0) bottom right / 3px 14px;
+    background-repeat: no-repeat;
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .hud {
+      background: var(--surface);
+    }
+  }
+  .hud__left,
+  .hud__right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .hud__right {
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .hud__byte {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    animation: byte-bob 2.4s ease-in-out infinite;
+    animation-play-state: var(--play);
+  }
+  .hud__brand {
+    flex: none;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  .hud__lv {
+    flex: none;
+    padding: 0.3em 0.55em;
+    clip-path: var(--px-sm);
+    background: var(--world);
+    color: var(--ink);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1;
+  }
+
+  /* XP bar: LED segments on an ink track — reads in every theme and world color */
+  .hud-xp {
+    position: relative;
+    display: flex;
+    flex: 0 1 120px;
+    gap: 2px;
+    min-width: 56px;
+    height: 14px;
+    padding: 2px;
+    background: var(--ink);
+    clip-path: var(--px-sm);
+  }
+  .hud-xp__seg {
+    flex: 1;
+    background: rgb(255 255 255 / 0.13);
+  }
+  .hud-xp__seg[data-on] {
+    background: var(--world);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.4);
+  }
+  .hud-xp[data-shimmer]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 35%, rgb(255 255 255 / 0.75) 50%, transparent 65%) no-repeat;
+    background-size: 200% 100%;
+    animation: xp-shimmer 700ms ease-out 1 both;
+    pointer-events: none;
+  }
+
+  /* World label (typewriter) */
+  .hud-world {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    max-width: min(46vw, 560px);
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    white-space: nowrap;
+  }
+  .hud-world::before {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    background: var(--world);
+    box-shadow: 0 0 0 2px var(--ink);
+  }
+  .hud-world > span[aria-hidden] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 1.2em;
+  }
+
+  /* Chips (wallet, trophies) and square buttons */
+  .hud-chip,
+  .hud-btn {
+    position: relative;
+    flex: none;
+    height: 36px;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    background: var(--surface-2);
+    color: var(--text);
+    box-shadow:
+      0 3px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      var(--ring);
+    transition:
+      translate calc(var(--motion) * 120ms) var(--ease-pop),
+      box-shadow calc(var(--motion) * 120ms) var(--ease-pop),
+      background-color 150ms ease;
+  }
+  .hud-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .hud-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+  }
+  .hud-chip:hover,
+  .hud-btn:hover {
+    translate: 0 -1px;
+    box-shadow:
+      0 4px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      var(--ring);
+  }
+  .hud-chip:active,
+  .hud-btn:active {
+    translate: 0 2px;
+    box-shadow:
+      0 1px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      var(--ring);
+  }
+  .hud-btn[aria-pressed="true"] {
+    background: var(--world);
+    color: var(--ink);
+  }
+  .hud-btn__badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 11px;
+    height: 11px;
+    border: 2px solid var(--ink);
+    background: var(--color-pink);
+  }
+  .hud-coin {
+    display: inline-grid;
+    animation: coin-spin 2.4s steps(1, end) infinite;
+    animation-play-state: var(--play);
+  }
+
+  /* Day/night: sun ↔ moon morph (current theme shown) */
+  .hud-theme > .hud-theme__icon {
+    grid-area: 1 / 1;
+    display: inline-grid;
+    transition:
+      opacity calc(var(--motion) * 220ms + 1ms) ease,
+      scale calc(var(--motion) * 320ms) var(--ease-pop),
+      rotate calc(var(--motion) * 320ms) var(--ease-pop);
+  }
+  .hud-theme .hud-theme__moon,
+  .hud-theme[data-night] .hud-theme__sun {
+    opacity: 0;
+    scale: 0.3;
+    rotate: -90deg;
+  }
+  .hud-theme[data-night] .hud-theme__moon {
+    opacity: 1;
+    scale: 1;
+    rotate: 0deg;
+  }
+
+  @media (max-width: 1023px) {
+    .hud__brand {
+      display: none;
+    }
+    .hud-world {
+      max-width: 34vw;
+    }
+  }
+  @media (max-width: 767px) {
+    .hud {
+      display: flex;
+      justify-content: space-between;
+    }
+    .hud-world {
+      display: none;
+    }
+  }
+  @media (max-width: 479px) {
+    .hud {
+      inset: 6px 6px auto;
+      padding-inline: 6px;
+    }
+    .hud__byte,
+    .hud-chip--optional,
+    .hud-btn--optional {
+      display: none;
+    }
+    .hud-xp {
+      flex-basis: 64px;
+    }
+    .hud-chip {
+      padding: 0 8px;
+    }
+  }
+
+  /* ── Level-select rail ───────────────────────────────────────────────────────────────────────────────────────── */
+  .rail {
+    position: fixed;
+    top: 50%;
+    right: 10px;
+    z-index: 50;
+    translate: 0 -50%;
+  }
+  .rail > ol {
+    display: grid;
+    gap: 4px;
+    padding: 5px;
+    border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--surface) 84%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--ink) 50%, transparent);
+  }
+  .rail__item {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 2px solid transparent;
+    border-radius: 9px;
+    text-decoration: none;
+    transition: background-color 150ms ease;
+  }
+  .rail__item:hover {
+    background: var(--surface-2);
+  }
+  .rail__item[aria-current="location"] {
+    border-color: var(--ink);
+    background: var(--world);
+    box-shadow: 0 2px 0 var(--ink);
+  }
+  .rail__item[aria-current="location"] > .pixel-icon:first-child {
+    animation: rail-bounce 1.6s var(--ease-pop) infinite;
+    animation-play-state: var(--play);
+  }
+  .rail__check {
+    position: absolute;
+    right: -6px;
+    bottom: -6px;
+    display: grid;
+    line-height: 0;
+  }
+  .rail__check > .pixel-icon {
+    width: 12px;
+    height: 12px;
+  }
+  .rail__label {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 12px);
+    translate: 8px -50%;
+    opacity: 0;
+    padding: 0.3rem 0.6rem;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 3px 0 var(--ink);
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: none;
+    transition:
+      opacity 150ms ease,
+      translate calc(var(--motion) * 200ms) var(--ease-pop);
+  }
+  .rail__item:hover > .rail__label,
+  .rail__item:focus-visible > .rail__label {
+    opacity: 1;
+    translate: 0 -50%;
+  }
+  @media (max-width: 767px) {
+    .rail {
+      display: none; /* phones use Pause → Map instead (keeps the right edge of read zones clear — R6) */
+    }
+  }
+
+  /* ── Toasts (top layer popover) ──────────────────────────────────────────────────────────────────────────────── */
+  .toast-host {
+    position: fixed;
+    inset: 74px auto auto 50%;
+    translate: -50% 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    overflow: visible;
+  }
+  .toast {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    width: min(440px, calc(100vw - 24px));
+    padding: 12px 18px 12px 12px;
+    border: 3px solid var(--ink);
+    border-radius: var(--radius-sticker);
+    background: var(--surface);
+    box-shadow:
+      inset 0 2px 0 var(--gloss),
+      0 6px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      0 6px 0 1px var(--rim);
+    transform-origin: 50% 0;
+    animation:
+      toast-drop calc(var(--motion) * 560ms + 1ms) var(--ease-pop) both,
+      fade-in 180ms ease-out both;
+  }
+  .toast-host[data-leaving] .toast {
+    animation:
+      toast-leave calc(var(--motion) * 220ms + 1ms) ease-in both,
+      fade-out 200ms ease-in both;
+  }
+  .toast__badge,
+  .ach__icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+  }
+  .toast__badge {
+    width: 58px;
+    height: 52px;
+  }
+  .toast__badge::before,
+  .toast__badge::after,
+  .ach__icon::before,
+  .ach__icon::after {
+    content: "";
+    position: absolute;
+    clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  }
+  .toast__badge::before,
+  .ach__icon::before {
+    inset: 0;
+    background: var(--ink);
+  }
+  .toast__badge::after {
+    inset: 3px 4px;
+    background: linear-gradient(to bottom, var(--color-gold-hi), var(--color-gold) 50%, var(--color-gold-lo));
+  }
+  .toast__badge > .pixel-icon,
+  .ach__icon > .pixel-icon {
+    position: relative;
+    z-index: 1;
+  }
+  .toast__text {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+  .toast__kicker {
+    color: var(--fg-gold);
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .toast__title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .toast__detail {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.35;
+  }
+  .toast__xp {
+    color: var(--fg-lime);
+    font-family: var(--font-pixel);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .toast[data-kind="item"] {
+    width: min(360px, calc(100vw - 24px));
+    gap: 10px;
+    padding: 8px 16px 8px 8px;
+    border-radius: 16px;
+  }
+  .toast[data-kind="item"] .toast__badge {
+    width: 44px;
+    height: 40px;
+  }
+  .toast[data-kind="item"] .toast__badge::after {
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--world) 55%, #fff), var(--world));
+  }
+  .toast[data-kind="item"] .toast__kicker {
+    color: var(--world-fg);
+  }
+  .toast[data-kind="item"] .toast__badge > .pixel-icon {
+    width: 24px;
+    height: 24px;
+  }
+  .toast[data-kind="item"] .toast__title {
+    font-size: var(--text-base);
+  }
+
+  /* ── Level-up banner (non-blocking: clicks pass through) ─────────────────────────────────────────────────────── */
+  .levelup {
+    position: fixed;
+    inset: 22vh auto auto 50%;
+    translate: -50% 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    overflow: visible;
+    pointer-events: none;
+  }
+  .levelup__card {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    padding: 18px 30px 20px;
+    border: 3px solid var(--ink);
+    border-radius: var(--radius-sticker);
+    background: var(--surface);
+    box-shadow:
+      inset 0 2px 0 var(--gloss),
+      0 8px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      0 8px 0 1px var(--rim);
+    text-align: center;
+    animation:
+      levelup-in calc(var(--motion) * 620ms + 1ms) var(--ease-pop) both,
+      fade-in 200ms ease-out both,
+      fade-out 400ms ease-in 3.2s both;
+  }
+  .levelup__kicker {
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .levelup__title {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+  .levelup__reward {
+    color: var(--muted);
+    font-size: var(--text-sm);
+  }
+
+  /* ── +XP ghosts ──────────────────────────────────────────────────────────────────────────────────────────────── */
+  .xp-ghosts {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .xp-ghost {
+    position: absolute;
+    color: var(--fg-lime);
+    font-family: var(--font-pixel);
+    font-size: var(--text-base);
+    font-weight: 700;
+    white-space: nowrap;
+    text-shadow:
+      2px 0 0 var(--ink),
+      -2px 0 0 var(--ink),
+      0 2px 0 var(--ink),
+      0 -2px 0 var(--ink);
+    will-change: transform, opacity;
+  }
+
+  /* ── Warp streaks (level-select jumps) ───────────────────────────────────────────────────────────────────────── */
+  .warp-streaks {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .warp-streaks > i {
+    position: absolute;
+    top: -70vh;
+    width: 3px;
+    background: linear-gradient(to bottom, transparent, var(--world), transparent);
+    opacity: 0.7;
+    animation: warp-streak 320ms ease-in both;
+  }
+
+  /* ── Speedrun pill ───────────────────────────────────────────────────────────────────────────────────────────── */
+  /* full-width row (a fixed box at left:50% would shrink-wrap to half the viewport and wrap the label) */
+  .speedrun-pill {
+    position: fixed;
+    inset: auto 0 16px;
+    z-index: 55;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    animation: fade-in 200ms ease-out both;
+  }
+  .speedrun-pill > * {
+    pointer-events: auto;
+  }
+  @media (max-width: 639px) {
+    .speedrun-pill {
+      bottom: 10px;
+    }
+    .speedrun-pill .arcade-btn {
+      --btn-h: 38px;
+      padding-inline: 1rem;
+      font-size: var(--text-sm);
+    }
+  }
+
+  /* ── Form controls: Switch, Segmented, range, kbd ────────────────────────────────────────────────────────────── */
+  .pixel-switch {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-width: 96px;
+    height: 38px;
+    padding: 0 12px 0 4px;
+    border: 3px solid var(--ink);
+    border-radius: 10px;
+    background: var(--surface-2);
+    color: var(--text);
+    box-shadow:
+      0 3px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      var(--ring);
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .pixel-switch__knob {
+    width: 24px;
+    height: 24px;
+    flex: none;
+    background: var(--muted);
+    box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.25);
+  }
+  .pixel-switch[data-on] {
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    padding: 0 4px 0 12px;
+    background: var(--world);
+    color: var(--ink);
+  }
+  .pixel-switch[data-on] .pixel-switch__knob {
+    background: var(--ink);
+    box-shadow: inset 0 -4px 0 rgb(255 255 255 / 0.18);
+  }
+
+  .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .segmented__option {
+    position: relative;
+    display: inline-flex;
+  }
+  .segmented__option > input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+  }
+  .segmented__option > span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0.35rem 0.9rem;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    background: var(--surface-2);
+    color: var(--text);
+    box-shadow:
+      0 3px 0 var(--ink),
+      0 0 0 1px var(--rim);
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition:
+      translate calc(var(--motion) * 120ms) var(--ease-pop),
+      box-shadow calc(var(--motion) * 120ms) var(--ease-pop);
+  }
+  .segmented__option > input:checked + span {
+    translate: 0 2px;
+    background: var(--world);
+    color: var(--ink);
+    box-shadow:
+      0 1px 0 var(--ink),
+      0 0 0 1px var(--rim);
+  }
+  .segmented__option > input:focus-visible + span {
+    outline: 3px dashed var(--world);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 8px var(--ink);
+  }
+  .segmented__option[data-disabled] > span {
+    border-style: dashed;
+    opacity: 0.65;
+  }
+
+  .pixel-range {
+    --val: 50%;
+    width: 100%;
+    height: 32px;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .pixel-range::-webkit-slider-runnable-track {
+    height: 14px;
+    border: 3px solid var(--ink);
+    background:
+      linear-gradient(var(--world) 0 0) 0 0 / var(--val) 100% no-repeat,
+      var(--surface-2);
+  }
+  .pixel-range::-webkit-slider-thumb {
+    width: 20px;
+    height: 26px;
+    margin-top: -9px;
+    border: 3px solid var(--ink);
+    border-radius: 0;
+    background: var(--text);
+    box-shadow: 0 3px 0 var(--ink);
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .pixel-range::-moz-range-track {
+    height: 8px;
+    border: 3px solid var(--ink);
+    background: var(--surface-2);
+  }
+  .pixel-range::-moz-range-progress {
+    height: 8px;
+    border: 3px solid var(--ink);
+    background: var(--world);
+  }
+  .pixel-range::-moz-range-thumb {
+    width: 16px;
+    height: 22px;
+    border: 3px solid var(--ink);
+    border-radius: 0;
+    background: var(--text);
+  }
+
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0.1rem 0.55rem;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--text);
+    box-shadow:
+      0 3px 0 var(--ink),
+      0 0 0 1px var(--rim);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+
+  /* ── Achievements grid (pause menu) ──────────────────────────────────────────────────────────────────────────── */
+  .ach {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface-2);
+  }
+  .ach--on {
+    border-color: color-mix(in srgb, var(--fg-gold) 70%, transparent);
+  }
+  .ach__icon {
+    width: 48px;
+    height: 44px;
+  }
+  .ach__icon::after {
+    inset: 3px 4px;
+    background: linear-gradient(to bottom, var(--color-gold-hi), var(--color-gold) 50%, var(--color-gold-lo));
+  }
+  .ach--off .ach__icon::after {
+    background: var(--surface);
+  }
+  .ach--off .ach__icon {
+    color: var(--muted);
+  }
+
+  /* ── Vertical tabs (pause menu) + large modal ───────────────────────────────────────────────────────────────── */
+  .modal[data-size="lg"] {
+    width: min(940px, calc(100vw - 32px));
+  }
+  .tabs[data-orientation="vertical"] {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    align-items: start;
+    gap: 24px;
+  }
+  .tabs[data-orientation="vertical"] > .tabs__list {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    padding-right: 8px;
+    border-bottom: 0;
+    border-right: 3px solid var(--line);
+  }
+  .tabs[data-orientation="vertical"] .tabs__tab {
+    justify-content: flex-start;
+    border-radius: 8px 0 0 8px;
+    text-align: left;
+  }
+  .tabs[data-orientation="vertical"] .tabs__tab[aria-selected="true"] {
+    background: var(--surface-2);
+  }
+  .tabs[data-orientation="vertical"] .tabs__indicator {
+    top: 0;
+    right: -3px;
+    bottom: auto;
+    left: auto;
+    width: 6px;
+    height: var(--tab-h, 0px);
+    translate: 0 var(--tab-y, 0px);
+    background: repeating-linear-gradient(to bottom, var(--world) 0 6px, transparent 6px 8px);
+    transition:
+      translate calc(var(--motion) * 300ms) var(--ease-pop),
+      height calc(var(--motion) * 300ms) var(--ease-pop);
+  }
+  .tabs[data-orientation="vertical"] .tabs__indicator:not([data-ready]) {
+    transition: none;
+  }
+  .tabs[data-orientation="vertical"] > .tabs__panel {
+    min-width: 0;
+    padding-top: 0;
+  }
+  @media (max-width: 47.99rem) {
+    .tabs[data-orientation="vertical"] {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+    }
+    .tabs[data-orientation="vertical"] > .tabs__list {
+      flex-direction: row;
+      flex-wrap: wrap;
+      padding-right: 0;
+      padding-bottom: 6px;
+      border-right: 0;
+      border-bottom: 3px solid var(--line);
+    }
+    .tabs[data-orientation="vertical"] .tabs__tab {
+      border-radius: 8px;
+    }
+    .tabs[data-orientation="vertical"] .tabs__tab[aria-selected="true"] {
+      box-shadow: inset 0 -3px 0 var(--world);
+    }
+    .tabs[data-orientation="vertical"] .tabs__indicator {
+      display: none;
+    }
+  }
+
+  /* ── Speedrun summary card (visible only in Speedrun Mode — see the unlayered rules below) ────────────────────── */
+  .speedrun-summary {
+    display: none;
+    gap: 1rem;
+    max-width: 960px;
+    padding: 1.25rem 1.5rem 1.5rem;
+    border: 3px solid var(--ink);
+    border-radius: var(--radius-sticker);
+    background: var(--surface);
+    box-shadow:
+      inset 0 2px 0 var(--gloss),
+      0 6px 0 var(--ink),
+      0 0 0 1px var(--rim),
+      0 6px 0 1px var(--rim);
+  }
+  .speedrun-summary__kicker {
+    margin: 0;
+    color: var(--world-fg);
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .speedrun-summary__tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    gap: 10px;
+  }
+  .speedrun-tile {
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    padding: 10px 14px 12px;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface-2);
+  }
+  .speedrun-tile__value {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 800;
+  }
+  .speedrun-tile__label {
+    color: var(--muted);
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .speedrun-tile__context {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.35;
+  }
+}
+
+/* ── Theme sweep: lib/theme.ts animates a clip-path circle on the new snapshot; no default cross-fade ─────────── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* ── Recruiter Speedrun Mode: same DOM, condensed by CSS (unlayered → beats utilities) ─────────────────────────── */
+html[data-mode="speedrun"] .speedrun-summary {
+  display: grid;
+}
+html[data-mode="speedrun"] .title-play,
+html[data-mode="speedrun"] #launchpad,
+html[data-mode="speedrun"] #arcade,
+html[data-mode="speedrun"] [data-speedrun="hide"],
+html[data-mode="speedrun"] [data-byte] {
+  display: none;
+}
+html[data-mode="speedrun"] #title {
+  min-height: 0;
+  padding-top: 88px;
+  padding-bottom: 32px;
+}
+html[data-mode="speedrun"] #title-heading {
+  font-size: clamp(2.25rem, 1.4rem + 4.2vw, 4.75rem);
+}
+html[data-mode="speedrun"] main > section[data-world]:not(#title) {
+  padding-block: 2.5rem;
+}
+html[data-mode="speedrun"] .world-header {
+  margin-bottom: 1.25rem;
+}
+html[data-mode="speedrun"] .world-header__title {
+  font-size: var(--text-xl);
+}
+html[data-mode="speedrun"] body {
+  padding-bottom: 88px; /* room for the "Back to Play Mode" pill */
+}
+/* Toasts + level-ups keep clear of the summary (no friction for recruiters — R3): top-right on wide screens, where
+   the title column leaves empty space; on phones a slim one-line toast over the HUD bar (chrome, not content). */
+html[data-mode="speedrun"] .toast-host {
+  inset: 74px 64px auto auto;
+  translate: none;
+}
+html[data-mode="speedrun"] .toast {
+  transform-origin: 100% 0;
+  animation:
+    toast-rise calc(var(--motion) * 380ms + 1ms) var(--ease-pop) both,
+    fade-in 180ms ease-out both;
+}
+html[data-mode="speedrun"] .toast-host[data-leaving] .toast {
+  animation: fade-out 200ms ease-in both;
+}
+html[data-mode="speedrun"] .levelup {
+  inset: 200px 64px auto auto;
+  translate: none;
+}
+@media (max-width: 639px) {
+  html[data-mode="speedrun"] #title {
+    padding-top: 76px;
+    padding-bottom: 24px;
+  }
+  html[data-mode="speedrun"] #title > .shell {
+    gap: 1rem;
+  }
+  html[data-mode="speedrun"] #title .world-header__kicker,
+  html[data-mode="speedrun"] #title .title-kicker {
+    display: none; /* the HUD already names the world */
+  }
+  html[data-mode="speedrun"] .toast-host {
+    inset: 4px 4px auto;
+  }
+  html[data-mode="speedrun"] .toast {
+    width: calc(100vw - 8px);
+    min-height: 56px;
+    gap: 10px;
+    padding: 4px 12px 4px 6px;
+    border-radius: 14px;
+  }
+  html[data-mode="speedrun"] .toast .toast__badge {
+    width: 40px;
+    height: 36px;
+  }
+  html[data-mode="speedrun"] .toast .toast__badge > .pixel-icon {
+    width: 24px;
+    height: 24px;
+  }
+  html[data-mode="speedrun"] .toast .toast__detail {
+    display: none;
+  }
+  html[data-mode="speedrun"] .levelup {
+    display: none; /* still announced to screen readers; no banner over the summary on a phone */
+  }
+  html[data-mode="speedrun"] #title-heading {
+    font-size: 1.75rem;
+  }
+  .speedrun-summary {
+    gap: 0.75rem;
+    padding: 1rem 1rem 1.1rem;
+  }
+  .speedrun-summary__role {
+    font-size: var(--text-base);
+  }
+  .speedrun-summary__tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .speedrun-tile {
+    padding: 8px 10px 10px;
+  }
+  .speedrun-tile__value {
+    font-size: 1rem;
+  }
+  .speedrun-tile__context,
+  .speedrun-summary__edu,
+  .speedrun-summary__links {
+    font-size: var(--text-sm);
+  }
+  .speedrun-summary__actions .arcade-btn {
+    --btn-h: 38px;
+    padding-inline: 0.9rem;
+    font-size: var(--text-sm);
+  }
+  .speedrun-summary__more {
+    display: none; /* "Details below" — on a phone the next world is one swipe away */
+  }
+}
+
+@media print {
+  .hud,
+  .rail,
+  .toast-host,
+  .levelup,
+  .xp-ghosts,
+  .warp-streaks,
+  .speedrun-pill {
+    display: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .hud-xp__seg {
+    border: 1px solid CanvasText;
+  }
+  .hud-xp__seg[data-on],
+  .pixel-switch[data-on] .pixel-switch__knob {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+  .segmented__option > input:checked + span,
+  .rail__item[aria-current="location"],
+  .hud-btn[aria-pressed="true"] {
+    outline: 3px solid Highlight;
+  }
+}

@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { CURSOR_SIZES, CURSOR_SKINS, type CursorSize } from "@/components/cursor/skins";
 import { ArcadeButton } from "@/components/ui/ArcadeButton";
-import { locateCursor, setCursorSize, setCursorSkin } from "@/lib/cursor";
+import { command } from "@/lib/commands";
+import { locateCursor } from "@/lib/cursor";
 import { useGameCursor } from "@/lib/hooks/useGameCursor";
 import { useHtmlAttribute } from "@/lib/hooks/useHtmlAttribute";
 
 const SIZE_LABEL: Record<CursorSize, string> = { normal: "Normal", large: "Large", xl: "XL" };
 
-/** Skin + size pickers (the real switches land in PART 3's Settings / PART 11's Prize Counter), ping, game mode. */
+/** Skin preview (equipping lives in PART 11's Prize Counter), size (saved, same as Pause → Settings), ping, game mode. */
 export function CursorControls() {
   const skin = useHtmlAttribute("data-cursor-skin", "pixel-pop");
   const size = useHtmlAttribute("data-cursor-size", "normal");
@@ -28,7 +29,7 @@ export function CursorControls() {
               variant={skin === s.id ? "primary" : "secondary"}
               aria-pressed={skin === s.id}
               cursorLabel="EQUIP"
-              onClick={() => setCursorSkin(s.id)}
+              onClick={() => command({ type: "preview-cursor-skin", id: s.id })}
             >
               {s.name}
               {s.locked ? " · locked" : ""}
@@ -45,7 +46,7 @@ export function CursorControls() {
               size="sm"
               variant={size === id ? "primary" : "secondary"}
               aria-pressed={size === id}
-              onClick={() => setCursorSize(id)}
+              onClick={() => command({ type: "setting", key: "cursorSize", value: id })}
             >
               {SIZE_LABEL[id]} {CURSOR_SIZES[id]}
             </ArcadeButton>

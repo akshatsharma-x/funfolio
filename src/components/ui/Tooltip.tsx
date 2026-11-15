@@ -26,6 +26,8 @@ export function Tooltip({ title, typeLine, body, children }: TooltipProps) {
   const anchorRef = useRef<HTMLSpanElement>(null);
   const tipRef = useRef<HTMLSpanElement>(null);
   const hideTimer = useRef<number | undefined>(undefined);
+  /** Opened by keyboard focus (Tab) rather than hover / a mouse click — decides whether Esc is consumed. */
+  const viaKeyboard = useRef(false);
   const [open, setOpen] = useState(false);
 
   const show = useCallback(() => {
@@ -65,16 +67,33 @@ export function Tooltip({ title, typeLine, body, children }: TooltipProps) {
 
   useEffect(() => {
     if (!open) return;
+    // Esc always dismisses (WCAG 1.4.13). A tooltip opened by keyboard focus consumes that Esc (capture +
+    // preventDefault), so the game's Esc (pause menu) or a surrounding dialog waits for the next press; one opened by
+    // hover or a mouse click lets the same Esc carry on.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      if (viaKeyboard.current) e.preventDefault();
+      viaKeyboard.current = false;
+      setOpen(false);
     };
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("scroll", position, { passive: true, capture: true });
-    window.addEventListener("resize", position);
+    // Follow the trigger on scroll/resize, one frame later — repositioning inside the scroll event itself is a
+    // "scroll-linked effect" (janky with async panning; Firefox warns about it).
+    let frame = 0;
+    const follow = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        position();
+      });
+    };
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("scroll", follow, { passive: true, capture: true });
+    window.addEventListener("resize", follow);
     return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("scroll", position, { capture: true });
-      window.removeEventListener("resize", position);
+      cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("scroll", follow, { capture: true });
+      window.removeEventListener("resize", follow);
     };
   }, [open, position]);
 
@@ -99,8 +118,14 @@ export function Tooltip({ title, typeLine, body, children }: TooltipProps) {
       className="inline-flex max-w-full"
       onPointerEnter={show}
       onPointerLeave={() => hide()}
-      onFocus={show}
-      onBlur={() => hide(0)}
+      onFocus={(e) => {
+        viaKeyboard.current = e.target instanceof HTMLElement && e.target.matches(":focus-visible");
+        show();
+      }}
+      onBlur={() => {
+        viaKeyboard.current = false;
+        hide(0);
+      }}
     >
       {children}
       <span

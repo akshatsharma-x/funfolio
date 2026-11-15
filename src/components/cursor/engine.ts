@@ -31,11 +31,6 @@ type LocateKind = "shake" | "key" | "api" | "reentry";
 
 const clamp = (v: number, m: number) => Math.max(-m, Math.min(m, v));
 
-function isTyping(): boolean {
-  const a = document.activeElement;
-  return !!a && (a.matches(TEXTISH) || (a as HTMLElement).isContentEditable);
-}
-
 export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOptions): () => void {
   const q = <T extends Element>(sel: string) => root.querySelector<T>(sel);
   const pos = q<HTMLElement>("[data-fx-pos]");
@@ -381,14 +376,6 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
     locate("reentry");
   };
 
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key !== "l" && e.key !== "L") return;
-    if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || e.defaultPrevented || isTyping()) return;
-    // while a modal or a game owns the keyboard, only Esc is global (PART 3 keyboard rules)
-    if (document.activeElement?.closest('dialog[open], [data-keyboard="exclusive"]')) return;
-    locate("key");
-  };
-
   const onHtmlChange = () => {
     // theme / world / global cursor variant changed: refresh colors and mode
     glowFrom = undefined;
@@ -397,6 +384,7 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
 
   const htmlObserver = new MutationObserver(onHtmlChange);
   htmlObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-world", "data-cursor"] });
+  // Hotkey L lives in the PART 3 keyboard manager (src/components/hud/useGameRuntime.ts) → locateCursor() → here.
   const offLocate = bus.on("cursor:locate", () => locate("api"));
 
   window.addEventListener("pointermove", onMove, { passive: true });
@@ -406,7 +394,6 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
   document.addEventListener("pointerout", onOut, { passive: true });
   document.addEventListener("pointerover", onOver, { passive: true });
   window.addEventListener("scroll", onScroll, { passive: true, capture: true });
-  window.addEventListener("keydown", onKey);
   window.addEventListener("focus", onRefocus);
   document.addEventListener("visibilitychange", onRefocus);
 
@@ -427,7 +414,6 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
     document.removeEventListener("pointerout", onOut);
     document.removeEventListener("pointerover", onOver);
     window.removeEventListener("scroll", onScroll, { capture: true });
-    window.removeEventListener("keydown", onKey);
     window.removeEventListener("focus", onRefocus);
     document.removeEventListener("visibilitychange", onRefocus);
   };
