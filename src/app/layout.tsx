@@ -6,11 +6,14 @@ import "./cursors.generated.css";
 import "./cursors.css";
 import "./game.css";
 import "./fx.css";
+import "./title.css";
+import "./boot.css";
 import { CursorLayer } from "@/components/cursor/CursorLayer";
 import { GameRuntimeLoader } from "@/components/hud/GameRuntimeLoader";
 import { InlineScript } from "@/components/system/InlineScript";
 import { SmoothScroll } from "@/components/system/SmoothScroll";
 import { player } from "@/content/content";
+import { buildBootScript } from "@/content/boot";
 import { buildByteScript } from "@/content/quips";
 import { site, siteUrl } from "@/content/site";
 import { publicFileExists } from "@/lib/files";
@@ -50,6 +53,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <InlineScript html={PREPAINT_SCRIPT} />
       </head>
       <body>
+        {/* PART 5: black boot curtain from the first paint (html[data-boot]) until the boot screen takes over; it
+            hides itself after a few seconds if JavaScript never arrives (R3) */}
+        <div className="boot-curtain" aria-hidden="true" />
         <a href="#main" className="arcade-btn skip-link" data-size="sm">
           Skip to content
         </a>
@@ -59,6 +65,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <GameRuntimeLoader
           resumeHref={publicFileExists(player.resumeUrl) ? player.resumeUrl : null}
           byteScript={buildByteScript()}
+          bootScript={buildBootScript()}
         />
         {children}
         <CursorLayer />

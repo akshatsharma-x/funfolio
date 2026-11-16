@@ -5,6 +5,7 @@
 // layer is not mounted at all (see FxLayer).
 
 import type { BurstOptions, BurstShape, ConfettiStyle, DissolveOptions, FloatTextOptions, FxEngine } from "@/lib/juice";
+import { readZoneRects, type Zone } from "./readZones";
 
 const INK = "#07060f";
 const RAINBOW = ["#FF3D8B", "#FF8A1F", "#FFD23F", "#B6FF3B", "#22D3EE", "#A78BFA", "#2EE59D"];
@@ -149,6 +150,60 @@ export function createFxEngine(canvas: HTMLCanvasElement, opts: { shakeTargets?:
     parts.push(p);
   };
 
+  function drawParticle(p: Particle, now: number) {
+    if (!ctx) return;
+    const t = (now - p.born) / p.life;
+    ctx.globalAlpha = Math.max(0, t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4);
+    if (p.kind === "trail") {
+      trailCount++;
+      const s = Math.max(2, Math.round(p.size * (0.35 + 0.65 * (1 - t))));
+      ctx.drawImage(sprite("pixel", p.color, s), Math.round(p.x - s / 2) - 1, Math.round(p.y - s / 2) - 1);
+    } else if (p.kind === "confetti") {
+      const img = sprite(p.shape, p.color, p.shape === "pixel" ? p.size : 2);
+      const flip = Math.cos(p.wob * 2.2); // paper turning over
+      ctx.setTransform(dpr * Math.cos(p.rot), dpr * Math.sin(p.rot), -dpr * Math.sin(p.rot) * flip, dpr * Math.cos(p.rot) * flip, p.x * dpr, p.y * dpr);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    } else if (p.kind === "spark") {
+      const len = Math.min(14, Math.hypot(p.vx, p.vy) * 22);
+      const ang = Math.atan2(p.vy, p.vx);
+      ctx.setTransform(dpr * Math.cos(ang), dpr * Math.sin(ang), -dpr * Math.sin(ang), dpr * Math.cos(ang), p.x * dpr, p.y * dpr);
+      ctx.fillStyle = INK;
+      ctx.fillRect(-len - 1, -2, len + 2, 4);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-len, -1, len, 2);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    } else {
+      const px = p.kind === "pixel" ? Math.max(2, Math.round(p.size * (1 - t * 0.5))) : 2;
+      const img = sprite(p.kind, p.color, px);
+      ctx.drawImage(img, Math.round(p.x - img.width / 2), Math.round(p.y - img.height / 2));
+    }
+  }
+
+  // Confetti never sits on reading text (R6): erase the text boxes from it, as if it fell behind the words. The boxes
+  // are re-measured after scrolling and at most every 300ms (only while confetti is alive).
+  let zones: Zone[] = [];
+  let zonesAt = -1e9;
+  let zonesDirty = true;
+  const onScroll = () => {
+    zonesDirty = true;
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  function maskReadZones(now: number) {
+    if (!ctx) return;
+    if (zonesDirty || now - zonesAt > 300) {
+      zones = readZoneRects();
+      zonesAt = now;
+      zonesDirty = false;
+    }
+    if (!zones.length) return;
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.fillStyle = "#000";
+    for (const z of zones) ctx.fillRect(z.x, z.y, z.w, z.h);
+    ctx.globalCompositeOperation = "source-over";
+  }
+
   function frame(now: number) {
     raf = 0;
     if (!ctx) return;
@@ -158,9 +213,9 @@ export function createFxEngine(canvas: HTMLCanvasElement, opts: { shakeTargets?:
     const frozen = now < frozenUntil;
     ctx.clearRect(0, 0, w, h);
 
-    // particles
+    // particles: physics first, then confetti under the reading-zone mask, then everything else on top
     let write = 0;
-    trailCount = 0;
+    let confetti = 0;
     for (let i = 0; i < parts.length; i++) {
       const p = parts[i];
       const age = now - p.born;
@@ -181,36 +236,16 @@ export function createFxEngine(canvas: HTMLCanvasElement, opts: { shakeTargets?:
           p.x += Math.sin(p.wob) * 0.06 * dt;
         }
       }
-      const t = age / p.life;
-      const alpha = t < 0.6 ? 1 : 1 - (t - 0.6) / 0.4;
-      ctx.globalAlpha = Math.max(0, alpha);
-      if (p.kind === "trail") {
-        trailCount++;
-        const s = Math.max(2, Math.round(p.size * (0.35 + 0.65 * (1 - t))));
-        ctx.drawImage(sprite("pixel", p.color, s), Math.round(p.x - s / 2) - 1, Math.round(p.y - s / 2) - 1);
-      } else if (p.kind === "confetti") {
-        const img = sprite(p.shape, p.color, p.shape === "pixel" ? p.size : 2);
-        const flip = Math.cos(p.wob * 2.2); // paper turning over
-        ctx.setTransform(dpr * Math.cos(p.rot), dpr * Math.sin(p.rot), -dpr * Math.sin(p.rot) * flip, dpr * Math.cos(p.rot) * flip, p.x * dpr, p.y * dpr);
-        ctx.drawImage(img, -img.width / 2, -img.height / 2);
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      } else if (p.kind === "spark") {
-        const len = Math.min(14, Math.hypot(p.vx, p.vy) * 22);
-        const ang = Math.atan2(p.vy, p.vx);
-        ctx.setTransform(dpr * Math.cos(ang), dpr * Math.sin(ang), -dpr * Math.sin(ang), dpr * Math.cos(ang), p.x * dpr, p.y * dpr);
-        ctx.fillStyle = INK;
-        ctx.fillRect(-len - 1, -2, len + 2, 4);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-len, -1, len, 2);
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      } else {
-        const px = p.kind === "pixel" ? Math.max(2, Math.round(p.size * (1 - t * 0.5))) : 2;
-        const img = sprite(p.kind, p.color, px);
-        ctx.drawImage(img, Math.round(p.x - img.width / 2), Math.round(p.y - img.height / 2));
-      }
+      if (p.kind === "confetti") confetti++;
       parts[write++] = p;
     }
     parts.length = write;
+    trailCount = 0;
+    if (confetti) {
+      for (const p of parts) if (p.kind === "confetti" && now >= p.born) drawParticle(p, now);
+      maskReadZones(now);
+    }
+    for (const p of parts) if (p.kind !== "confetti" && now >= p.born) drawParticle(p, now);
 
     // floating text
     if (texts.length) {
@@ -422,6 +457,7 @@ export function createFxEngine(canvas: HTMLCanvasElement, opts: { shakeTargets?:
       cancelAnimationFrame(raf);
       raf = 0;
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll);
       parts.length = 0;
       texts.length = 0;
       dissolve?.covered();

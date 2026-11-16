@@ -24,4 +24,7 @@ export const SOUNDS: Readonly<Record<SfxName, readonly number[]>> = {
   countdown: [0.35, 0, 440, 0, 0.06, 0.1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.8],
   win: [0.55, 0, 523, 0.02, 0.25, 0.5, 1, 1, 0, 0, 262, 0.12, 0.12, 0, 0, 0, 0, 0.8, 0.05],
   lose: [0.45, 0, 300, 0.02, 0.2, 0.4, 2, 1, -4, 0, 0, 0, 0, 0.1, 0, 0, 0, 0.6, 0.1],
+  // PART 5: a short square-ish pluck for the playable name letters (pitch = the note) and a metallic coin-slot clink
+  note: [0.3, 0, 523.25, 0, 0.02, 0.16, 1, 1.8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.55, 0.02],
+  clink: [0.5, 0.02, 1568, 0, 0.01, 0.09, 1, 0.4, 0, 0, 784, 0.03, 0, 0.1, 0, 0, 0.03, 0.4, 0.01],
 };

@@ -49,6 +49,8 @@ const list = (values: readonly string[]) => JSON.stringify(values);
 /**
  * Inline <head> script, ES5, no imports. URL params win (?theme=, ?fx=, ?speedrun), then the save, then legacy prefs,
  * then defaults. Reduced motion (OS, or the in-app override) and Speedrun Mode force data-fx="chill" unless ?fx= is set.
+ * PART 5: data-boot = "full" (first visit) | "fast" (a save exists) on the home page only — never in Speedrun Mode,
+ * never on a deep link (#world), never with ?boot=0 (?boot=full forces the full boot). It shows the boot curtain.
  */
 export const PREPAINT_SCRIPT = `(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search),s={},e={},p={};try{var r=JSON.parse(localStorage.getItem(${JSON.stringify(
   SAVE_KEY,
@@ -58,6 +60,6 @@ export const PREPAINT_SCRIPT = `(function(){try{var d=document.documentElement,q
   THEMES,
 )},F=${list(FX_LEVELS)},M=${list(MODES)},S=${list(CURSOR_SKIN_IDS)},Z=${list(
   CURSOR_SIZE_IDS,
-)};var os=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches,rm=s.reducedMotion,reduced=rm==="reduce"||(rm!=="full"&&os);var mode=q.has("speedrun")||q.get("mode")==="speedrun"?"speedrun":pick(s.mode,M,"play");d.setAttribute("data-theme",pick(q.get("theme"),T,pick(s.theme,T,"night")));d.setAttribute("data-fx",pick(q.get("fx"),F,reduced||mode==="speedrun"?"chill":pick(s.fx,F,"normal")));d.setAttribute("data-mode",mode);if(rm==="reduce"||rm==="full")d.setAttribute("data-motion",rm);d.setAttribute("data-cursor","default");d.setAttribute("data-cursor-skin",pick(e.cursorSkin,S,${JSON.stringify(
+)};var os=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches,rm=s.reducedMotion,reduced=rm==="reduce"||(rm!=="full"&&os);var mode=q.has("speedrun")||q.get("mode")==="speedrun"?"speedrun":pick(s.mode,M,"play");d.setAttribute("data-theme",pick(q.get("theme"),T,pick(s.theme,T,"night")));d.setAttribute("data-fx",pick(q.get("fx"),F,reduced||mode==="speedrun"?"chill":pick(s.fx,F,"normal")));d.setAttribute("data-mode",mode);var bq=q.get("boot");if(location.pathname==="/"&&mode!=="speedrun"&&bq!=="0"&&(!location.hash||bq==="full")){var lv=r&&r.state&&r.state.meta&&r.state.meta.lastVisit;d.setAttribute("data-boot",bq==="full"||!lv?"full":"fast")}if(rm==="reduce"||rm==="full")d.setAttribute("data-motion",rm);d.setAttribute("data-cursor","default");d.setAttribute("data-cursor-skin",pick(e.cursorSkin,S,${JSON.stringify(
   DEFAULT_CURSOR_SKIN,
 )}));d.setAttribute("data-cursor-size",pick(s.cursorSize,Z,"normal"));d.setAttribute("data-world","title");d.setAttribute("data-js","")}catch(x){}})();`;

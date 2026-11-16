@@ -29,8 +29,9 @@ const TYPE_MS = 28;
 const SLEEP_AFTER = 30000;
 const PETS_FOR_ZOO = 10;
 const LABEL = "BYTE, the robot mascot. Press for a quip; arrow keys move BYTE.";
+const PENDING_LABEL = "BYTE, the robot mascot, has something to say. Press to hear it; arrow keys move BYTE.";
 const INTERACTIVE =
-  'a[href], button, input, select, textarea, summary, label[for], [role="button"], [role="link"], [role="tab"], [role="switch"], [role="checkbox"], [role="radio"], [role="slider"], [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
+  'a[href], button, input, select, textarea, summary, label[for], [role="button"], [role="link"], [role="tab"], [role="switch"], [role="checkbox"], [role="radio"], [role="slider"], [contenteditable="true"], [tabindex]:not([tabindex="-1"]), .peel__corner';
 
 type Vec = { x: number; y: number };
 type Line = { text: string; mood?: ByteMood; ms?: number };
@@ -188,6 +189,11 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
 
   // ── speech ──────────────────────────────────────────────────────────────────────────────────────────────────
   const queue: Line[] = [];
+  // Phones have no gutters, so an unrequested bubble would sit on the text being read (R6). There, tips and world
+  // lines wait behind a "!" on BYTE until the visitor taps it, and any open bubble closes once the page scrolls on.
+  const narrow = window.matchMedia("(max-width: 47.99rem)");
+  const pending: { key: string; line: Line }[] = [];
+  let openedAtY = 0;
   let speaking = false;
   let typing = false;
   let full = "";
@@ -224,6 +230,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     typedEl.textContent = "";
     bubble.setAttribute("data-open", "");
     bubble.setAttribute("data-text", full);
+    openedAtY = window.scrollY;
     requestAnimationFrame(updateBubbleHit);
     const hold = line.ms ?? 2400 + full.length * 45;
     if (line.mood) react(line.mood, hold + full.length * TYPE_MS);
@@ -253,6 +260,32 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     if (typing) finishTyping(1600);
     else nextLine();
   };
+  const syncPending = () => {
+    root.toggleAttribute("data-pending", pending.length > 0);
+    if (!minimized) bot.setAttribute("aria-label", pending.length ? PENDING_LABEL : LABEL);
+  };
+  // the page moves under a fixed bubble: phones close it; elsewhere re-check what it covers (≤ every 120ms)
+  let scrollFrame = 0;
+  let hitCheckedAt = 0;
+  listen(
+    window,
+    "scroll",
+    () => {
+      if (!speaking || scrollFrame) return;
+      scrollFrame = requestAnimationFrame((now) => {
+        scrollFrame = 0;
+        if (!speaking) return;
+        if (narrow.matches && Math.abs(window.scrollY - openedAtY) > 48) {
+          queue.length = 0;
+          nextLine(); // closes the bubble
+        } else if (now - hitCheckedAt > 120) {
+          hitCheckedAt = now;
+          updateBubbleHit();
+        }
+      });
+    },
+    { passive: true },
+  );
 
   // ── quips ───────────────────────────────────────────────────────────────────────────────────────────────────
   const order = shuffle(script.quips.map((_, i) => i));
@@ -270,7 +303,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     minimized = on;
     if (persist) store.getState().setByteMinimized(on);
     root.toggleAttribute("data-minimized", on);
-    bot.setAttribute("aria-label", on ? "Bring BYTE back" : LABEL);
+    bot.setAttribute("aria-label", on ? "Bring BYTE back" : pending.length ? PENDING_LABEL : LABEL);
     if (on) {
       queue.length = 0;
       nextLine();
@@ -507,6 +540,13 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
       fastForward();
       return;
     }
+    const waiting = pending.shift();
+    if (waiting) {
+      syncPending();
+      if (say(waiting.line)) store.getState().markByteSaid(waiting.key);
+      if (e.detail === 0) announce(`BYTE says: ${waiting.line.text}`);
+      return;
+    }
     quip(e.detail === 0);
   });
   listen(bubble, "click", () => fastForward());
@@ -562,12 +602,29 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
   const sayOnce = (key: string, line: Line, requires?: string) => {
     if (requires && !document.querySelector(requires)) return; // the feature it talks about isn't on the page yet
     if (store.getState().byte.said.includes(key)) return;
+    if (narrow.matches) {
+      if (minimized || tucked || pending.some((p) => p.key === key)) return;
+      pending.push({ key, line });
+      if (pending.length > 3) pending.shift();
+      syncPending();
+      react("surprised", 900);
+      return;
+    }
     if (say(line)) store.getState().markByteSaid(key);
   };
   const tipTimes = [5000, 17000, 29000];
-  script.tips
-    .filter((t) => !store.getState().byte.said.includes(t.key))
-    .forEach((tip, i) => later(() => sayOnce(tip.key, { text: tip.text, mood: tip.mood, ms: 3800 }, tip.requires), tipTimes[Math.min(i, tipTimes.length - 1)]));
+  const scheduleTips = () =>
+    script.tips
+      .filter((t) => !store.getState().byte.said.includes(t.key))
+      .forEach((tip, i) => later(() => sayOnce(tip.key, { text: tip.text, mood: tip.mood, ms: 3800 }, tip.requires), tipTimes[Math.min(i, tipTimes.length - 1)]));
+  // the tips start once the boot screen is gone (PART 5) — nobody can read BYTE behind it
+  if (document.documentElement.hasAttribute("data-boot")) {
+    const offBoot = bus.on("boot:done", () => {
+      offBoot();
+      scheduleTips();
+    });
+    offs.push(offBoot);
+  } else scheduleTips();
 
   offs.push(
     bus.on("world:enter", ({ id }) => {
@@ -645,6 +702,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     window.clearInterval(sleepTimer);
     cancelAnimationFrame(eyeRaf);
     cancelAnimationFrame(flightRaf);
+    cancelAnimationFrame(scrollFrame);
     layoutObserver.disconnect();
     offs.forEach((off) => off());
   };

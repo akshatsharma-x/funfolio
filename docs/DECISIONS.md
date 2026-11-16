@@ -183,3 +183,94 @@ change an entry only when the decision itself changes.
     minimized) when nothing is free. Home position (fractions of the viewport) and minimized survive a reset; said
     lines don't. Hidden in Speedrun Mode and when turned off in Settings. Petting doesn't count as shake-to-find.
 46. **Playground: Juice kit & BYTE panel** drives every `fx.*` call and `byte.react / say / point` by hand.
+
+## PART 5 — Boot sequence & Title Screen
+
+47. **When the boot runs.** Decided before first paint (`html[data-boot]`, pre-paint script #5): home page only,
+    `full` on a first visit (no `meta.lastVisit` in the save), `fast` for returning players. Never in Speedrun Mode,
+    on a deep link (`/#lab` — the visitor asked for a world), with `?boot=0`, or without JavaScript; `?boot=full`
+    forces the first-visit boot. A black curtain covers the first paint while `data-boot` is set and hides itself
+    after 6s by CSS alone, so a failed chunk can't hide the page (R3). If the runtime mounts later than 4.5s after
+    navigation (slow network), the boot is skipped — the page has been readable too long to interrupt.
+48. **The boot is a native modal `<dialog>`** (lazy client chunk, ~8 KB gzip): focus stays inside, the page behind is
+    inert but fully server-rendered, Esc (the dialog's cancel) = skip. Any other key skips after 400ms, "Skip ▶▶"
+    always does, and 8s idle at INSERT COIN continues muted. Skipping unlocks Skipper; idling doesn't. Focus lands
+    on the coin at INSERT COIN, on START WITH SOUND after the coin, and on the Title's heading when the boot exits.
+49. **Real progress, honest timing.** The bar is 35% log + 65% hero island: the island chunk's dynamic import (a
+    creeping estimate until it resolves — fetch progress isn't observable for `import()`), drei's `useProgress`
+    (three's loading manager; the island is procedural, so it has nothing to load today) and the first rendered
+    frames (shaders compiled). Typing is time-based (12ms/char, line beats 55ms) so a busy main thread doesn't
+    stretch it, and the log stops waiting for the island at 3s. The island loads only once the boot is on screen
+    and renders just its 3 warm-up frames behind it (rendering behind the boot starved the boot's timers).
+    Measured on the export: INSERT COIN at 2.5s with a GPU or with WebGL off, 3.4s on SwiftShader.
+50. **Software WebGL = NONE tier.** SwiftShader / llvmpipe / "basic render" (via `WEBGL_debug_renderer_info`) get the
+    SVG island: their first 3D frame blocked the main thread for ~1.9s.
+51. **INSERT COIN.** Click, Enter/Space or drag the CSS-3D coin into the slot (drop zone = the slot ± a margin):
+    clink sfx (only after that gesture), CREDIT 01 flashes once, coin #1 "Starter Coin". START WITH SOUND turns sound
+    on (that click is the audio gesture), START MUTED keeps it off; both unlock Player One. "Recruiter Speedrun"
+    (or Shift+R) exits straight into Speedrun Mode. The coin's face glyphs are CSS-drawn so the button's visible
+    text matches its name (WCAG 2.5.3).
+52. **CONTINUE? / NEW GAME.** The fast boot shows "LV n · x/12 coins" from the save. NEW GAME asks first (Erase &
+    start / Back — erasing progress is destructive), then plays the full boot on a fresh save (settings kept, #25).
+53. **Exit = pixel dissolve** drawn on the boot's own canvas (the FX layer sits below the top layer and may not be
+    loaded yet): rainbow cells clear in a sweep in ~650ms, revealing the Title underneath.
+54. **Landmarks are HTML buttons, not raycast meshes.** The 8 landmarks, the plane and the hidden coin are real
+    `<button>`s (keyboard, screen readers, label-in-name "QUEST TOWER · Experience"); the 3D scene projects them onto
+    its anchors every frame and hides them (`data-off`) off screen, mid-dive, or — the coin — while the tower covers
+    it. Hover/focus makes the landmark hop and its outline glow. The same buttons sit on the SVG island. The button
+    layer passes the pointer through everywhere except the buttons, so the name, the CTAs and drags stay reachable.
+    Landmark → world: House → Profile, Quest Tower → Launchpad (Quest Log in Speedrun Mode), Observatory → Lab,
+    Workshop → Vault, Arcade → Arcade, Skill Tree → Skills, Pedestal → Trophies, Radio Tower → Lobby. Click = GSAP
+    camera swoop (0.75s, expo.inOut; skipped under reduced motion), then the smooth scroll, then focus on the world.
+55. **Orbit only with a mouse.** OrbitControls rotate-only (no zoom, no pan — the wheel always scrolls the page),
+    polar angle clamped to 0.75–1.25 rad, ≤ 3° pointer parallax. Touch-first devices get no OrbitControls (they set
+    `touch-action: none` and would swallow page swipes); touchscreen laptops keep vertical swipes (`pan-y`). The
+    keyboard/touch alternative to dragging is "Peek behind the tower" (aria-pressed), which turns the island to
+    reveal coin #2; on wide screens it sits under the island, clear of BYTE's corner and the rail.
+56. **Scroll-out dive without ScrollTrigger.** When pinned, the Title section is 200vh with a sticky 100vh stage (pin
+    ≤ 100vh); its scroll progress (read once per frame) raises the island past the camera, widens the fov, thickens
+    a cream fog and fades the overlay. The pin (`#title[data-pin]`) is set by the island component only on wide
+    screens (≥ 64rem), with motion, outside Speedrun Mode, and only when the whole overlay fits the viewport — it
+    wraps taller on narrower windows (1280×800 needs ~890px), and a clipped CTA would be blocked content (R3).
+    Unpinned, the stage simply grows with its content and nothing dives (phones included). ScrollTrigger would bring
+    its perpetual rAF loop (#40).
+57. **Island budget.** One WebGL context; DPR 1.5 (≤ 1.75) on HIGH with antialias and blob shadows, 1 on LOW with
+    fewer voxels and no shadows; PerformanceMonitor steps DPR by 0.25 and drops a tier when it gives up. The canvas
+    unmounts beyond 1.5 viewports and renders only while on screen (the strip left under the HUD doesn't count),
+    unpaused and awake: it naps after 30s without input, and under reduced motion it renders on demand (no idle
+    loops, no parallax). The chunk (three + R3F +
+    drei pieces + the scene) is 249 KB gzip, lazy, never part of initial JS; Speedrun Mode never loads it.
+58. **R3F's THREE.Clock warning is filtered.** R3F 9.8 still constructs `THREE.Clock`, which three r187 deprecates
+    with a console warning (§10: zero console errors). `THREE.setConsoleFunction` drops exactly that message and
+    forwards everything else.
+59. **The name is playable but reads plainly.** The h1's text is an sr-only "Akshat Sharma"; the extruded letters
+    are aria-hidden spans, one palette color each (the Title is a rainbow world, R8). Hover = hop + a C-major
+    pentatonic note (sound on only). Coin #3: hover the K for 2s or long-press it on touch — a pointer-only egg for
+    now; PART 16's typed eggs add the keyboard path (single letters are reserved for them, #28).
+60. **Bounded loops (WCAG 2.2.2).** PRESS START blinks at 1Hz five times and then stays lit; the scroll mouse nudges
+    four times; nothing title-related animates while the boot is up. The class line types once after the boot
+    (screen readers get the full list; a hidden ghost line reserves the space, no layout shift).
+61. **BYTE on phones (PART 4 finding).** Below 48rem there are no gutters, so an unrequested bubble lands on the text
+    being read (R6). There, tips and world lines wait behind a "!" badge on BYTE (its name says "has something to
+    say"); a tap plays the waiting line before any quip, and any open bubble closes once the page scrolls 48px on.
+    Wider screens are unchanged.
+62. **Confetti falls behind the words (PART 4 finding).** Celebration confetti (level-ups) is drawn first and every
+    box with words on it — reading text plus links, buttons and fields (`TEXT` in `src/components/fx/readZones.ts`;
+    click juice's quieter zone is `READ`, since bursts on buttons are wanted) — is erased from it before the other
+    effects are drawn, so it shows around the words, never on them. The boxes are re-measured after scrolling and at
+    most every 300ms, only while confetti is alive.
+63. **The Title never widens the page.** Hidden landmark labels (nowrap, centered on a marker near the edge) made a
+    390px phone 449px wide. Labels near an edge now anchor to that side (static positions on the SVG island,
+    projected every frame in 3D), and `#title` has `overflow: clip` (sticky-safe) as a safety net.
+64. **WebGL probe without console noise.** The tier probe reads `RENDERER` first; only browsers that mask it
+    ("WebKit WebGL": Chrome, Safari) are asked for `WEBGL_debug_renderer_info` and get the probe context released at
+    once. Firefox reports the renderer directly and logs a warning both for the extension and for a deliberately lost
+    context, so there the 1×1 probe is left to garbage collection. Firefox still notes "WebGL context was lost."
+    when the island unmounts (R3F releases its context) — expected, not an error. The canvas box is snapped up to
+    a multiple of 4 CSS px: three.js floors the drawing buffer but rounds the viewport, so a fractional
+    size × DPR made the viewport 1px larger than the buffer (Firefox warned); with DPR steps of 0.25 the product is
+    now always whole.
+65. **Moving things never steal a click.** The circling plane's button hides while it crosses the Title's text column
+    (its right edge is measured with the pin check and shared through `island.textRight`). BYTE's fixed speech bubble
+    re-checks what it covers when the page scrolls under it (≤ every 120ms, only while speaking) and lets the
+    pointer through over anything interactive — sticker peel corners now count as interactive, for BYTE's body too.

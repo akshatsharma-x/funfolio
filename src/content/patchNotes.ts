@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.5.0",
+    date: "2026-11-16",
+    title: "Boot sequence & Title Screen",
+    notes: [
+      "The site boots like a console: insert the coin (click or drag it), then start with sound or muted. Skippable.",
+      "Returning players get a one-second boot and CONTINUE? / NEW GAME.",
+      "A 3D island on the Title Screen with one landmark per world — click one to fly there. Drag to turn it.",
+      "Play the letters of the name, find three new coins and make the little plane loop.",
+      "No 3D on this device? The same island, drawn flat, with the same buttons.",
+    ],
+  },
+  {
     version: "0.4.0",
     date: "2026-11-16",
     title: "FX layer & BYTE",

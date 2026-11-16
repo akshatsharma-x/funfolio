@@ -24,6 +24,8 @@ export const SFX_NAMES = [
   "countdown",
   "win",
   "lose",
+  "note",
+  "clink",
 ] as const;
 
 export type SfxName = (typeof SFX_NAMES)[number];
@@ -33,7 +35,7 @@ export type SfxOptions = { pitch?: number; volume?: number };
 type Engine = typeof import("zzfx");
 
 const BASE_VOLUME = 0.35;
-const MIN_GAP: Partial<Record<SfxName, number>> = { hover: 80, blip: 25, stretch: 30 };
+const MIN_GAP: Partial<Record<SfxName, number>> = { hover: 80, blip: 25, stretch: 30, note: 35 };
 const DEFAULT_GAP = 45;
 const WINDOW_MS = 250;
 const WINDOW_MAX = 6;

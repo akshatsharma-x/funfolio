@@ -24,4 +24,17 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
 - Keyboard shortcuts live only in `useKeyboardShortcuts` (`src/components/hud/useGameRuntime.ts`). Games mark their focus area `data-keyboard="exclusive"` (then only Esc is global); single letters are reserved for PART 16's typed eggs.
 - Speedrun Mode is CSS-only (`html[data-mode="speedrun"]`, rules in `src/app/game.css`); add `data-speedrun="hide"` to anything recruiters should skip. Add a `PATCH_NOTES` entry for each part.
 - FX (PART 4): call `fx.*` from `src/lib/juice.ts` and `byte.*` from `src/lib/byte.ts` — never import the engines. `data-fx-skip` opts an element out of click juice. BYTE lines about a feature wait for its hook attribute (`data-slingshot`, `data-boss-fight`, `data-cartridge`, `data-arcade-game`, `data-jd-scanner`, `data-contact-form`, `data-coin`) — add it when you build the feature.
+- Boot + Title Screen (PART 5): the pre-paint script sets `html[data-boot="full"|"fast"]` (home page only; never in
+  Speedrun Mode, on a deep link or with `?boot=0`; `?boot=full` forces it); the lazy boot (`src/components/boot/`)
+  switches it to `running`, removes it on exit and emits `boot:done` on the bus. Anything that must not start behind
+  the boot (typing, tips, title animations) waits for that. Boot log lines come from `buildBootScript()`
+  (`src/content/boot.ts`, server-side). The 3D island is `src/components/three/IslandCanvas.tsx` (lazy); the HTML
+  landmark buttons and the SVG island (NONE tier, no-JS view) are in `src/components/sections/title/`. They talk
+  through `src/lib/island.ts` (hover, go/swoop, spin, plane, dive) and report load progress to the boot via
+  `src/lib/heroLoad.ts`. Landmarks: `src/content/landmarks.ts`. No raycasting — hit targets are HTML buttons.
+  The Title pins (`#title[data-pin]`, set by `TitleIsland`) only when its whole overlay fits the viewport; nothing
+  there may widen the page (labels near an edge anchor to that side).
+- Reading zones (R6): `src/components/fx/readZones.ts` defines them once — `READ` (text people read: click juice stays
+  silent near it) and `TEXT` (READ + labelled controls: confetti is masked out of it). Reuse them for any new effect
+  that could land on text.
 - Keep the page idle (docs/DECISIONS.md #40–41): no always-on rAF loops, continuous CSS animations only on HTML elements' transform/opacity (never on SVG elements), no style writes inside scroll events (use `onScrollMotion`), and get GSAP/ScrollTrigger via `loadScrollTrigger()` only where needed.

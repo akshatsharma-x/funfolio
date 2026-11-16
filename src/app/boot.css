@@ -1,0 +1,489 @@
+/* AKSHAT-OS boot screen (PART 5). The curtain covers the first paint on boot pages; the <dialog> takes over. */
+
+@layer theme, base, components, utilities;
+
+@keyframes curtain-failsafe {
+  to {
+    visibility: hidden;
+  }
+}
+@keyframes crt-on {
+  0% {
+    transform: scale(0.02, 0.004);
+    opacity: 1;
+  }
+  45% {
+    transform: scale(1, 0.004);
+    opacity: 1;
+  }
+  78% {
+    transform: scale(1, 1);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1, 1);
+    opacity: 0;
+  }
+}
+@keyframes boot-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes coin3d-spin {
+  to {
+    transform: rotateY(360deg);
+  }
+}
+@keyframes coin-in {
+  0% {
+    translate: 0 0;
+    scale: 1 1;
+    opacity: 1;
+  }
+  55% {
+    translate: 0 78px;
+    scale: 0.3 1;
+    opacity: 1;
+  }
+  100% {
+    translate: 0 104px;
+    scale: 0.2 0.8;
+    opacity: 0;
+  }
+}
+@keyframes credit-flash {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+@keyframes slot-glow {
+  50% {
+    box-shadow:
+      inset 0 0 0 2px #b9b2d9,
+      0 0 26px #ffc83d;
+  }
+}
+@keyframes insert-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Curtain: only while the pre-paint script asked for a boot and before the dialog opens ("running") */
+.boot-curtain {
+  display: none;
+}
+html[data-boot="full"] .boot-curtain,
+html[data-boot="fast"] .boot-curtain {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: #07060f;
+  pointer-events: none;
+  animation: curtain-failsafe 0s linear 6s forwards; /* no JavaScript → the page shows anyway (R3) */
+}
+
+@layer components {
+  .boot {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    background: #07060f;
+    color: #fff4e0;
+    font-family: var(--font-mono);
+  }
+  .boot::backdrop {
+    background: #07060f;
+  }
+  .boot:focus {
+    outline: none;
+  }
+  .boot[data-dissolving],
+  .boot[data-dissolving]::backdrop {
+    background: transparent;
+  }
+  .boot[data-dissolving] .boot__screen,
+  .boot[data-dissolving] .boot__skip {
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+  .boot__dissolve {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .boot__crt {
+    position: absolute;
+    inset: 0;
+    background: #fff4e0;
+    pointer-events: none;
+    animation: crt-on 260ms ease-out both;
+  }
+  /* CRT scanlines + vignette over the whole boot screen */
+  .boot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.22) 0 1px, transparent 1px 3px),
+      radial-gradient(120% 90% at 50% 45%, transparent 60%, rgb(0 0 0 / 0.55) 100%);
+  }
+  .boot[data-dissolving]::after {
+    display: none;
+  }
+
+  .boot__screen {
+    position: relative;
+    display: grid;
+    align-content: center;
+    gap: 1.1rem;
+    width: min(760px, calc(100vw - 40px));
+    min-height: 100%;
+    margin: 0 auto;
+    padding-block: 64px;
+  }
+  .boot[data-phase="power"] .boot__screen {
+    opacity: 0;
+  }
+  .boot__title {
+    margin: 0;
+    color: #ffc83d;
+    font-family: var(--font-pixel);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+  .boot__ver {
+    color: #b9b2d9;
+    font-size: var(--text-sm);
+  }
+
+  /* log */
+  .boot__log {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: clamp(0.78rem, 0.7rem + 0.35vw, 0.95rem);
+  }
+  .boot__log li {
+    display: none;
+    align-items: baseline;
+    gap: 0.5ch;
+    white-space: nowrap;
+  }
+  .boot__log li[data-on] {
+    display: flex;
+  }
+  .boot__prompt {
+    color: #22d3ee;
+  }
+  .boot__dots {
+    flex: 1;
+    min-width: 2ch;
+    overflow: hidden;
+    color: #5b5375;
+    visibility: hidden;
+  }
+  .boot__ok {
+    color: #b6ff3b;
+    visibility: hidden;
+  }
+  .boot__log li[data-ok] .boot__dots,
+  .boot__log li[data-ok] .boot__ok {
+    visibility: visible;
+  }
+  .boot__fast-line {
+    color: #fff4e0;
+  }
+  .boot[data-mode="fast"] .boot__log li[data-line] {
+    display: none;
+  }
+  .boot[data-mode="fast"] .boot__fast-line,
+  .boot:not([data-mode="fast"]) .boot__fast-line {
+    display: none;
+  }
+  .boot[data-mode="fast"][data-phase="fast"] .boot__fast-line,
+  .boot[data-mode="fast"][data-phase="continue"] .boot__fast-line,
+  .boot[data-mode="fast"][data-phase="exit"] .boot__fast-line {
+    display: flex;
+  }
+
+  /* segmented progress bar */
+  .boot__bar {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border: 3px solid #fff4e0;
+    clip-path: var(--px-sm);
+  }
+  .boot__bar > span {
+    flex: 1;
+    height: 14px;
+    background: rgb(255 255 255 / 0.08);
+  }
+  .boot__bar > span[data-on] {
+    background: #b6ff3b;
+    box-shadow: inset 0 3px 0 rgb(255 255 255 / 0.4);
+  }
+
+  /* INSERT COIN */
+  .boot__coin-stage,
+  .boot__continue {
+    display: none;
+    justify-items: center;
+    gap: 1rem;
+    padding-top: 0.5rem;
+    text-align: center;
+  }
+  .boot[data-phase="coin"] .boot__coin-stage,
+  .boot[data-phase="exit"]:not([data-mode="fast"]) .boot__coin-stage {
+    display: grid;
+    animation: boot-fade-in 220ms ease-out both;
+  }
+  .boot[data-phase="continue"] .boot__continue,
+  .boot[data-phase="exit"][data-mode="fast"] .boot__continue {
+    display: grid;
+    animation: boot-fade-in 220ms ease-out both;
+  }
+  .boot[data-phase="coin"] .boot__log,
+  .boot[data-phase="coin"] .boot__bar {
+    opacity: 0.55;
+  }
+  .boot__insert {
+    margin: 0;
+    color: #ffc83d;
+    font-family: var(--font-pixel);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    animation: insert-pulse 1.4s ease-in-out infinite;
+    animation-play-state: var(--play);
+  }
+  .boot[data-coin="in"] .boot__insert {
+    animation: none;
+    opacity: 0.4;
+  }
+  .boot__coin-wrap {
+    position: relative;
+    z-index: 2;
+    width: 96px;
+    height: 96px;
+  }
+  .boot[data-coin="drag"] .boot__coin-wrap {
+    z-index: 5;
+  }
+  .boot[data-coin="in"] .boot__coin-wrap {
+    animation: coin-in calc(var(--motion) * 420ms + 1ms) ease-in forwards;
+  }
+  .boot__coin {
+    display: block;
+    width: 96px;
+    height: 96px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    perspective: 600px;
+    touch-action: none;
+  }
+  .coin3d {
+    position: relative;
+    display: block;
+    width: 96px;
+    height: 96px;
+    transform-style: preserve-3d;
+    animation: coin3d-spin 2.2s linear infinite;
+    animation-play-state: var(--play);
+  }
+  .boot[data-coin="drag"] .coin3d {
+    animation-play-state: paused;
+  }
+  .coin3d__face {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border: 4px solid #07060f;
+    border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, #fff1a8 0 16%, #ffc83d 42%, #c98a00 100%);
+    color: #7a4a00;
+    font-family: var(--font-display);
+    font-size: 44px;
+    font-weight: 900;
+    backface-visibility: hidden;
+  }
+  .coin3d__face--front {
+    transform: translateZ(7px);
+  }
+  .coin3d__face--back {
+    transform: rotateY(180deg) translateZ(7px);
+  }
+  /* decorative glyphs (empty alt text where supported; the first declaration is the fallback) */
+  .coin3d__face--front::before {
+    content: "1";
+    content: "1" / "";
+  }
+  .coin3d__face--back::before {
+    content: "★";
+    content: "★" / "";
+  }
+  .coin3d__edge {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 26px;
+    height: 14px;
+    margin: -7px 0 0 -13px;
+    background: #c98a00;
+    box-shadow: inset 0 0 0 2px #07060f;
+    transform: rotateZ(calc(var(--i) * 30deg)) translateY(-46px) rotateX(90deg);
+  }
+  .boot__slot {
+    display: grid;
+    place-items: center;
+    width: 160px;
+    height: 48px;
+    margin-top: -6px;
+    border: 4px solid #07060f;
+    border-radius: 12px;
+    background: linear-gradient(#2a1d5e, #120b2e);
+    box-shadow: inset 0 0 0 2px #b9b2d9;
+  }
+  .boot[data-coin="in"] .boot__slot {
+    animation: slot-glow 600ms ease-out 1;
+  }
+  .boot__slit {
+    width: 64px;
+    height: 10px;
+    border-radius: 4px;
+    background: #07060f;
+    box-shadow: 0 0 0 2px #5b5375;
+  }
+  .boot__credit {
+    min-height: 1.6em;
+    margin: 0;
+    color: #b6ff3b;
+    font-family: var(--font-pixel);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .boot__credit-text {
+    visibility: hidden;
+  }
+  .boot[data-credit] .boot__credit-text {
+    visibility: visible;
+    animation: credit-flash 500ms steps(2, end) 1; /* flashes once */
+  }
+  .boot__choice {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+  }
+  .boot__speedrun {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.3rem 0.6rem;
+    border: 0;
+    background: transparent;
+    color: #b9b2d9;
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    letter-spacing: 0.06em;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .boot__speedrun:hover {
+    color: #fff4e0;
+  }
+  .boot__q {
+    margin: 0;
+    color: #ffc83d;
+    font-family: var(--font-pixel);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .boot__confirm {
+    display: none;
+    gap: 0.75rem;
+    justify-items: center;
+    padding: 1rem 1.25rem;
+    border: 3px dashed #ff4d4d;
+    border-radius: 14px;
+  }
+  .boot__confirm p {
+    margin: 0;
+  }
+  .boot[data-confirm] .boot__confirm {
+    display: grid;
+  }
+  .boot[data-confirm] .boot__continue > .boot__choice {
+    display: none;
+  }
+  .boot__skip {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    z-index: 4;
+    padding: 0.45rem 0.9rem;
+    border: 2px solid #5b5375;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.06);
+    color: #fff4e0;
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .boot__skip:hover {
+    border-color: #fff4e0;
+  }
+  .boot :focus-visible {
+    outline: 3px dashed #ffc83d;
+    outline-offset: 3px;
+  }
+}
+
+/* reduced motion: no CRT line, no spin, no drop — just fades */
+:root[data-motion="reduce"] .boot__crt,
+:root[data-motion="reduce"] .coin3d,
+:root[data-motion="reduce"] .boot__insert {
+  animation: none;
+}
+:root[data-motion="reduce"] .boot__crt {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .boot__crt {
+    display: none;
+  }
+  :root:not([data-motion="full"]) .coin3d,
+  :root:not([data-motion="full"]) .boot__insert {
+    animation: none;
+  }
+}

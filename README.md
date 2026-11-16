@@ -19,6 +19,14 @@ no server, no API keys, no runtime third-party requests.
 Progress (XP, levels, coins, achievements, settings) is saved in this browser only (`localStorage`, key
 `funfolio-save`) — Pause → Reset save erases it. Recruiter link: `/?speedrun` shows the whole résumé summary first.
 
+The home page boots first (AKSHAT-OS log → INSERT COIN → start with sound / muted); returning players get a 1s boot
+and CONTINUE? / NEW GAME. Any key, Esc or "Skip ▶▶" skips it, and 8s of idling continues muted. No boot in Speedrun
+Mode, on deep links (`/#lab`), with `?boot=0`, or without JavaScript; `?boot=full` forces the first-visit boot.
+
+The Title Screen island: drag to turn it (the wheel always scrolls the page), hover or Tab to a landmark to see its
+world, click or Enter to fly there. "Peek behind the tower" turns it around. Without WebGL (or on a software
+renderer) it is a flat isometric drawing with the same buttons; phones switch to 3D after the first tap or scroll.
+
 | Key | Action |
 |---|---|
 | `0`–`8` | Jump to a world |

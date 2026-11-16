@@ -534,6 +534,27 @@ export const PIXEL_ICONS = {
       "................",
     ],
   },
+  mouse: {
+    palette: { k: INK, a: "#FFF4E0", p: "#FF3D8B" },
+    rows: [
+      "................",
+      "....kkkkkkkk....",
+      "...kaakppkaak...",
+      "...kaakppkaak...",
+      "...kaakkkkaak...",
+      "...kkkkkkkkkk...",
+      "...kaaaaaaaak...",
+      "...kaaaaaaaak...",
+      "...kaaaaaaaak...",
+      "...kaaaaaaaak...",
+      "...kaaaaaaaak...",
+      "....kaaaaaak....",
+      ".....kkkkkk.....",
+      "................",
+      "................",
+      "................",
+    ],
+  },
 } as const satisfies Record<string, PixelIconDef>;
 
 export type PixelIconName = keyof typeof PIXEL_ICONS;

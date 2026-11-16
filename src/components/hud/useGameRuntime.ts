@@ -271,17 +271,21 @@ export function useStatsTracker() {
   }, []);
 }
 
-/** Spare coins already pocketed (sticker peels) show as pocketed — server markup can't know the save. */
+/** Spare coins already pocketed (sticker peels) and hidden coins already found — server markup can't know the save. */
 export function useSpareCoinSync(routeKey: string) {
   useEffect(() => {
-    const sync = (claims: string[]) => {
+    const sync = (claims: string[], coins: string[]) => {
       document.querySelectorAll<HTMLElement>("[data-spare-coin]").forEach((el) => {
         el.toggleAttribute("data-pocketed", claims.includes(`spare:${el.dataset.spareCoin}`));
       });
+      // PART 5: hidden coins already found (the K, behind the Quest Tower…) never show up again
+      document.querySelectorAll<HTMLElement>("[data-coin-id]").forEach((el) => {
+        el.toggleAttribute("data-collected", coins.includes(el.dataset.coinId ?? ""));
+      });
     };
-    sync(useSave.getState().player.xpClaims);
+    sync(useSave.getState().player.xpClaims, useSave.getState().player.coinIds);
     return useSave.subscribe((s, prev) => {
-      if (s.player.xpClaims !== prev.player.xpClaims) sync(s.player.xpClaims);
+      if (s.player.xpClaims !== prev.player.xpClaims || s.player.coinIds !== prev.player.coinIds) sync(s.player.xpClaims, s.player.coinIds);
     });
   }, [routeKey]);
 }

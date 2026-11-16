@@ -539,6 +539,31 @@
     display: none;
   }
 
+  /* phones: BYTE has a line waiting (it only speaks when tapped there, R6) */
+  .byte__bot::after {
+    content: "!";
+    content: "!" / "";
+    position: absolute;
+    top: -6px;
+    left: -4px; /* the minimize button owns the top-right corner */
+    display: none;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    background: var(--world);
+    color: var(--ink);
+    font-family: var(--font-pixel);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 2px 0 var(--ink);
+  }
+  .byte[data-pending]:not([data-minimized], [data-tucked]) .byte__bot::after {
+    display: grid;
+  }
+
   /* speech bubble (decorative: aria-hidden) */
   .byte__bubble {
     position: absolute;

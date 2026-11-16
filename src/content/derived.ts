@@ -133,3 +133,17 @@ export function tickerItems(set: TickerSet): string[] {
   })();
   return items.filter((v): v is string => typeof v === "string" && known(v) && !/\bTODO\b/i.test(v));
 }
+
+/** "B.Tech. in Computer Science and Engineering" + "8.79/10" → "B.Tech CSE @ Manipal University Jaipur · CGPA 8.79" (Title chip, PART 5). */
+export function educationShort(): string {
+  const [degree, field] = education.degree.split(/\s+in\s+/);
+  const acronym = field
+    ? field
+        .split(/\s+/)
+        .filter((w) => !/^(and|of|&)$/i.test(w))
+        .map((w) => w[0].toUpperCase())
+        .join("")
+    : "";
+  const cgpa = known(education.cgpa) ? ` · CGPA ${education.cgpa.split("/")[0]}` : "";
+  return `${degree.replace(/\.$/, "")}${acronym ? ` ${acronym}` : ""} @ ${education.school}${cgpa}`;
+}

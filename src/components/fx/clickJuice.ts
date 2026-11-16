@@ -6,8 +6,8 @@
 import { fx } from "@/lib/juice";
 import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
 import { useSave } from "@/lib/store";
+import { READ } from "./readZones";
 
-const READ = "p, li, dd, dt, h1, h2, h3, h4, h5, h6, blockquote, figcaption, td, th, pre, label, legend, .read, [data-read]";
 const FIELD = 'input, textarea, select, [contenteditable]:not([contenteditable="false"])';
 const SKIP = '[data-byte], [data-keyboard="exclusive"], [data-fx-skip], dialog, [popover]';
 const WORDS = ["POW!", "BOOP", "NICE", "CRIT!", "+1", "GG", "WOW", "YEET", "EZ"];
