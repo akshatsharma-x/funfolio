@@ -200,7 +200,7 @@ html[data-cursor]:not([data-cursor="default"]) :where(*) {
   color: #fff4e0;
   font-family: var(--font-pixel);
   font-size: calc(11px * var(--cursor-scale));
-  font-weight: 700;
+  font-weight: 400; /* pixel face: C and O stay apart (#87) */
   letter-spacing: 0.08em;
   line-height: 1;
   white-space: nowrap;

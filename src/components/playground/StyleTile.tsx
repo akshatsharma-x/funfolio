@@ -112,7 +112,7 @@ export function StyleTile() {
             <span className="text-sm">{education.school}</span>
           </TypeRow>
           <TypeRow label="pixel · HUD / buttons">
-            <span className="font-pixel text-lg font-bold uppercase tracking-wider">Press start · Save file · Eject · Launch</span>
+            <span className="font-pixel text-lg font-medium uppercase tracking-wider">Press start · Save file · Eject · Launch</span>
           </TypeRow>
           <TypeRow label="mono · chips / terminal">
             <span className="font-mono text-sm">{quest.stack.slice(0, 3).join(" · ")}</span>

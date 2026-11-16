@@ -191,7 +191,7 @@
     color: var(--w-fg-n, var(--world));
     font-family: var(--font-pixel);
     font-size: 1.05rem;
-    font-weight: 700;
+    font-weight: 400; /* pixel face: C and O stay apart, even under the LED mask (#87) */
     letter-spacing: 0.14em;
     text-transform: uppercase;
     white-space: nowrap;
@@ -228,6 +228,11 @@
   }
   .ticker__run {
     display: flex;
+  }
+  .ticker__num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.04em;
   }
   .ticker__item {
     display: inline-flex;
@@ -280,7 +285,7 @@
     color: var(--ink);
     font-family: var(--font-pixel);
     font-size: var(--text-xs);
-    font-weight: 700;
+    font-weight: 400; /* pixel face: C and O stay apart (#87) */
     letter-spacing: 0.12em;
     text-transform: uppercase;
     animation:
@@ -482,7 +487,7 @@
     color: var(--world-fg);
     font-family: var(--font-pixel);
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 400; /* pixel face: C and O stay apart (#87) */
     pointer-events: none;
   }
   .byte[data-mood="sleepy"] .byte__zzz {
@@ -556,7 +561,7 @@
     color: var(--ink);
     font-family: var(--font-pixel);
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 400; /* pixel face: C and O stay apart (#87) */
     line-height: 1;
     box-shadow: 0 2px 0 var(--ink);
   }

@@ -1,0 +1,805 @@
+/* World 2B · QUEST LOG (PART 8): the active quest hero and its illustrative widgets, the completed quests on a winding
+   trail (a straight rail below 64rem), checklists, loot, stamps. Lime leads (R8). Continuous loops run on --play (idle
+   nap, off-screen pause, reduced motion); one-shots animate from [data-play="armed"] to "run" (QuestLogFx) — the
+   un-attributed state is the final one (no JS, reduced motion, Speedrun Mode, already on screen). */
+
+@layer theme, base, components, utilities;
+
+@keyframes quest-shimmer {
+  from {
+    translate: -110% 0;
+  }
+  to {
+    translate: 260% 0;
+  }
+}
+@keyframes quest-blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+@keyframes stamp-thump {
+  0% {
+    scale: 2.1;
+    opacity: 0;
+    rotate: -16deg;
+  }
+  55% {
+    scale: 0.9;
+    opacity: 1;
+    rotate: var(--stamp-rot);
+  }
+}
+@keyframes tick-pop {
+  0% {
+    scale: 0;
+  }
+  70% {
+    scale: 1.3;
+  }
+}
+@keyframes box-fill {
+  from {
+    background-color: var(--surface);
+  }
+}
+@keyframes pop-in {
+  from {
+    scale: 0.4;
+    opacity: 0;
+  }
+}
+@keyframes token-squeeze {
+  0% {
+    scale: 1 1;
+  }
+  55% {
+    scale: calc(var(--squeezed) - 0.04) 1.14;
+  }
+  78% {
+    scale: calc(var(--squeezed) + 0.015) 0.95;
+  }
+}
+@keyframes walker-bob {
+  50% {
+    translate: 0 -3px;
+    rotate: calc(var(--face, 1) * 7deg);
+  }
+}
+@keyframes skill-flash {
+  15%,
+  55% {
+    box-shadow: 0 0 0 5px var(--world);
+  }
+}
+
+@layer components {
+  /* the columns never grow past the screen (an auto column takes its widest min-content: "Technologies" at 28px is
+     wider than a 320px card); stamps thumping in and spinning emblems can't widen the page either */
+  #quests {
+    overflow-x: clip;
+  }
+  .quest-log {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+  .quest-kicker {
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--world-fg);
+  }
+  .quest-kicker__plain,
+  .quest-sub__plain {
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+  .quest-log__done {
+    margin-top: 1.5rem;
+  }
+
+  /* ── card head: spinning emblem, company, role, chips (+ status or COMPLETE stamp) ──────────────────────────── */
+  .quest-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.75rem 1rem;
+  }
+  .quest-head__text {
+    display: grid;
+    flex: 1 1 13rem;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+  .quest-head__company {
+    font-size: min(var(--text-xl), 6.6vw);
+    overflow-wrap: break-word;
+  }
+  .quest-head__role {
+    font-weight: 600;
+  }
+  .quest-head__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .quest-emblem {
+    flex: none;
+    width: 3.5rem;
+    height: 3.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    perspective: 500px;
+  }
+  .quest-emblem:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 3px;
+  }
+  .quest-emblem__coin {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border: 3px solid var(--ink);
+    background: var(--world);
+    color: var(--ink);
+    font-family: var(--font-pixel);
+    font-size: 1.5rem; /* ≥ 22px: big enough for the pixel C's notch at 700 (#87) */
+    font-weight: 700;
+    clip-path: polygon(0 6px, 6px 6px, 6px 0, calc(100% - 6px) 0, calc(100% - 6px) 6px, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 6px calc(100% - 6px), 0 calc(100% - 6px));
+  }
+  .quest-sub {
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--world-fg);
+  }
+
+  /* ── ACTIVE QUEST ─────────────────────────────────────────────────────────────────────────────────────────── */
+  .active-quest {
+    --sticker-pad: clamp(1.25rem, 3vw, 2rem);
+  }
+  .active-quest > .sticker__body,
+  .quest-card > .sticker__body {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .active-quest__body {
+    display: grid;
+    gap: 1.5rem;
+  }
+  .active-quest__objectives,
+  .active-quest__xp,
+  .quest-card section {
+    display: grid;
+    align-content: start;
+    gap: 0.7rem;
+  }
+  .quest-status {
+    display: inline-grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    align-self: flex-start;
+    gap: 0.35rem 0.5rem;
+    margin-left: auto;
+    padding: 0.4rem 0.8rem 0.45rem;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    background: var(--world);
+    color: var(--ink);
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: 0 3px 0 var(--ink);
+  }
+  .quest-status__dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--ink);
+    animation: quest-blink 1.6s steps(2, jump-none) infinite; /* < 1 blink per second */
+    animation-play-state: var(--play);
+  }
+  .quest-status__bar {
+    position: relative;
+    grid-column: 1 / -1;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: rgb(7 6 15 / 0.28);
+  }
+  .quest-status__bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.9), transparent);
+    animation: quest-shimmer 2.4s linear infinite;
+    animation-play-state: var(--play);
+  }
+
+  .objectives,
+  .checklist {
+    display: grid;
+    gap: 0.65rem;
+  }
+  .objectives__item,
+  .checklist__item {
+    display: grid;
+    grid-template-columns: 1.4rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.65rem;
+  }
+  .objectives__marker {
+    width: 0.65rem;
+    height: 0.8rem;
+    margin: 0.4rem 0 0 0.35rem;
+    background: var(--world-fg);
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+  .checklist__box {
+    display: grid;
+    place-items: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    margin-top: 0.1rem;
+    border: 2px solid var(--ink);
+    border-radius: 5px;
+    background: var(--world);
+    color: var(--ink);
+  }
+  [data-play="armed"] .checklist__box {
+    background: var(--surface);
+  }
+  [data-play="armed"] .checklist__box > *,
+  [data-play="armed"] .stamp--complete,
+  .stamp--regulated[data-play="armed"] {
+    opacity: 0;
+  }
+  [data-play="run"] .checklist__box {
+    animation: box-fill 1ms steps(1, end) both;
+    animation-delay: calc(160ms + var(--i) * 150ms);
+  }
+  [data-play="run"] .checklist__box > * {
+    animation: tick-pop calc(var(--motion) * 260ms + 1ms) var(--ease-pop) both;
+    animation-delay: calc(160ms + var(--i) * 150ms);
+  }
+
+  /* ── stamps ───────────────────────────────────────────────────────────────────────────────────────────────── */
+  .stamp {
+    --stamp-rot: -6deg;
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border: 3px solid currentColor;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--world) 14%, transparent);
+    color: var(--world-fg);
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    rotate: var(--stamp-rot);
+  }
+  .stamp--complete {
+    margin-left: auto;
+  }
+  .stamp--regulated {
+    --stamp-rot: 4deg;
+    border-style: double;
+    border-width: 5px;
+    color: var(--text);
+  }
+  [data-play="run"] .stamp--complete {
+    animation: stamp-thump calc(var(--motion) * 380ms + 1ms) var(--ease-pop) both;
+    animation-delay: calc(240ms + var(--ticks, 3) * 150ms);
+  }
+  .stamp--regulated[data-play="run"] {
+    animation: stamp-thump calc(var(--motion) * 420ms + 1ms) var(--ease-pop) both;
+    animation-delay: 120ms;
+  }
+
+  /* ── XP EARNED: the illustrative widgets ──────────────────────────────────────────────────────────────────── */
+  .widgets__note {
+    color: var(--muted);
+    font-size: var(--text-sm);
+  }
+  .widgets {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.85rem;
+  }
+  .active-quest__xp {
+    container-type: inline-size;
+  }
+  /* wide enough: the gauge spans two rows beside the token squeeze and the cache, the map takes the full width */
+  @container (min-width: 28rem) {
+    .widgets {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas:
+        "cost tokens"
+        "cost cache"
+        "map map";
+    }
+    .widget--cost {
+      grid-area: cost;
+    }
+    .widget--tokens {
+      grid-area: tokens;
+    }
+    .widget--cache {
+      grid-area: cache;
+    }
+    .widget--map {
+      grid-area: map;
+    }
+  }
+  .widget {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0.9rem 1rem 1rem;
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface-2);
+  }
+  .widget__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--muted);
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .widget__tag {
+    padding: 0.05rem 0.45rem;
+    border: 1px dashed currentColor;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+  .widget__stat {
+    display: grid;
+    gap: 0.1rem;
+  }
+  .widget__stat dt {
+    color: var(--muted);
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .widget__stat dd {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* COST METER: a number-free dial; the needle swings down from the top end and settles in the lime band */
+  .gauge {
+    width: 100%;
+    max-width: 12rem;
+    height: auto;
+    overflow: visible;
+  }
+  .gauge__track {
+    fill: none;
+    stroke: color-mix(in srgb, var(--text) 16%, transparent);
+    stroke-width: 12;
+    stroke-linecap: round;
+  }
+  .gauge__band {
+    fill: none;
+    stroke: var(--world);
+    stroke-width: 12;
+  }
+  .gauge__tick {
+    stroke: var(--muted);
+    stroke-width: 2;
+  }
+  .gauge__needle {
+    fill: var(--text);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+    transform-box: view-box;
+    transform-origin: 70px 70px;
+    rotate: var(--a);
+  }
+  [data-play="armed"] .gauge__needle {
+    rotate: 82deg;
+  }
+  [data-play="run"] .gauge__needle {
+    transition: rotate calc(var(--motion) * 1100ms) cubic-bezier(0.34, 1.56, 0.64, 1) 220ms;
+  }
+  .coin-egg {
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: inherit;
+    font: inherit;
+  }
+  .coin-egg:hover {
+    color: var(--world-fg);
+  }
+  .coin-egg:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 2px;
+  }
+
+  /* TOKEN SQUEEZE: the row shrinks into the band that marks the real compression range */
+  .tokens {
+    position: relative;
+    height: 1.7rem;
+    margin-block: 0.4rem;
+  }
+  .tokens__ghost {
+    position: absolute;
+    inset: 0;
+    border: 2px dashed var(--muted);
+    border-radius: 7px;
+    opacity: 0.55;
+  }
+  .tokens__band {
+    position: absolute;
+    top: -5px;
+    bottom: -5px;
+    left: var(--band-from);
+    width: max(5px, var(--band-width));
+    border: 2px solid var(--ink);
+    border-radius: 3px;
+    background: var(--world);
+  }
+  .tokens__row {
+    position: absolute;
+    inset: 4px;
+    display: flex;
+    gap: 3px;
+    transform-origin: 0 50%;
+    scale: var(--squeezed) 1;
+  }
+  .tokens__t {
+    flex: 1;
+    border-radius: 3px;
+    background: var(--text);
+    opacity: 0.82;
+  }
+  .tokens__t:nth-child(3n) {
+    opacity: 0.5;
+  }
+  [data-play="armed"] .tokens__row {
+    scale: 1 1;
+  }
+  [data-play="run"] .tokens__row {
+    animation: token-squeeze calc(var(--motion) * 900ms + 1ms) var(--ease-pop) both;
+    animation-delay: 300ms;
+  }
+
+  /* SHA256 CACHE */
+  .cache__hash {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    letter-spacing: 0.04em;
+    overflow-wrap: anywhere;
+  }
+  .cache__hit {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    gap: 0.35rem;
+    padding: 0.15rem 0.6rem;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--world);
+    color: var(--ink);
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  [data-play="armed"] .cache__hit {
+    opacity: 0;
+  }
+  [data-play="run"] .cache__hit {
+    animation: pop-in calc(var(--motion) * 300ms + 1ms) var(--ease-pop) both;
+    animation-delay: 1100ms;
+  }
+
+  /* CARTOGRAPHER: the graph draws itself outward from the hub; 2 calls → 6 artifacts */
+  .kg {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+  }
+  .kg__graph {
+    flex: 1 1 14rem;
+    width: 100%;
+    max-width: 24rem;
+    height: auto;
+    overflow: visible;
+  }
+  .kg__edge {
+    stroke: var(--muted);
+    stroke-width: 1.6;
+    stroke-dasharray: 1;
+  }
+  .kg__node {
+    fill: var(--surface);
+    stroke: var(--text);
+    stroke-width: 1.6;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .kg__node--module {
+    fill: color-mix(in srgb, var(--world) 45%, var(--surface));
+  }
+  .kg__node--hub {
+    fill: var(--world);
+    stroke: var(--ink);
+    stroke-width: 2.5;
+  }
+  .kg__out {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 9rem;
+    color: var(--text);
+  }
+  .kg__call {
+    color: var(--world-fg);
+  }
+  .kg__arrow {
+    color: var(--muted);
+    font-family: var(--font-pixel);
+  }
+  .kg__caption {
+    color: var(--muted);
+    font-size: var(--text-sm);
+  }
+  [data-play="armed"] .kg__edge {
+    stroke-dashoffset: 1;
+  }
+  [data-play="armed"] .kg__node,
+  [data-play="armed"] .kg__call,
+  [data-play="armed"] .kg__doc {
+    opacity: 0;
+  }
+  [data-play="run"] .kg__edge {
+    transition: stroke-dashoffset calc(var(--motion) * 420ms) ease-out;
+    transition-delay: calc(380ms + var(--o) * 260ms);
+  }
+  [data-play="run"] .kg__node {
+    animation: pop-in calc(var(--motion) * 300ms + 1ms) var(--ease-pop) both;
+    animation-delay: calc(260ms + var(--o) * 260ms);
+  }
+  [data-play="run"] .kg__call {
+    animation: pop-in calc(var(--motion) * 260ms + 1ms) var(--ease-pop) both;
+    animation-delay: calc(1250ms + var(--i) * 160ms);
+  }
+  [data-play="run"] .kg__doc {
+    animation: pop-in calc(var(--motion) * 260ms + 1ms) var(--ease-pop) both;
+    animation-delay: calc(1600ms + var(--i) * 90ms);
+  }
+
+  /* ── LOOT ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+  .loot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .loot__logo {
+    flex: none;
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+  }
+  .loot__link {
+    text-decoration: none;
+    transition:
+      translate calc(var(--motion) * 120ms) var(--ease-pop),
+      box-shadow calc(var(--motion) * 120ms) var(--ease-pop);
+  }
+  .loot__link:hover {
+    translate: 0 -2px;
+    box-shadow: 0 4px 0 var(--ink);
+  }
+  .loot__link:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 2px;
+  }
+  .quest-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* ── the COMPLETED QUESTS trail ───────────────────────────────────────────────────────────────────────────── */
+  .quest-trail {
+    --trail: rail;
+    --rail-x: 18px;
+    position: relative;
+    padding-left: 3rem;
+  }
+  .quest-trail__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+  }
+  .quest-trail__svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .quest-trail__base {
+    fill: none;
+    stroke: color-mix(in srgb, var(--text) 24%, transparent);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 1 13;
+  }
+  .quest-trail__lit {
+    fill: none;
+    stroke: var(--world);
+    stroke-width: 6;
+    stroke-linecap: round;
+  }
+  .quest-trail__nodes circle {
+    fill: var(--surface);
+    stroke: var(--ink);
+    stroke-width: 3;
+    transition: fill calc(var(--motion) * 200ms);
+  }
+  .quest-trail__nodes circle.is-lit {
+    fill: var(--world);
+  }
+  .quest-trail__walker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  .quest-trail__byte {
+    position: absolute;
+    top: -36px;
+    left: -16px;
+    display: block;
+    scale: var(--face, 1) 1;
+    transition: scale calc(var(--motion) * 160ms);
+  }
+  .quest-trail__walker[data-walking] .quest-trail__byte {
+    animation: walker-bob 280ms steps(2, jump-none) infinite;
+  }
+  .quest-trail:not([data-trail="live"]) .quest-trail__walker {
+    display: none;
+  }
+  /* no JS: a plain dotted rail with a dot beside each card */
+  .quest-node {
+    display: none;
+  }
+  html:not([data-js]) .quest-trail::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--rail-x) - 3px);
+    width: 6px;
+    border-radius: 3px;
+    background: repeating-linear-gradient(to bottom, color-mix(in srgb, var(--text) 26%, transparent) 0 6px, transparent 6px 16px);
+  }
+  html:not([data-js]) .quest-node {
+    position: absolute;
+    top: 52px;
+    left: calc(-3rem + var(--rail-x) - 12px);
+    display: block;
+    width: 18px;
+    height: 18px;
+    border: 3px solid var(--ink);
+    border-radius: 50%;
+    background: var(--world);
+  }
+
+  /* Skill Tree entries the loot chips jump to */
+  .skill-item[data-flash] > .chip {
+    animation: skill-flash calc(var(--motion) * 1500ms + 1ms) ease-out;
+  }
+  .skill-item:focus {
+    outline: none;
+  }
+  .skill-item:focus-visible > .chip {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 3px;
+  }
+}
+
+/* desktop: the cards alternate left / right and the trail winds between them */
+@media (min-width: 64rem) {
+  .quest-trail {
+    --trail: wind;
+    padding: 2.5rem 0 3.5rem;
+  }
+  .quest-trail__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .quest-card {
+    width: 42%;
+  }
+  .quest-card[data-side="right"] {
+    align-self: flex-end;
+  }
+  .quest-card + .quest-card {
+    margin-top: -9rem;
+  }
+  .active-quest__body {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.2fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "obj xp"
+      "loot xp"
+      "foot xp";
+    align-items: start;
+    gap: 1.5rem 2.5rem;
+  }
+  .active-quest__objectives {
+    grid-area: obj;
+  }
+  .active-quest__xp {
+    grid-area: xp;
+  }
+  .active-quest__loot {
+    grid-area: loot;
+  }
+  .active-quest__foot {
+    grid-area: foot;
+  }
+  html:not([data-js]) .quest-trail::before {
+    left: calc(50% - 3px);
+  }
+  html:not([data-js]) .quest-card[data-side="left"] .quest-node {
+    right: -40px;
+    left: auto;
+  }
+  html:not([data-js]) .quest-card[data-side="right"] .quest-node {
+    left: -40px;
+  }
+  /* Speedrun Mode: no zig-zag, just the cards */
+  html[data-mode="speedrun"] .quest-trail {
+    padding: 0;
+  }
+  html[data-mode="speedrun"] .quest-trail__list {
+    display: grid;
+    gap: 1.25rem;
+  }
+  html[data-mode="speedrun"] .quest-card {
+    width: auto;
+    margin-top: 0;
+  }
+}
+html[data-mode="speedrun"] .quest-trail {
+  padding-left: 0;
+}

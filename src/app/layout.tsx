@@ -9,6 +9,7 @@ import "./fx.css";
 import "./title.css";
 import "./profile.css";
 import "./launchpad.css";
+import "./quests.css";
 import "./boot.css";
 import { CursorLayer } from "@/components/cursor/CursorLayer";
 import { GameRuntimeLoader } from "@/components/hud/GameRuntimeLoader";

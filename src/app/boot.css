@@ -166,7 +166,7 @@ html[data-boot="fast"] .boot-curtain {
     color: #ffc83d;
     font-family: var(--font-pixel);
     font-size: var(--text-lg);
-    font-weight: 700;
+    font-weight: 500; /* pixel face: C and O stay apart (#87) */
     letter-spacing: 0.14em;
   }
   .boot__ver {
@@ -382,9 +382,9 @@ html[data-boot="fast"] .boot-curtain {
     min-height: 1.6em;
     margin: 0;
     color: #b6ff3b;
-    font-family: var(--font-pixel);
+    font-family: var(--font-display);
     font-size: var(--text-lg);
-    font-weight: 700;
+    font-weight: 800; /* numbers in the display face (#87) */
     letter-spacing: 0.16em;
     text-transform: uppercase;
   }
@@ -456,7 +456,7 @@ html[data-boot="fast"] .boot-curtain {
     color: #fff4e0;
     font-family: var(--font-pixel);
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 400; /* pixel face: C and O stay apart (#87) */
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }

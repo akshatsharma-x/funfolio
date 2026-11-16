@@ -385,10 +385,61 @@ change an entry only when the decision itself changes.
     every size ("500 ERROR" read "SOO ERROR"). In the Launchpad, crate labels use DM Sans 800 (canvas and poster
     share `crateText()`), numbers use the display face (the Bible's "big numbers": HUD values, results, and
     `fx.text(…, { font: "display" })` for the +500 / +50 pops), and the HUD labels, the stage tip and the gate's
-    message use the pixel face at 400; the crates that fly to the Quest Log keep the canvas crates' DM Sans. The rest
-    of the site still sets the pixel face at 700 ("ACHIEVEMENT UNLOCKED" reads "AOHIEVEMENT UNLOOKED" in the toast) —
-    left for a site-wide decision.
+    message use the pixel face at 400; the crates that fly to the Quest Log keep the canvas crates' DM Sans. PART 8
+    applies the same rule site-wide (#97).
 88. **Attract mode naps too** (PART 6 finding): the living grid's twinkles (#39) stop when the idle nap starts (#67)
     instead of finishing their 60s show.
 89. **QA hook.** If a test defines `window.__QA_LAUNCHPAD` before load, the game hands it the sim, the preview and the
     world ↔ page mapping; otherwise nothing is exposed.
+
+## PART 8 — World 2b: Quest Log
+
+90. **Every value on the cards is computed (R1)** in `src/content/quests.ts` (server-only). Active quest = the
+    `current` role; completed quests = the others in content order (content.ts lists them newest first). The work-mode
+    chip shows only when known. Loot = the stack, typed by the Skill Tree category that lists the item (color, type
+    line, `#skill-<slug>` link) or neutral when the tree doesn't list it; "Used in" = every role and project whose stack
+    has it. Side quests come from `src/content/games.ts` (PART 11 builds the cartridges). EY's "Regulated env" stamp
+    shows only for a role without a side quest whose objectives say "regulated".
+91. **The active quest's widgets restate real stats.** Each is bound by label to one United Airlines stat (Inference
+    cost, Token compression, Eval scenarios, Documentation artifacts) and shows it exactly as written; the Cartographer
+    caption is two phrases found verbatim in the bullets; schema.ts fails the build when a binding breaks. The visuals
+    are decoration and say so ("Illustrative widgets — every number on them is from the résumé", "illustrative: code
+    knowledge graph"): the cost dial has no numbers (the needle settles in a lime band); the token row squeezes into a
+    band drawn at 75–78% of its length (= 22–25% compression); the hash is a real SHA-256 of the objective that
+    mentions caching, not a cache key; the 2 bolts → 6 docs are the stat's own numbers; the graph is a 14-node
+    Fruchterman–Reingold layout computed at build time from a fixed seed (no runtime simulation).
+92. **Coin #6 and side quests.** "$0.08" — the head of the cost value — is a button: coin #6 "Cost Coin" and a "Saved
+    you a coin" float. Side quest buttons send `openGame`; until PART 11 the runtime answers with a "Side quest ·
+    Cartridge not found · <name> — coming soon" toast (`item:acquired` gained an optional `kicker`).
+93. **Card anatomy** (StickerCard, tilt ≤ 3°, peel): an emblem button that spins like a coin (Web Animations, two
+    turns, clink; no spin under reduced motion); company, role, period and mode chips; a COMPLETE stamp; OBJECTIVES as a
+    checklist (decorative boxes; the text stays a list) ticking one box per 150ms with a rising blip, then a three-note
+    fanfare and the stamp's thump; LOOT chips with a tinted simple-icons logo (or the item-type pixel icon) and the item
+    tooltip, linking to the Skill Tree (smooth scroll, focus, a flash on arrival); XP EARNED tiles (NumberRoll, exact
+    strings); a side-quest button, or EY's REGULATED ENV stamp thumping down as it scrolls in. The active quest's
+    objectives get "in progress" markers, not ticks. Everything is server-rendered in its final state; one delegated
+    island (`QuestLogFx`) arms only what is below the fold or behind the closed gate — never under reduced motion or
+    in Speedrun Mode — and plays it on view, after the gate opens.
+94. **Read a card for 3s → +10 XP** (`XP_RULES.openDetails`, reason `open:quest-<id>`, once per save) when half of it
+    (or half the viewport) stays visible, through the existing XP ghost; not while the gate is closed or the tab hidden.
+95. **The trail scrubs without ScrollTrigger.** The brief names ScrollTrigger, whose perpetual rAF loop (#40) would end
+    the page's idle state. `QuestTrail` measures the cards per layout (ResizeObserver) and scrubs from a passive scroll
+    listener that schedules one rAF: dash offset + `getPointAtLength` for BYTE. Measured: zero frames at rest, p95 frame
+    10ms while scrolling. Desktop (≥ 64rem): cards alternate at 42% width with a 9rem overlap and the trail snakes across
+    the channel every ~240px through a node beside each card; narrower screens get a straight rail on the left. The walk
+    cycle runs only on real steps (≥ 0.4px — not the sub-pixel tail of an easing scroll). Reduced motion: drawn in full,
+    no walker. Speedrun Mode: no trail, cards stacked. No JS: a dotted CSS rail. The walker is the `byte` pixel icon,
+    rendered on the server (no icon data in client JS).
+96. **Skill Tree anchors.** Every skill has `id="skill-<slug>"` (unique — checked); PART 13 keeps the ids. A deep link
+    to `#skill-…` opens the Quest Log's gate before first paint, like a world past it (#79).
+97. **Pixel-face legibility, site-wide** (#87, applied): Pixelify Sans renders at 400 for 12–14px labels and 500 for
+    16–22px text (arcade buttons, tooltip titles, the boot title), 700 only from 24px up; numbers move to the display
+    face — HUD coin and trophy chips, toast and ghost XP, "CREDIT 01", Meter values, the radar's counts and every digit
+    run in the LED tickers (the LED mask still applies). The FX layer's pixel words render at 500. Left: at 12px the
+    pixel B and G (and O and 0 in words) still look alike — a different pixel face would solve that.
+98. **320px reflow.** The Quest Log's grid columns are `minmax(0, 1fr)` (an `auto` column grows to its widest
+    min-content: "Technologies" at 28px is wider than a 320px card), company names scale down to 6.6vw, and `#quests`
+    clips horizontal overflow so a stamp thumping in can't widen the page.
+99. **The gate's frost no longer dims** (PART 7, #79): blur + desaturation + the chains say "locked"; the 60% opacity
+    went, because the new cards' muted labels, the violet loot chips and deep lime on day sit near 4.5:1 and fell
+    under it (axe) while frosted.

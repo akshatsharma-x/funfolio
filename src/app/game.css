@@ -286,9 +286,9 @@
     align-items: center;
     gap: 6px;
     padding: 0 10px;
-    font-family: var(--font-pixel);
+    font-family: var(--font-display);
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 800; /* numbers in the display face (#87) */
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -459,7 +459,7 @@
     box-shadow: 0 3px 0 var(--ink);
     font-family: var(--font-pixel);
     font-size: var(--text-xs);
-    font-weight: 600;
+    font-weight: 400; /* pixel face: C and O stay apart (#87) */
     letter-spacing: 0.06em;
     text-transform: uppercase;
     white-space: nowrap;
@@ -558,7 +558,7 @@
     color: var(--fg-gold);
     font-family: var(--font-pixel);
     font-size: var(--text-xs);
-    font-weight: 700;
+    font-weight: 400; /* pixel face: C and O stay apart (#87) */
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
@@ -575,9 +575,9 @@
   }
   .toast__xp {
     color: var(--fg-lime);
-    font-family: var(--font-pixel);
+    font-family: var(--font-display);
     font-size: var(--text-lg);
-    font-weight: 700;
+    font-weight: 800; /* numbers in the display face (#87) */
     white-space: nowrap;
   }
   .toast[data-kind="item"] {
@@ -639,7 +639,7 @@
   .levelup__kicker {
     font-family: var(--font-pixel);
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 400; /* pixel face: C and O stay apart (#87) */
     letter-spacing: 0.16em;
     text-transform: uppercase;
   }
@@ -665,9 +665,9 @@
   .xp-ghost {
     position: absolute;
     color: var(--fg-lime);
-    font-family: var(--font-pixel);
+    font-family: var(--font-display);
     font-size: var(--text-base);
-    font-weight: 700;
+    font-weight: 800; /* numbers in the display face (#87) */
     white-space: nowrap;
     text-shadow:
       2px 0 0 var(--ink),
@@ -738,7 +738,7 @@
       var(--ring);
     font-family: var(--font-pixel);
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 400; /* pixel face: C and O stay apart (#87) */
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
@@ -792,7 +792,7 @@
       0 0 0 1px var(--rim);
     font-family: var(--font-pixel);
     font-size: var(--text-sm);
-    font-weight: 600;
+    font-weight: 400; /* pixel face: C and O stay apart (#87) */
     letter-spacing: 0.04em;
     text-transform: uppercase;
     transition:
@@ -997,7 +997,7 @@
     color: var(--world-fg);
     font-family: var(--font-pixel);
     font-size: var(--text-sm);
-    font-weight: 700;
+    font-weight: 400; /* pixel face: C and O stay apart (#87) */
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }

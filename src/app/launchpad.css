@@ -269,13 +269,12 @@
     pointer-events: none; /* never traps: the cards underneath stay clickable and focusable (both open the gate) */
   }
   html[data-js][data-quest-log="locked"] [data-quest-list] {
-    opacity: 0.6;
+    /* the blur and the chains say "locked" — no dimming, so every label keeps the contrast it has when open
+       (several sit near 4.5:1: muted widget labels, the violet chips, deep lime on day) */
     filter: blur(7px) saturate(0.55);
   }
   [data-quest-list] {
-    transition:
-      filter 450ms ease,
-      opacity 450ms ease;
+    transition: filter 450ms ease;
   }
   .quest-gate__chain {
     position: absolute;
@@ -325,7 +324,7 @@
     font-weight: 600;
     text-transform: none;
   }
-  [data-quest-list][data-deal="play"] > li {
+  [data-quest-list][data-deal="play"] [data-deal-card] {
     animation: quest-deal calc(var(--motion) * 520ms + 1ms) var(--ease-pop) both;
     animation-delay: calc(var(--i, 0) * 70ms);
   }

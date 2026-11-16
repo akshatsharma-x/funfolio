@@ -53,6 +53,14 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   Gates: `store.gates` + `command({ type: "gate", … })`; `html[data-quest-log]` comes from the pre-paint script and the
   runtime, and `QuestGate` plays the reveal. Gated content stays in the DOM and is never trapped (R3).
 - Game screens carry `data-game-screen` (BYTE holds unasked lines behind its "!" instead of talking over them) and
-  `data-keyboard="exclusive"` while focused. Small text in the pixel face misreads (C/O at 700, 5/S, 0/O — #87): put
-  numbers in the display face (`fx.text(…, { font: "display" })`) and keep tiny world labels out of it.
+  `data-keyboard="exclusive"` while focused.
+- Pixel face (Pixelify Sans) legibility (#87, #97): 400 for 12–14px, 500 for 16–22px, 700 only from 24px up; numbers
+  always in the display face (`font-family: var(--font-display)`, `fx.text(…, { font: "display" })`) — its 5/S, 0/O
+  and C/O look alike. Tiny world labels (canvas, SVG) use DM Sans.
+- Quest Log (PART 8): cards, loot, widgets and "used in" evidence are computed in `src/content/quests.ts`
+  (server-only; schema.ts checks the widget bindings); side quests/cartridges in `src/content/games.ts`
+  (`command({ type: "openGame", id })`); tech logos in `src/content/techIcons.ts` (simple-icons, server-rendered).
+  Components in `src/components/sections/quests/`: server cards render the final state; `QuestLogFx` (one delegated
+  island) arms and plays the one-shots; `QuestTrail` scrubs the trail on scroll — no ScrollTrigger (#95). Skills keep
+  `id="skill-<slug>"` anchors (`skillAnchor()`), the loot chips' targets.
 - Keep the page idle (docs/DECISIONS.md #40–41): no always-on rAF loops, continuous CSS animations only on HTML elements' transform/opacity (never on SVG elements), no style writes inside scroll events (use `onScrollMotion`), and get GSAP/ScrollTrigger via `loadScrollTrigger()` only where needed.

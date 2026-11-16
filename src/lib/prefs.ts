@@ -46,7 +46,8 @@ export function readUrlOverrides(): UrlOverrides {
 }
 
 const list = (values: readonly string[]) => JSON.stringify(values);
-/** Worlds behind the Launchpad's soft gate: a deep link to any of them starts with the Quest Log open (PART 7). */
+/** Worlds behind the Launchpad's soft gate: a deep link to any of them (or to a Skill Tree entry, `#skill-…`, PART 8)
+ *  starts with the Quest Log open (PART 7). */
 const PAST_THE_GATE = WORLDS.slice(WORLDS.findIndex((w) => w.id === "quests")).map((w) => w.id);
 
 /**
@@ -69,4 +70,4 @@ export const PREPAINT_SCRIPT = `(function(){try{var d=document.documentElement,q
   DEFAULT_CURSOR_SKIN,
 )}));d.setAttribute("data-cursor-size",pick(s.cursorSize,Z,"normal"));var gt=r&&r.state&&r.state.gates,hs=location.hash.slice(1);d.setAttribute("data-quest-log",(gt&&gt.indexOf&&gt.indexOf("quest-log")>-1)||mode==="speedrun"||reduced||${list(
   PAST_THE_GATE,
-)}.indexOf(hs)>-1?"open":"locked");d.setAttribute("data-world","title");d.setAttribute("data-js","")}catch(x){}})();`;
+)}.indexOf(hs)>-1||hs.indexOf("skill-")===0?"open":"locked");d.setAttribute("data-world","title");d.setAttribute("data-js","")}catch(x){}})();`;

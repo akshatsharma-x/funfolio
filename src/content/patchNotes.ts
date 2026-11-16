@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.8.0",
+    date: "2026-11-17",
+    title: "Quest Log",
+    notes: [
+      "The Experience world is a quest log: the active quest up top, finished quests on a trail you walk down with BYTE.",
+      "The active quest's widgets use only real numbers: cost per run, token compression, cache hits, the doc generator.",
+      "Checklists tick, stamps thump, emblems spin — and every loot item opens its spot in the Skill Tree.",
+      "One of those numbers is worth a coin.",
+      "Small pixel text got easier to read everywhere: numbers now use the chunky display font.",
+    ],
+  },
+  {
     version: "0.7.0",
     date: "2026-11-16",
     title: "The Launchpad",

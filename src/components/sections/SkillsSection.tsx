@@ -1,12 +1,14 @@
 import { skills } from "@/content/content";
 import { counts, ITEM_META, ITEM_TYPES } from "@/content/derived";
+import { skillAnchor } from "@/content/quests";
 import { Chip } from "@/components/ui/Chip";
 import { PixelIcon } from "@/components/ui/PixelIcon";
 import { StickerCard } from "@/components/ui/StickerCard";
 import { WorldHeader } from "@/components/ui/WorldHeader";
 import { WorldSection } from "./parts";
 
-/** World 6 · SKILL TREE · Skills. PART 13 adds the tree, inventory, "used in" evidence and the JD scanner. */
+/** World 6 · SKILL TREE · Skills. PART 13 adds the tree, inventory, "used in" evidence and the JD scanner; every skill
+ *  already has its `#skill-<slug>` anchor (the Quest Log's loot links). */
 export function SkillsSection() {
   const signature = new Set(skills.signature);
   return (
@@ -32,7 +34,8 @@ export function SkillsSection() {
               </h3>
               <ul aria-label={category.label} className="flex flex-wrap gap-2">
                 {category.items.map((item) => (
-                  <li key={item}>
+                  // #skill-<slug>: the Quest Log's loot chips land here (PART 8; PART 13 keeps the ids)
+                  <li key={item} id={skillAnchor(item)} className="skill-item">
                     <Chip type={type} holo={signature.has(item)}>
                       {item}
                     </Chip>

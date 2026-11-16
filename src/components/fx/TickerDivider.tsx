@@ -9,6 +9,19 @@ const MIN_ITEMS = 12; // each run must be wider than any viewport for a seamless
  * computed content; decorative (aria-hidden — every fact is also in the page). The marquee is a CSS animation;
  * FxLayer couples its speed and skew to scroll velocity. Static under reduced motion, hidden in Speedrun Mode.
  */
+/** Digits in the display face: the pixel face's 5/S and 0/O look alike, and these are facts (R1, DECISIONS #87). */
+function LedText({ text }: { text: string }) {
+  return text.split(/(\d(?:[\d.,/]*\d)?)/).map((part, i) =>
+    i % 2 ? (
+      <span key={i} className="ticker__num">
+        {part}
+      </span>
+    ) : (
+      part
+    ),
+  );
+}
+
 export function TickerDivider({ set, world, reverse = false }: { set: TickerSet; world: WorldId; reverse?: boolean }) {
   const base = tickerItems(set);
   if (base.length === 0) return null;
@@ -18,7 +31,7 @@ export function TickerDivider({ set, world, reverse = false }: { set: TickerSet;
       {items.map((text, i) => (
         <span className="ticker__item" key={`${copy}-${i}`}>
           <span className="ticker__star" />
-          {text}
+          <LedText text={text} />
         </span>
       ))}
     </span>

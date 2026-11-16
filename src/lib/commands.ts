@@ -19,7 +19,9 @@ export type Command =
   | { type: "preview-cursor-skin"; id: string }
   | { type: "item"; title: string; detail?: string }
   /** Opens a soft gate (PART 7: the Quest Log behind the Launchpad) — however it happened. */
-  | { type: "gate"; id: "quest-log"; how: GateHow };
+  | { type: "gate"; id: "quest-log"; how: GateHow }
+  /** Starts a side quest / arcade cartridge (src/content/games.ts). Until PART 11 builds the Arcade: a toast. */
+  | { type: "openGame"; id: string; origin?: Point };
 
 /** cleared = every bug popped · played = out of shots · skipped = Skip ▶▶ · scrolled / focus = walked right past it */
 export type GateHow = "cleared" | "played" | "skipped" | "scrolled" | "focus";

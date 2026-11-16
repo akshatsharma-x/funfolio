@@ -26,6 +26,8 @@ export const SFX_NAMES = [
   "lose",
   "note",
   "clink",
+  "squish",
+  "fanfare",
 ] as const;
 
 export type SfxName = (typeof SFX_NAMES)[number];

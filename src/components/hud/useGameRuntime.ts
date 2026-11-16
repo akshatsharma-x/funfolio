@@ -11,6 +11,7 @@
 import { useEffect } from "react";
 import { WORLDS, type WorldId } from "@/content/worlds";
 import { XP_RULES } from "@/content/levels";
+import { GAME_BY_ID } from "@/content/games";
 import { applyToDocument, type Effective } from "@/lib/apply";
 import { bus } from "@/lib/bus";
 import { setCommandHandler, type Command } from "@/lib/commands";
@@ -224,6 +225,15 @@ export function useCommandHandler(resumeHref: string | null) {
         case "item":
           bus.emit("item:acquired", { title: c.title, detail: c.detail });
           break;
+        case "openGame": {
+          // PART 11 plugs the Arcade in here; until then every cartridge is "coming soon"
+          const game = GAME_BY_ID[c.id];
+          if (!game?.ready) {
+            sfx.play("error");
+            bus.emit("item:acquired", { kicker: "Side quest", title: "Cartridge not found", detail: `${game?.name ?? "This game"} — coming soon`, icon: "cartridge" });
+          }
+          break;
+        }
         case "gate":
           if (c.how === "skipped") store.unlock("skipper");
           // the gate's own island (QuestGate) stages the reveal: chains shatter, then the cards deal in

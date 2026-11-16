@@ -4,7 +4,10 @@
 import { z } from "zod";
 import * as content from "./content";
 import { resolveHighlight } from "./derived";
+import { GAME_BY_ID } from "./games";
 import { PERK_DEFS, radarItems } from "./profile";
+import { activeWidgetIssues, skillAnchor } from "./quests";
+import { TECH_ICONS } from "./techIcons";
 
 const todo = z.literal("TODO");
 const text = z.string().trim().min(1);
@@ -159,6 +162,21 @@ const schema = z
     const all = new Set([c.skills.weapons, c.skills.spells, c.skills.gear, c.skills.gadgets, c.skills.runes].flatMap((s) => s.items));
     for (const s of c.skills.signature) {
       if (!all.has(s)) ctx.addIssue({ code: "custom", message: `signature skill "${s}" is not in any skill category`, path: ["skills", "signature"] });
+    }
+    // PART 8 · Quest Log: the active quest's widgets restate real stats; loot links land on a unique Skill Tree anchor
+    for (const issue of activeWidgetIssues()) ctx.addIssue({ code: "custom", message: `active quest widget: ${issue} (src/content/quests.ts)`, path: ["experience"] });
+    const anchors = new Map<string, string>();
+    for (const item of all) {
+      const id = skillAnchor(item);
+      const clash = anchors.get(id);
+      if (clash) ctx.addIssue({ code: "custom", message: `skills "${clash}" and "${item}" share the anchor #${id}`, path: ["skills"] });
+      anchors.set(id, item);
+    }
+    for (const name of Object.keys(TECH_ICONS)) {
+      if (!stacks.has(name)) ctx.addIssue({ code: "custom", message: `tech icon "${name}" matches no stack item (src/content/techIcons.ts)`, path: ["experience"] });
+    }
+    for (const e of c.experience) {
+      if (e.sideQuest && !GAME_BY_ID[e.sideQuest]) ctx.addIssue({ code: "custom", message: `side quest "${e.sideQuest}" (${e.id}) is not in src/content/games.ts`, path: ["experience"] });
     }
   });
 

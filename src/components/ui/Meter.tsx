@@ -32,7 +32,7 @@ export function Meter({ value, max = 100, segments = 10, label, valueText, showL
       {showLabel ? (
         <div className="flex justify-between gap-4 font-pixel text-xs uppercase tracking-wider" aria-hidden="true">
           <span>{label}</span>
-          <span className="text-muted">{text}</span>
+          <span className="font-display font-bold tracking-normal text-muted">{text}</span>
         </div>
       ) : null}
       <div

@@ -1,14 +1,12 @@
-import type { CSSProperties } from "react";
-import { experience } from "@/content/content";
 import { counts } from "@/content/derived";
-import { Badge } from "@/components/ui/Badge";
-import { Fact } from "@/components/ui/ComingSoon";
-import { PeelDoodle, PeelFact } from "@/components/ui/PeelSecrets";
-import { StickerCard } from "@/components/ui/StickerCard";
+import { activeQuest, completedQuests } from "@/content/quests";
 import { PixelIcon } from "@/components/ui/PixelIcon";
 import { WorldHeader } from "@/components/ui/WorldHeader";
 import { QuestGate } from "./quests/QuestGate";
-import { BulletList, Emblem, InfoList, StackList, StatList, WorldSection } from "./parts";
+import { QuestLogFx } from "./quests/QuestLogFx";
+import { QuestTrail } from "./quests/QuestTrail";
+import { ActiveQuestCard, CompletedQuestCard } from "./quests/QuestCards";
+import { WorldSection } from "./parts";
 
 /** Pixel chain links for the soft gate (decorative). */
 function Chain({ className }: { className: string }) {
@@ -22,10 +20,13 @@ function Chain({ className }: { className: string }) {
 }
 
 /**
- * World 2B · QUEST LOG · Experience. PART 7: behind the Launchpad's soft gate — frosted and chained until the fortress
- * falls, Skip is pressed or you simply scroll in; always fully in the DOM. PART 8 adds the quest path and stamps.
+ * World 2B · QUEST LOG · Experience (PART 8). The ACTIVE QUEST hero (current role, illustrative widgets, coin #6), then
+ * the COMPLETED QUESTS on a winding trail that draws itself as you scroll, with a tiny BYTE walking it (a straight
+ * rail on phones). Behind the Launchpad's soft gate (PART 7): frosted until opened, always fully in the DOM.
  */
 export function QuestsSection() {
+  const active = activeQuest();
+  const done = completedQuests();
   return (
     <WorldSection id="quests" world="quests" labelledBy="quests-title" className="pt-8 md:pt-10">
       <WorldHeader world="quests" id="quests-title">
@@ -42,42 +43,38 @@ export function QuestsSection() {
             Clear the fortress or press Skip <span className="quest-gate__or">— or just keep scrolling</span>
           </p>
         </div>
-      <ol className="grid gap-6" data-quest-list="">
-        {experience.map((xp, i) => (
-          <StickerCard
-            key={xp.id}
-            as="li"
-            style={{ "--i": i } as CSSProperties}
-            aria-labelledby={`quest-${xp.id}`}
-            bodyClassName="grid gap-5 sm:p-7"
-            tilt
-            tiltMax={3}
-            peelLabel={`Peek under the ${xp.company} quest card`}
-            peel={i === 2 ? <PeelDoodle name="byte" caption="BYTE was here." /> : <PeelFact n={i} />}
-          >
-            <div className="flex flex-wrap items-start gap-4">
-              <Emblem text={xp.emblem} />
-              {/* below 25rem the name goes under the emblem: "WalkingTree Technologies" needs the full width at 320px */}
-              <div className="grid min-w-0 flex-1 basis-full gap-1 min-[25rem]:basis-0">
-                <h3 id={`quest-${xp.id}`} className="text-xl [overflow-wrap:break-word]">
-                  {xp.company}
-                </h3>
-                <p className="font-semibold">{xp.role}</p>
-                <p className="flex flex-wrap items-center gap-3 text-muted">
-                  <span>{xp.period}</span>
-                  {xp.current ? <Badge tone="world">Current quest</Badge> : null}
-                </p>
+        <div className="quest-log" data-quest-list="">
+          {active ? <ActiveQuestCard q={active} /> : null}
+          {done.length ? (
+            <>
+              <p className="quest-kicker quest-log__done" id="quests-done">
+                Completed quests <span className="quest-kicker__plain">· Previous roles, newest first</span>
+              </p>
+              <div className="quest-trail" data-quest-trail="">
+                {/* drawn by QuestTrail; without JS a plain CSS rail stands in */}
+                <svg className="quest-trail__svg" aria-hidden="true" focusable="false" data-speedrun="hide">
+                  <path className="quest-trail__base" />
+                  <path className="quest-trail__lit" />
+                  <g className="quest-trail__nodes" />
+                </svg>
+                <span className="quest-trail__walker" data-walker="" aria-hidden="true" data-speedrun="hide">
+                  <span className="quest-trail__byte">
+                    <PixelIcon name="byte" size={32} />
+                  </span>
+                </span>
+                <QuestTrail />
+                <ol className="quest-trail__list" aria-labelledby="quests-done">
+                  {done.map((q, i) => (
+                    <CompletedQuestCard key={q.id} q={q} index={i} />
+                  ))}
+                </ol>
               </div>
-            </div>
-            <InfoList rows={[{ label: "Work mode", value: <Fact value={xp.mode} /> }]} />
-            <BulletList items={xp.bullets} />
-            <StatList stats={xp.stats} label={`${xp.company} stats`} />
-            <StackList items={xp.stack} label={`${xp.company} stack`} />
-          </StickerCard>
-        ))}
-      </ol>
+            </>
+          ) : null}
+        </div>
       </div>
       <QuestGate />
+      <QuestLogFx />
     </WorldSection>
   );
 }

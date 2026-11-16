@@ -349,7 +349,7 @@ export function createFxEngine(canvas: HTMLCanvasElement, opts: { shakeTargets?:
       if (texts.length > 12) texts.shift();
       canvas.setAttribute("data-last-text", text);
       const display = o.font === "display";
-      texts.push({ text, x, y, born: performance.now(), life: o.ms ?? 760, rise: o.rise ?? 34, color: o.color ?? "#FFD23F", size: o.size ?? 18, weight: display ? 800 : 700, family: fontFor(display ? "display" : "pixel") });
+      texts.push({ text, x, y, born: performance.now(), life: o.ms ?? 760, rise: o.rise ?? 34, color: o.color ?? "#FFD23F", size: o.size ?? 18, weight: display ? 800 : 500, family: fontFor(display ? "display" : "pixel") });
       wake();
     },
 

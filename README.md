@@ -49,6 +49,12 @@ Fortress; a strong lob reaches the coin above it. The Quest Log below is only fr
 fortress, running out of shots, "Skip ▶▶" or simply scrolling on opens it. Reduced motion shows a still picture of
 the level ("Play anyway" starts the game); Speedrun Mode leaves the game out.
 
+World 2b (the Quest Log) starts with the ACTIVE QUEST — the current role, with illustrative widgets built only from
+its real numbers (a cost dial, a token squeeze, a SHA-256 cache hit, a knowledge graph) and a hidden coin on "$0.08".
+The COMPLETED QUESTS follow, newest first, on a trail that draws itself as you scroll while a tiny BYTE walks it (a
+straight rail on phones): checklists tick, stamps thump down, emblems spin when clicked, and every loot chip opens its
+Skill Tree entry. Side quest buttons say "coming soon" until the Arcade exists. Reading a card for 3s pays +10 XP once.
+
 BYTE, the robot mascot, lives in the bottom-right corner: click for a quip, drag or throw it, rub it for hearts,
 minimize it with the `–` button (or turn it off in Pause → Settings). `/playground` has a Juice kit & BYTE panel.
 

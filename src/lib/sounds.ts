@@ -27,4 +27,7 @@ export const SOUNDS: Readonly<Record<SfxName, readonly number[]>> = {
   // PART 5: a short square-ish pluck for the playable name letters (pitch = the note) and a metallic coin-slot clink
   note: [0.3, 0, 523.25, 0, 0.02, 0.16, 1, 1.8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.55, 0.02],
   clink: [0.5, 0.02, 1568, 0, 0.01, 0.09, 1, 0.4, 0, 0, 784, 0.03, 0, 0.1, 0, 0, 0.03, 0.4, 0.01],
+  // PART 8: a rubbery downward squelch (token squeeze) and a quick rising three-note fanfare (a quest's checklist done)
+  squish: [0.4, 0.05, 240, 0.01, 0.05, 0.16, 0, 1.6, -14, 0, 0, 0, 0, 0.6, 2, 0, 0, 0.5, 0.03],
+  fanfare: [0.5, 0, 659, 0.01, 0.1, 0.24, 1, 1, 0, 0, 330, 0.06, 0.06, 0, 0, 0, 0, 0.75, 0.04],
 };

@@ -16,7 +16,7 @@ export type BusEvents = {
   "achievement:unlocked": { id: string };
   "coin:collected": { id: string; name: string; found: number; total: number; origin?: Point };
   /** Small "ITEM ACQUIRED" toasts: copied email, downloads, prizes… */
-  "item:acquired": { title: string; detail?: string; icon?: string };
+  "item:acquired": { title: string; detail?: string; icon?: string; kicker?: string };
   "world:enter": { id: string };
   /** First time a world scrolls into view (PART 4 plays the WorldHeader intro). */
   "world:first-visit": { id: string };

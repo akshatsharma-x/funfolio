@@ -88,8 +88,8 @@ export function ToastHost() {
       bus.on("coin:collected", ({ name, found, total }) =>
         push({ kind: "item", kicker: "Item acquired", title: name, detail: `Hidden coins ${found}/${total}`, icon: "coin" }),
       ),
-      bus.on("item:acquired", ({ title, detail, icon }) =>
-        push({ kind: "item", kicker: "Item acquired", title, detail, icon: (icon as PixelIconName | undefined) ?? "chest" }),
+      bus.on("item:acquired", ({ title, detail, icon, kicker }) =>
+        push({ kind: "item", kicker: kicker ?? "Item acquired", title, detail, icon: (icon as PixelIconName | undefined) ?? "chest" }),
       ),
     ];
     return () => offs.forEach((off) => off());
