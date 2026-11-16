@@ -22,6 +22,7 @@ import { useSave, type Settings } from "@/lib/store";
 import { sweepTheme } from "@/lib/theme";
 import { isPauseTab, useUi } from "@/lib/ui";
 import { fx } from "@/lib/juice";
+import { byte } from "@/lib/byte";
 import { warp } from "@/lib/warp";
 
 const TEXT_FIELDS =
@@ -152,13 +153,28 @@ export function useDocumentSync() {
       useUi.getState().setPreviousVisit(useSave.getState().startSession());
     }
     apply();
+    // the Quest Log's soft gate (PART 7): open at load when the save, Speedrun Mode or reduced motion says so (a gate
+    // opened during the visit is revealed by QuestGate); never re-locked here — only after a save reset
+    const root = document.documentElement;
+    const syncGate = () => {
+      const s = useSave.getState();
+      const reduced = s.settings.reducedMotion === "reduce" || (s.settings.reducedMotion !== "full" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      if (s.gates.includes("quest-log") || root.getAttribute("data-mode") === "speedrun" || reduced) root.setAttribute("data-quest-log", "open");
+    };
+    syncGate();
+    const offReset = bus.on("save:reset", () => {
+      root.setAttribute("data-quest-log", "locked");
+      syncGate();
+    });
     const unsub = useSave.subscribe((s, prev) => {
       if (s.settings !== prev.settings || s.inventory.equipped !== prev.inventory.equipped) apply();
+      if (s.settings !== prev.settings) syncGate();
     });
     const os = window.matchMedia("(prefers-reduced-motion: reduce)");
     os.addEventListener("change", apply);
     return () => {
       unsub();
+      offReset();
       os.removeEventListener("change", apply);
     };
   }, []);
@@ -207,6 +223,14 @@ export function useCommandHandler(resumeHref: string | null) {
           break;
         case "item":
           bus.emit("item:acquired", { title: c.title, detail: c.detail });
+          break;
+        case "gate":
+          if (c.how === "skipped") store.unlock("skipper");
+          // the gate's own island (QuestGate) stages the reveal: chains shatter, then the cards deal in
+          if (store.openGate(c.id)) {
+            bus.emit("gate:open", { id: c.id, how: c.how });
+            if (c.how === "scrolled" || c.how === "focus") byte.say("Fine, fine… unlocked for you 🙄", { mood: "cool", now: true });
+          }
           break;
       }
     };

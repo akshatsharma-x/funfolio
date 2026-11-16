@@ -17,7 +17,12 @@ export type Command =
   | { type: "setting"; key: "fx" | "sound" | "cursorSize" | "reducedMotion" | "byteVisible"; value: string | boolean | number }
   | { type: "pause"; tab?: string }
   | { type: "preview-cursor-skin"; id: string }
-  | { type: "item"; title: string; detail?: string };
+  | { type: "item"; title: string; detail?: string }
+  /** Opens a soft gate (PART 7: the Quest Log behind the Launchpad) — however it happened. */
+  | { type: "gate"; id: "quest-log"; how: GateHow };
+
+/** cleared = every bug popped · played = out of shots · skipped = Skip ▶▶ · scrolled / focus = walked right past it */
+export type GateHow = "cleared" | "played" | "skipped" | "scrolled" | "focus";
 
 type Handler = (command: Command) => void;
 

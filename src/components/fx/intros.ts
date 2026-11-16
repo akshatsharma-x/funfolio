@@ -107,8 +107,16 @@ export function startWorldIntros(): () => void {
     { threshold: 0.6 },
   );
   for (const h of headers) if (!seen.has(h.dataset.worldHeader ?? "")) io.observe(h);
+  // another animation is about to own a header (PART 7: crates assembling into QUEST LOG) — don't play over it
+  const offSkip = bus.on("intro:skip", ({ id }) => {
+    seen.add(id);
+    save();
+    const el = headers.find((h) => h.dataset.worldHeader === id);
+    if (el) io.unobserve(el);
+  });
 
   return () => {
+    offSkip();
     io.disconnect();
     timers.forEach((t) => window.clearTimeout(t));
     pending.forEach((finish) => finish());

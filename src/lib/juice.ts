@@ -12,7 +12,8 @@ export type BurstOptions = {
   /** Launch speed multiplier (1 = default). */
   power?: number;
 };
-export type FloatTextOptions = { color?: string; size?: number; rise?: number; ms?: number };
+/** `font: "display"` draws the text in the display face — use it for scores: the pixel face's 5/S and 0/O look alike. */
+export type FloatTextOptions = { color?: string; size?: number; rise?: number; ms?: number; font?: "pixel" | "display" };
 export type ConfettiStyle = "pixels" | "stars" | "hearts" | "coins";
 export type DissolveDirection = "up" | "down" | "left" | "right";
 export type DissolveOptions = { color?: string; direction?: DissolveDirection };

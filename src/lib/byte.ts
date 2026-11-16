@@ -11,6 +11,8 @@ export type SayOptions = {
   mood?: ByteMood;
   /** How long the finished bubble stays (default: 2.4s + 45ms per character). */
   ms?: number;
+  /** A direct reaction to what the visitor just did: cut in instead of queueing behind the current line. */
+  now?: boolean;
 };
 
 export const byte = {

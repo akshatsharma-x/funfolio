@@ -8,6 +8,7 @@
 //   • minimize → only the antenna peeks out; rubbing → hearts; 10 pets → petting-zoo
 //   • never covers a button: when its spot overlaps anything interactive, BYTE glides to the nearest free spot
 //     (and back home once it's free); if nothing is free, it tucks away like minimized.
+//   • never talks over a game unasked: over a `[data-game-screen]` (and on phones) its lines wait behind a "!"
 
 import type { ByteScript } from "@/content/quips";
 import type { WorldId } from "@/content/worlds";
@@ -267,6 +268,20 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     queue.push(line);
     nextLine();
     return true;
+  };
+  // A game screen (`[data-game-screen]`) is a play zone with its own tips: there, too, lines BYTE offers unasked wait
+  // behind the "!" rather than open a bubble over the game (estimated from BYTE's spot; a click on BYTE plays them).
+  const bubbleOverGame = () => {
+    const games = document.querySelectorAll<HTMLElement>("[data-game-screen]");
+    if (!games.length) return false;
+    const w = Math.min(260, window.innerWidth - 24);
+    const h = 120;
+    const l = root.dataset.side === "left" ? pos.x : pos.x + BYTE_W - w;
+    const t = root.dataset.place === "below" ? pos.y + BYTE_H + 4 : pos.y - 4 - h;
+    return [...games].some((g) => {
+      const r = g.getBoundingClientRect();
+      return r.width > 0 && r.left < l + w && r.right > l && r.top < t + h && r.bottom > t;
+    });
   };
   const syncPending = () => {
     root.toggleAttribute("data-pending", pending.length > 0);
@@ -658,7 +673,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
   const sayOnce = (key: string, line: Line, requires?: string) => {
     if (requires && !document.querySelector(requires)) return; // the feature it talks about isn't on the page yet
     if (store.getState().byte.said.includes(key)) return;
-    if (narrow.matches) {
+    if (narrow.matches || bubbleOverGame()) {
       if (minimized || tucked || pending.some((p) => p.key === key)) return;
       pending.push({ key, line });
       if (pending.length > 3) pending.shift();
@@ -684,12 +699,17 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
 
   offs.push(
     bus.on("world:enter", ({ id }) => {
-      const key = (id === "quests" ? "launchpad" : id) as WorldId;
-      const line = script.worldLines[key];
-      if (line) later(() => sayOnce(`world:${key}`, { text: line.text, mood: line.mood }, line.requires), 650);
+      const line = script.worldLines[id as WorldId];
+      if (!line) return;
+      // only about a world the visitor stays in: a jump or a fast scroll passing through says nothing (and the line
+      // stays unsaid for a real visit)
+      later(() => {
+        if (document.documentElement.getAttribute("data-world") === id) sayOnce(`world:${id}`, { text: line.text, mood: line.mood }, line.requires);
+      }, 650);
     }),
-    bus.on("byte:say", ({ text, mood: m, ms }) => {
-      say({ text, mood: m, ms });
+    bus.on("byte:say", ({ text, mood: m, ms, now }) => {
+      if (now) sayNow({ text, mood: m, ms });
+      else say({ text, mood: m, ms });
     }),
     bus.on("byte:react", ({ mood: m }) => react(m)),
     bus.on("byte:point", ({ selector }) => point(selector)),

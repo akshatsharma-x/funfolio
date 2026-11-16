@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.7.0",
+    date: "2026-11-16",
+    title: "The Launchpad",
+    notes: [
+      "World 2 opens with a slingshot: pull BYTE back on the neon launcher and fling it into the Bug Fortress.",
+      "Three shots, five glitch-bugs, nine crates of dev nightmares. The dotted line shows exactly where BYTE will fly.",
+      "Mouse, touch or keyboard (arrows to aim and set power, Space to launch). Skip ▶▶ any time.",
+      "The Quest Log is only frosted until you play, skip or scroll on — never locked.",
+      "A coin floats high above the fortress. Lob it.",
+    ],
+  },
+  {
     version: "0.6.0",
     date: "2026-11-16",
     title: "Player Profile",

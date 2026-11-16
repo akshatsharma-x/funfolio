@@ -49,9 +49,10 @@ function focusTarget(el: HTMLElement) {
 export const HUD_OFFSET = 64;
 
 /** Smoothly scrolls to an element (or instantly when Lenis is off), then focuses it. */
-export function scrollToElement(el: HTMLElement, opts: { focus?: boolean } = {}) {
+export function scrollToElement(el: HTMLElement, opts: { focus?: boolean; onComplete?: () => void } = {}) {
   const done = () => {
     if (opts.focus) focusTarget(el);
+    opts.onComplete?.();
   };
   if (instance) {
     instance.scrollTo(el, { offset: -HUD_OFFSET, onComplete: done });

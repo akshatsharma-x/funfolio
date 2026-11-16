@@ -22,7 +22,12 @@ import { bus, type Point } from "./bus";
 import { FX_LEVELS, LEGACY_PREFS_KEY, MODES, readLegacyPrefs, SAVE_KEY, THEMES, type FxLevel, type Mode, type Theme } from "./prefs";
 
 export { SAVE_KEY };
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
+
+/** Soft gates that open once per save (PART 7: the Launchpad in front of the Quest Log). */
+export const GATE_IDS = ["quest-log"] as const;
+export type GateId = (typeof GATE_IDS)[number];
+const isGate = (id: string): id is GateId => (GATE_IDS as readonly string[]).includes(id);
 
 export type ReducedMotionSetting = "system" | "reduce" | "full";
 
@@ -52,6 +57,8 @@ export type SaveData = {
   /** BYTE (PART 4): home position as fractions of the free viewport (null = docked bottom-right), minimized, and the
    *  once-only lines already said (world lines, first-run tips). Position + minimized survive a reset. */
   byte: { fx: number | null; fy: number | null; minimized: boolean; said: string[] };
+  /** Soft gates already opened (v2). */
+  gates: GateId[];
 };
 
 export type SaveActions = {
@@ -61,6 +68,8 @@ export type SaveActions = {
   unlock: (id: string) => boolean;
   visitWorld: (id: WorldId) => boolean;
   recordScore: (game: string, score: number) => { best: boolean; highScore: number };
+  /** Opens a soft gate; true the first time. */
+  openGate: (id: GateId) => boolean;
   buy: (itemId: string) => boolean;
   equip: (slot: PrizeSlot, itemId: string | null) => boolean;
   setSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => boolean;
@@ -108,6 +117,7 @@ function freshData(now = Date.now()): SaveData {
     stats: { clicks: 0, sessionStart: now, timePlayedMs: 0, eggsFound: [] },
     meta: { saveVersion: SAVE_VERSION, lastVisit: null, lastSeenPatch: null },
     byte: { fx: null, fy: null, minimized: false, said: [] },
+    gates: [],
   };
 }
 
@@ -195,6 +205,7 @@ export function normalizeSave(input: unknown): SaveData {
       lastSeenPatch: typeof meta.lastSeenPatch === "string" ? meta.lastSeenPatch : null,
     },
     byte: { fx: frac(byte.fx), fy: frac(byte.fy), minimized: byte.minimized === true, said: strs(byte.said).slice(0, 64) },
+    gates: strs(s.gates).filter(isGate),
   };
 }
 
@@ -215,6 +226,10 @@ export function migrateSave(persisted: unknown, version: number): SaveData {
       settings: isObj(data.settings) ? data.settings : { theme: legacy.theme, sound: legacy.sound },
     };
   }
+  if (version < 2) {
+    // v2 (PART 7) adds soft gates; no v1 save could have opened one — normalizeSave fills gates: [].
+    data = { ...data, gates: [] };
+  }
   return normalizeSave(data);
 }
 
@@ -228,6 +243,7 @@ const pickData = (s: SaveStore): SaveData => ({
   stats: s.stats,
   meta: s.meta,
   byte: s.byte,
+  gates: s.gates,
 });
 
 export const useSave = create<SaveStore>()(
@@ -372,6 +388,13 @@ export const useSave = create<SaveStore>()(
         if (s.settings[k] === v) return true;
         set({ settings: { ...s.settings, [k]: v } as Settings });
         if (k === "mode" && v === "speedrun") get().unlock("speedrunner");
+        return true;
+      },
+
+      openGate(id) {
+        const s = get();
+        if (s.gates.includes(id)) return false;
+        set({ gates: [...s.gates, id] });
         return true;
       },
 

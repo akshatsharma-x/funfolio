@@ -41,7 +41,7 @@ type Particle = {
   vr: number;
   wob: number;
 };
-type FloatText = { text: string; x: number; y: number; born: number; life: number; rise: number; color: string; size: number };
+type FloatText = { text: string; x: number; y: number; born: number; life: number; rise: number; color: string; size: number; weight: number; family: string };
 type Dissolve = {
   started: number;
   cover: number;
@@ -72,7 +72,15 @@ export function createFxEngine(canvas: HTMLCanvasElement, opts: { shakeTargets?:
   let w = 0;
   let h = 0;
   let sizeDirty = true;
-  let fontFamily = "";
+  const fonts = { pixel: "", display: "" };
+  const fontFor = (kind: "pixel" | "display") => {
+    if (!fonts[kind]) {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(kind === "pixel" ? "--font-pixelify" : "--font-unbounded").trim();
+      const fallback = kind === "pixel" ? "monospace" : "sans-serif";
+      fonts[kind] = v ? `${v}, ${fallback}` : fallback;
+    }
+    return fonts[kind];
+  };
   let lastTrail = { x: -999, y: -999, t: 0 };
   const sprites = new Map<string, HTMLCanvasElement>();
 
@@ -261,7 +269,7 @@ export function createFxEngine(canvas: HTMLCanvasElement, opts: { shakeTargets?:
         const ease = 1 - Math.pow(1 - t, 3);
         const pop = t < 0.12 ? 1.3 - (t / 0.12) * 0.3 : 1;
         ctx.globalAlpha = t < 0.65 ? 1 : 1 - (t - 0.65) / 0.35;
-        ctx.font = `700 ${Math.round(tx.size * pop)}px ${fontFamily}`;
+        ctx.font = `${tx.weight} ${Math.round(tx.size * pop)}px ${tx.family}`;
         const y = tx.y - tx.rise * ease;
         ctx.lineWidth = 5;
         ctx.strokeStyle = INK;
@@ -338,13 +346,10 @@ export function createFxEngine(canvas: HTMLCanvasElement, opts: { shakeTargets?:
     },
 
     text(x, y, text, o: FloatTextOptions = {}) {
-      if (!fontFamily) {
-        const v = getComputedStyle(document.documentElement).getPropertyValue("--font-pixelify").trim();
-        fontFamily = v ? `${v}, monospace` : "monospace";
-      }
       if (texts.length > 12) texts.shift();
       canvas.setAttribute("data-last-text", text);
-      texts.push({ text, x, y, born: performance.now(), life: o.ms ?? 760, rise: o.rise ?? 34, color: o.color ?? "#FFD23F", size: o.size ?? 18 });
+      const display = o.font === "display";
+      texts.push({ text, x, y, born: performance.now(), life: o.ms ?? 760, rise: o.rise ?? 34, color: o.color ?? "#FFD23F", size: o.size ?? 18, weight: display ? 800 : 700, family: fontFor(display ? "display" : "pixel") });
       wake();
     },
 

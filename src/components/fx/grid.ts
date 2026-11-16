@@ -200,7 +200,8 @@ export function createGrid(canvas: HTMLCanvasElement): GridEngine & { destroy():
   };
   function twinkle() {
     const idle = performance.now() - lastMove;
-    if (idle > IDLE_START && idle < IDLE_START + ATTRACT_FOR && !paused() && fxLevel() !== "chill") {
+    // …and it ends with the idle nap (PART 7): after 30s without input nothing moves at all (docs/DECISIONS.md #67)
+    if (idle > IDLE_START && idle < IDLE_START + ATTRACT_FOR && !paused() && fxLevel() !== "chill" && !root.hasAttribute("data-idle")) {
       for (let tries = 0; tries < 5; tries++) {
         const i = Math.floor(Math.random() * cols * rows);
         const c = i % cols;

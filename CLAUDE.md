@@ -46,4 +46,13 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
 - Reading zones (R6): `src/components/fx/readZones.ts` defines them once — `READ` (text people read: click juice stays
   silent near it) and `TEXT` (READ + labelled controls: confetti is masked out of it). Reuse them for any new effect
   that could land on text.
+- Launchpad (PART 7): `src/components/games/launchpad/` — `level.ts` holds every tuned number (change physics only
+  there and re-check that the preview still matches the flight), `sim.ts` the Matter world + rules (no DOM), `draw.ts`
+  the canvas renderer, `game.ts` the lazy entry (input, FX, sfx, save). The stage, the HUD and the server-rendered
+  poster (no-JS / reduced-motion view, drawn from the same `level.ts`) are in `src/components/sections/launchpad/`.
+  Gates: `store.gates` + `command({ type: "gate", … })`; `html[data-quest-log]` comes from the pre-paint script and the
+  runtime, and `QuestGate` plays the reveal. Gated content stays in the DOM and is never trapped (R3).
+- Game screens carry `data-game-screen` (BYTE holds unasked lines behind its "!" instead of talking over them) and
+  `data-keyboard="exclusive"` while focused. Small text in the pixel face misreads (C/O at 700, 5/S, 0/O — #87): put
+  numbers in the display face (`fx.text(…, { font: "display" })`) and keep tiny world labels out of it.
 - Keep the page idle (docs/DECISIONS.md #40–41): no always-on rAF loops, continuous CSS animations only on HTML elements' transform/opacity (never on SVG elements), no style writes inside scroll events (use `onScrollMotion`), and get GSAP/ScrollTrigger via `loadScrollTrigger()` only where needed.

@@ -284,7 +284,7 @@ change an entry only when the decision itself changes.
     becomes a full-width strip once it exists.
 67. **Idle nap** (PART 5 finding): after 30s without input `html[data-idle]` pauses every decorative CSS loop (they all
     run on `--play`); the next pointer move, key, wheel, touch or scroll resumes them at once. Measured after the nap:
-    0.5% main-thread time (vs ~4–20% before). The living grid's attract mode keeps its ≤ 60s show (#39), then sleeps.
+    0.5% main-thread time (vs ~4–20% before). Since PART 7 the living grid's attract mode stops then too (#88).
 68. **Everything on the sheet is computed** (`src/content/profile.ts`, server-side): Class = the first class, Subclass =
     the Full-Stack class, Guild = the school, Status = the current role's company; quick stats are `counts`;
     "Currently playing" = the current role, "since" its start, and headline phrases shown only while they appear
@@ -330,3 +330,65 @@ change an entry only when the decision itself changes.
     compositor loops on the main thread, and the Profile alone added eleven (holo ring, breathing avatar, equalizer,
     crate): with them running below the fold the Title's idle main-thread time rose from ≤ 3% to 9%; paused, it's
     back under 3%. Together with the idle nap (#67), a loop only runs while its world is on screen and someone's there.
+
+## PART 7 — World 2a: The Launchpad
+
+79. **A soft gate, never a wall (R3).** The Quest Log is server-rendered and stays in the DOM while "locked":
+    `html[data-quest-log="locked"]` only frosts it (blur, two pixel chains, a lock and "Clear the fortress or press
+    Skip — or just keep scrolling"); the overlay passes the pointer through. It opens when the fortress is cleared,
+    when a round ends out of shots ("Close enough! Quest Log unlocked anyway 😄"), on Skip ▶▶ (+ Skipper), and as soon
+    as the visitor scrolls the list into view or tabs into it (BYTE, interrupting: "Fine, fine… unlocked for you 🙄").
+    The pre-paint script (#5) opens it before first paint when the save has it, in Speedrun Mode, under reduced motion
+    and on a deep link to any world past the gate (`/#quests`, `/#lab` …); without JS it is simply open. Saved as
+    `gates: ["quest-log"]` — SAVE_VERSION 2; the v1 → v2 migration step adds `gates: []`.
+80. **Physics tuned in Node, verified in the browser.** Matter.js 0.20, fixed 1000/60 timestep (one `Engine.update`
+    per tick), gravity 1 × 0.001, BYTE's frictionAir 0.004, launch speed 22 units/tick × power along the aim, from
+    where BYTE is pulled back to (pull radius 170 world units in a 1600 × 1000 world; never under 88px on screen).
+    A full pull lands ≈ 1524 (past the far tower at 1450); the coin above the front tower (1080, 400) needs a
+    full-power lob at ≈ 50–58° (never reachable at ≤ 88% power). Every number lives in `level.ts`. The trajectory
+    preview (12 dots, one every 3 ticks) runs the engine's own per-tick integration (v = v·(1 − frictionAir) + g·dt²;
+    p += v); measured against real flights in Chrome, every dot is < 0.5 world units off.
+81. **Rules.** 3 shots. A glitch-bug pops (+500, burst, pop sfx) on an impact faster than 4.2 units/tick along the
+    contact normal, a 70-unit fall or leaving the stage; a crate tipped past 0.5 rad or pushed 45 units counts once
+    (+50). Impacts over 9 → a thud scaled by the hit, 60ms hit-stop and a small shake of the playfield (#37). All
+    five popped → "FORTRESS CLEARED!", coin confetti, Bug Exterminator; out of shots → "Close enough!". Either way
+    the gate opens and the score is saved (`games.highScores.launchpad`); the first launch ever unlocks Launch Day.
+    Coin #5 "Bug Fortress" floats above the front tower.
+82. **Input (R5).** A ≥ 88px grab handle around BYTE takes the pointer (`touch-action: none`); the rest of the screen
+    keeps `pan-y`, so a swipe elsewhere scrolls the page. The focused stage (`role="application"`,
+    `data-keyboard="exclusive"`, so only Esc stays global) takes ←/→ aim (Shift = bigger steps), ↑/↓ power, Space or
+    Enter launch, R reset; the first arrow sets 70% power so the preview shows at once. Unfocused, arrows scroll.
+    Skip ▶▶ and Reset sit in the game's HUD; Skip works before the game has even loaded.
+83. **Lazy and resting (R7).** The game chunk (Matter + sim + renderer: 31 KB gzip) loads when the stage is within one
+    viewport — never under reduced motion until "Play anyway", never in Speedrun Mode. Frames run only while
+    something moves; at rest a 10fps tick animates the bugs' glitch (off under reduced motion, in the pause menu,
+    during the idle nap #67 and off screen). The pause menu freezes the world (`game:pause`). Canvas DPR ≤ 1.5.
+84. **The poster.** No JS and reduced motion get a server-rendered SVG of the same level (built from `level.ts`, with
+    a text description); reduced motion adds "Play anyway". Speedrun Mode keeps `#launchpad` hidden (#29) instead of
+    showing the poster the brief asks for: the mode exists to remove friction, and the Quest Log is open in it.
+85. **Unlock choreography.** "Continue to the Quest Log ▼" or Skip ▶▶: the canvas hands its remaining crates over
+    (`liftCrates()`) as fixed HTML stickers; GSAP (loaded on demand) spins them up out of the fortress while the page
+    scrolls to the Quest Log underneath (`scrollToElement(el, { onComplete })`). The gate opens the moment the page
+    arrives — the chains shatter into pixel bursts and the cards deal in (CSS, 70ms stagger) while the crates land on
+    the letters of the heading (measured with a Range) — so reading never waits for the flourish: readable 1.1s after
+    Skip. Lenis drops `onComplete` when the visitor takes over the scroll mid-flight, so the wait gives up after 2.5s
+    and nothing is ever stranded (part7-qa J3). The Quest Log's world intro is skipped for that visit
+    (`intro:skip`) so two animations never play at once. Reduced motion: a scroll and a fade.
+86. **BYTE around games.** The Launchpad's world line ("pull me back…", #45) plays now that `[data-slingshot]`
+    exists — at the Launchpad only (it no longer doubles as the Quest Log's line). A world line plays only if the
+    visitor is still in that world 650ms later: a jump or a fast scroll passing through says nothing, and the line
+    stays unsaid for a real visit. BYTE's body already avoided the live stage (it is focusable); now its bubble does
+    too: unasked lines (world lines, tips) wait behind the "!" badge (#61) while the bubble would open over a
+    `[data-game-screen]`. `byte.say(text, { now: true })` interrupts the current line (direct answers to the visitor).
+87. **The pixel face misreads at small sizes (finding).** Pixelify Sans has no stylistic alternates; its C is an O
+    with a one-pixel notch that fills in at weight 700 ("SCORE" read "SOORE"), and its 5/S and 0/O look alike at
+    every size ("500 ERROR" read "SOO ERROR"). In the Launchpad, crate labels use DM Sans 800 (canvas and poster
+    share `crateText()`), numbers use the display face (the Bible's "big numbers": HUD values, results, and
+    `fx.text(…, { font: "display" })` for the +500 / +50 pops), and the HUD labels, the stage tip and the gate's
+    message use the pixel face at 400; the crates that fly to the Quest Log keep the canvas crates' DM Sans. The rest
+    of the site still sets the pixel face at 700 ("ACHIEVEMENT UNLOCKED" reads "AOHIEVEMENT UNLOOKED" in the toast) —
+    left for a site-wide decision.
+88. **Attract mode naps too** (PART 6 finding): the living grid's twinkles (#39) stop when the idle nap starts (#67)
+    instead of finishing their 60s show.
+89. **QA hook.** If a test defines `window.__QA_LAUNCHPAD` before load, the game hands it the sim, the preview and the
+    world ↔ page mapping; otherwise nothing is exposed.

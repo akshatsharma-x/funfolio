@@ -29,7 +29,7 @@ export type BusEvents = {
   /** Backtick (PART 16). */
   "terminal:toggle": Record<string, never>;
   /** BYTE (PART 4) — use the facade in src/lib/byte.ts. */
-  "byte:say": { text: string; mood?: ByteMood; ms?: number };
+  "byte:say": { text: string; mood?: ByteMood; ms?: number; now?: boolean };
   "byte:react": { mood: ByteMood };
   "byte:point": { selector: string };
   "byte:visit": { selector: string; text?: string };
@@ -37,6 +37,12 @@ export type BusEvents = {
   "world:intro": { id: string };
   /** The boot screen is gone and the Title Screen is revealed (PART 5) — typewriters, blinks and BYTE's tips start. */
   "boot:done": { skipped: boolean };
+  /** PART 7 · a soft gate opened (the runtime stored it; the gate's own island plays the unlock). */
+  "gate:open": { id: string; how: string };
+  /** PART 7 · the Launchpad hands its remaining crates (screen rects) to the Quest Log heading. */
+  "gate:assemble": { crates: { x: number; y: number; w: number; h: number; angle: number; label: string }[] };
+  /** Marks a world-header intro as already seen (another animation is about to own that header). */
+  "intro:skip": { id: string };
 };
 
 type EventName = keyof BusEvents;
