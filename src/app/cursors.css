@@ -91,12 +91,6 @@ html[data-cursor]:not([data-cursor="default"]) :where(*) {
   z-index: 2147483647;
   contain: layout style;
 }
-.cursor-fx__trail {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
 .cursor-fx__pos {
   position: absolute;
   left: 0;

@@ -2,6 +2,7 @@ import { projects } from "@/content/content";
 import { CATEGORY_LABEL, counts, known } from "@/content/derived";
 import { Badge } from "@/components/ui/Badge";
 import { Soon } from "@/components/ui/ComingSoon";
+import { PeelCoin, PeelDoodle, PeelJoke } from "@/components/ui/PeelSecrets";
 import { StickerCard } from "@/components/ui/StickerCard";
 import { WorldHeader } from "@/components/ui/WorldHeader";
 import { BulletList, InfoList, LinkOrSoon, StackList, StatList, WorldSection } from "./parts";
@@ -14,8 +15,17 @@ export function VaultSection() {
         <p className="text-muted">{counts.projects} projects.</p>
       </WorldHeader>
       <ul className="grid gap-6 md:grid-cols-2">
-        {projects.map((p) => (
-          <StickerCard key={p.id} as="li" aria-labelledby={`project-${p.id}`} bodyClassName="grid content-start gap-5">
+        {projects.map((p, i) => (
+          <StickerCard
+            key={p.id}
+            as="li"
+            aria-labelledby={`project-${p.id}`}
+            bodyClassName="grid content-start gap-5"
+            tilt
+            tiltMax={4}
+            peelLabel={`Peek under the ${p.title} cartridge`}
+            peel={i === 3 ? <PeelCoin id={`vault-${p.id}`} /> : i === 1 ? <PeelDoodle name="rocket" caption="Ship it." /> : <PeelJoke n={i * 2} />}
+          >
             <p className="flex flex-wrap gap-2">
               <Badge tone="world" icon="cartridge">
                 {p.genre}

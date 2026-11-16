@@ -65,8 +65,8 @@ change an entry only when the decision itself changes.
     fire only after a real exit — the first pointer move after load is not a re-entry.
 22. **Magnetic lean:** `.arcade-btn` and `[data-magnetic]` move ≤ 6px toward the pointer (3px in CHILL, off under
     reduced motion); the pointer never moves.
-23. **Trail:** its own canvas for now, max 6/10/14 squares by `data-fx`, with an ink rim so squares read on light
-    backgrounds. PART 4 moves it onto the shared FX canvas.
+23. **Trail:** max 6/10/14 squares by `data-fx`, with an ink rim so squares read on light backgrounds. Since PART 4 it
+    draws on the shared FX canvas (`fx.trail`); the follower has no canvas of its own.
 24. **Night rim (from the PART 1 look check):** `--rim` (14% white) outlines cards, buttons and their hard shadows on
     night/retro; transparent on day.
 
@@ -81,7 +81,8 @@ change an entry only when the decision itself changes.
     (`GameRuntimeLoader`, `next/dynamic` with `ssr: false`); the pause menu is another, fetched on first open.
     Server-rendered islands (PRESS START, SAVE FILE, Speedrun buttons) send plain-object commands through
     `src/lib/commands.ts`, queued until the runtime is ready. Measured: initial JS 149.1 KB gzip, runtime +69.5 KB
-    after hydration, pause menu +10 KB on first open.
+    after hydration, pause menu +10 KB on first open. (PART 4: after hydration 39.1 KB in total — runtime 20,
+    FX layer 7.4, BYTE 6.2, Lenis 5.3 — now that GSAP/ScrollTrigger load on demand, #40.)
 27. **XP rules.** First visit of each world +50 (the world in view at load counts), details +10, CTA +5, coin +25,
     achievement = its own XP. One-time reasons (`visit:` / `open:` / `cta:` / `coin:` / `achievement:` + id) pay
     once per save; game XP is capped at 200 per session. Level rewards: LV3 party hat, LV5 Retro Green cursor,
@@ -121,3 +122,64 @@ change an entry only when the decision itself changes.
     scroll-linked effect — janky with async panning (Firefox warns).
 36. **Cross-engine QA.** Besides system Chrome, Playwright's bundled WebKit (Safari engine) and Firefox run the
     cursor, HUD, pause menu, theme, persistence, Speedrun and axe checks.
+
+## PART 4 — FX layer & BYTE
+
+37. **One FX overlay canvas** (`src/components/fx/engine.ts`) for bursts, floating text, confetti, the cursor trail,
+    pixel dissolves, hit-stop and shake: fixed, `pointer-events: none`, DPR ≤ 1.5, z-index 90 (above the HUD and
+    BYTE, below the top layer, so dialogs, toasts and the cursor follower stay on top — R2). Its rAF loop runs only
+    while something is alive. Everything goes through the `fx.*` facade in `src/lib/juice.ts` (no-ops until the
+    lazy FX layer registers, and under reduced motion, where it is never mounted). Confetti is drawn natively on
+    this canvas, so canvas-confetti (which owns and clears its own canvas) was removed from the dependencies.
+    `fx.shake` moves the FX + grid layers and an optional game playfield — never the reading content (R6).
+38. **Click juice stays out of reading zones.** A real click (not a drag, selection, field, BYTE, dialog or game)
+    bursts 4 / 10 / 24 pixels (CHILL / NORMAL / CHAOS), shows a 1-in-4 floating word or "COMBO ×N" (never in
+    CHILL) and ripples the grid — unless any of 12 sample points around and above it lands on reading text
+    (`p, li, dd, h1–h6, …`), in which case it stays silent. 10 clicks in 3s → button-masher (also under reduced
+    motion, where nothing is drawn).
+39. **Living grid** (`src/components/fx/grid.ts`) replaces the static CSS grid, which stays as the no-JS and
+    reduced-motion fallback (`html[data-grid="live"]` hides it). Lines are drawn once; each frame repaints only lit
+    cells; the loop sleeps when nothing is lit. No lighting or twinkles behind reading text. Attract-mode twinkles
+    start after 7s without pointer movement, last at most a minute, and never run in CHILL, while paused or hidden.
+    Touch: no hover lighting; a tap ripples (via click juice).
+40. **The page really idles.** Measured at rest: 0 requestAnimationFrame callbacks and ~1–2% main-thread time.
+    To get there: Lenis runs on its own rAF loop that sleeps when idle and wakes on wheel / touch / keys / pointer /
+    scroll, with a clamped virtual clock so the first frame after a nap doesn't jump (it no longer rides the
+    always-on GSAP ticker). GSAP + ScrollTrigger load on demand via `loadScrollTrigger()` — while enabled,
+    ScrollTrigger keeps a perpetual rAF loop (its Firefox repaint workaround), so the first part that needs scroll
+    choreography pays that cost. Continuous CSS loops must be compositor-only: transforms/opacity on HTML elements
+    (Chrome can't composite transform animations on SVG elements, so the rail bounce and BYTE's antenna glow animate
+    HTML wrappers). Off-screen tickers skip rendering (`content-visibility: auto`).
+41. **No scroll-linked effects.** Nothing writes styles inside a scroll event: scroll-motion listeners
+    (`onScrollMotion`: decor, tickers) are coalesced to the next animation frame, and tooltips follow their
+    trigger one frame later (Firefox flags writes during scroll dispatch).
+42. **LED ticker dividers** (`TickerDivider`, server-rendered, aria-hidden) between every pair of worlds, in the next
+    world's color, alternating directions, every item computed from content (`tickerItems()` in derived.ts; unknown
+    values are left out). The LED board is dark in every theme, so the text uses the bright text-safe value of the
+    world color. The LED look comes from unlit dots on the panel plus a fine 2px texture on the glyphs that never
+    drops below 60% — a coarser dot mask made "2" and "5" read as "8" (R1: decoration must not show numbers that
+    look wrong). Speed and skew follow scroll velocity via Web Animations `updatePlaybackRate`; hover pauses;
+    static under reduced motion; hidden in Speedrun Mode.
+43. **WorldHeader intro** (`src/components/fx/intros.ts`): first view of a header per session (sessionStorage), not
+    for headers already on screen at load (no replay over text being read), not under reduced motion or in
+    Speedrun Mode. ≤ 900ms, inline: band wipe, badge stamp, letter drop (stepped, with a bounce), "READY? GO!" chip,
+    powerUp sfx. Letters are split only for the animation (aria-hidden + an sr-only copy); the original text node
+    comes back afterwards. Rainbow titles drop as one block.
+44. **Sticker peel + tilt.** Secrets are original code jokes and pixel doodles; fun facts appear once
+    `player.funFacts` has some (R1 — never invented). "Rarely a coin" = a **spare coin**: one card (Vault ·
+    Predictive Customer Churn Analysis) hides a one-time +1 wallet coin (+10 XP, `collectSpare`), pocketed with a
+    real button — it is not one of the 12 hidden coins, so "x/12" stays meaningful. The peel closes with 160ms of
+    hysteresis and tilt freezes while the pointer is on the peel (a tilting card moved the corner out from under
+    the pointer and made it flicker in WebKit). Tilt is gentler on text-heavy cards: Quests ≤ 3°, Lab and Vault ≤ 4°.
+45. **BYTE** (`src/components/byte/`): script built on the server (`buildByteScript()`), so content.ts stays out of
+    client chunks. 28 quips, each assembled from content values and checked at build time against the exact
+    content fragments it restates (a quip whose evidence disappears is dropped). World lines and tips that mention a
+    feature wait for its hook to exist on the page — `[data-slingshot]`, `[data-boss-fight]`, `[data-cartridge]`,
+    `[data-arcade-game]`, `[data-jd-scanner]`, `[data-contact-form]`, `[data-coin]` — so today only the Profile and
+    Trophies lines and the first two tips play. The Bible's "quests" line (pull me back) belongs to the Launchpad
+    slingshot. Bubbles are aria-hidden; a deliberate keyboard press on BYTE also announces the quip; arrow keys move
+    BYTE (drag alternative, R5). BYTE never covers an interactive element: exact rect intersection against
+    everything clickable on screen → glide to the nearest free spot, back home when it frees up, tuck away (like
+    minimized) when nothing is free. Home position (fractions of the viewport) and minimized survive a reset; said
+    lines don't. Hidden in Speedrun Mode and when turned off in Settings. Petting doesn't count as shake-to-find.
+46. **Playground: Juice kit & BYTE panel** drives every `fx.*` call and `byte.react / say / point` by hand.

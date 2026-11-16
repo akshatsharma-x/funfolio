@@ -1,54 +1,82 @@
-// Juice kit API (Bible §4). PART 4 implements these on the single FX overlay canvas (FxCanvas), scaled by
-// <html data-fx> and disabled/softened under reduced motion. Every call is safe today.
-// confetti() is live since PART 3 (level-ups) on canvas-confetti's own canvas — PART 4 moves it onto the FX canvas.
-
-import { prefersReducedMotion } from "./hooks/useReducedMotion";
-
-const CONFETTI_COLORS = ["#FF3D8B", "#FF8A1F", "#FFD23F", "#B6FF3B", "#22D3EE", "#A78BFA", "#2EE59D"];
-const CONFETTI_COUNT: Record<string, number> = { chill: 40, normal: 110, chaos: 220 };
+// Juice kit API (Bible §4). A thin, always-safe facade: the FX engine (src/components/fx/engine.ts — the one overlay
+// canvas) and the living grid (src/components/fx/grid.ts) register themselves when the lazy game runtime mounts them.
+// Until then — and under reduced motion, where they never start — every call is a cheap no-op, so any module can
+// call fx.* without importing the engines (keeps them out of the initial bundle).
 
 export type BurstShape = "pixel" | "star" | "coin" | "heart" | "spark";
-export type BurstOptions = { count?: number; colors?: string[]; shape?: BurstShape };
-export type FloatTextOptions = { color?: string; size?: number };
+export type BurstOptions = {
+  /** Default scales with <html data-fx>: chill 4 · normal 10 · chaos 24. */
+  count?: number;
+  colors?: string[];
+  shape?: BurstShape;
+  /** Launch speed multiplier (1 = default). */
+  power?: number;
+};
+export type FloatTextOptions = { color?: string; size?: number; rise?: number; ms?: number };
 export type ConfettiStyle = "pixels" | "stars" | "hearts" | "coins";
 export type DissolveDirection = "up" | "down" | "left" | "right";
 export type DissolveOptions = { color?: string; direction?: DissolveDirection };
 
+export type FxEngine = {
+  burst(x: number, y: number, opts?: BurstOptions): void;
+  text(x: number, y: number, text: string, opts?: FloatTextOptions): void;
+  confetti(opts?: { style?: ConfettiStyle }): void;
+  shake(intensity?: number, target?: HTMLElement | null): void;
+  hitStop(ms: number): Promise<void>;
+  pixelDissolve(opts?: DissolveOptions): Promise<void>;
+  trail(x: number, y: number, color: string): void;
+  clearTrail(): void;
+};
+
+export type GridEngine = { ripple(x: number, y: number): void };
+
+let engine: FxEngine | null = null;
+let grid: GridEngine | null = null;
+
+/** Called by the FX layer on mount (and with null on unmount). */
+export function registerFx(next: FxEngine | null): void {
+  engine = next;
+}
+
+export function registerGrid(next: GridEngine | null): void {
+  grid = next;
+}
+
 export const fx = {
   /** Particle burst at viewport coordinates. */
-  burst(_x: number, _y: number, _opts?: BurstOptions): void {},
-  /** Floating text like "+10 XP" or "CRIT!". */
-  text(_x: number, _y: number, _text: string, _opts?: FloatTextOptions): void {},
-  /** Celebration confetti (styles are Prize Counter unlocks). Lazy-loaded; nothing under reduced motion. */
-  confetti(opts?: { style?: ConfettiStyle }): void {
-    if (typeof window === "undefined" || prefersReducedMotion()) return;
-    const level = document.documentElement.getAttribute("data-fx") ?? "normal";
-    const style = opts?.style ?? "pixels";
-    void import("canvas-confetti").then(({ default: confetti }) => {
-      confetti({
-        particleCount: CONFETTI_COUNT[level] ?? 110,
-        spread: 80,
-        startVelocity: 40,
-        ticks: 180,
-        origin: { y: 0.12 },
-        colors: style === "coins" ? ["#FFC83D", "#FFF1A8", "#C98A00"] : style === "hearts" ? ["#FF3D8B", "#FF4D4D", "#FFF4E0"] : CONFETTI_COLORS,
-        shapes: style === "stars" ? ["star"] : style === "coins" ? ["circle"] : ["square"],
-        scalar: style === "pixels" ? 0.8 : 1,
-        disableForReducedMotion: true,
-        zIndex: 2147483000,
-      });
-    });
+  burst(x: number, y: number, opts?: BurstOptions): void {
+    engine?.burst(x, y, opts);
   },
-  /** Screen shake — games/celebrations only, ≤ 6px, ≤ 200ms. */
-  shake(_intensity?: number): void {},
+  /** Floating text like "+10 XP" or "CRIT!". */
+  text(x: number, y: number, text: string, opts?: FloatTextOptions): void {
+    engine?.text(x, y, text, opts);
+  },
+  /** Celebration confetti (styles are Prize Counter unlocks). */
+  confetti(opts?: { style?: ConfettiStyle }): void {
+    engine?.confetti(opts);
+  },
+  /** Screen shake — ≤ 6px, ≤ 200ms. Shakes the FX + grid layers (never the reading content, R6) and `target` if given
+   *  (a game passes its own playfield). */
+  shake(intensity = 4, target?: HTMLElement | null): void {
+    engine?.shake(intensity, target);
+  },
   /** Hit-stop freeze (50–80ms), games only. Resolves when time resumes. */
-  hitStop(_ms = 60): Promise<void> {
-    return Promise.resolve();
+  hitStop(ms = 60): Promise<void> {
+    return engine ? engine.hitStop(ms) : Promise.resolve();
   },
   /** Ripple ring on the background grid. */
-  ripple(_x: number, _y: number): void {},
-  /** Multicolor pixel-dissolve transition. Resolves when covered/revealed. */
-  pixelDissolve(_opts?: DissolveOptions): Promise<void> {
-    return Promise.resolve();
+  ripple(x: number, y: number): void {
+    grid?.ripple(x, y);
+  },
+  /** Multicolor pixel-dissolve transition. Resolves once the screen is covered; the reveal follows on its own. */
+  pixelDissolve(opts?: DissolveOptions): Promise<void> {
+    return engine ? engine.pixelDissolve(opts) : Promise.resolve();
+  },
+  /** Cursor trail square (called by the cursor engine on pointer moves). */
+  trail(x: number, y: number, color: string): void {
+    engine?.trail(x, y, color);
+  },
+  clearTrail(): void {
+    engine?.clearTrail();
   },
 };

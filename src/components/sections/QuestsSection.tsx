@@ -2,6 +2,7 @@ import { experience } from "@/content/content";
 import { counts } from "@/content/derived";
 import { Badge } from "@/components/ui/Badge";
 import { Fact } from "@/components/ui/ComingSoon";
+import { PeelDoodle, PeelFact } from "@/components/ui/PeelSecrets";
 import { StickerCard } from "@/components/ui/StickerCard";
 import { WorldHeader } from "@/components/ui/WorldHeader";
 import { BulletList, Emblem, InfoList, StackList, StatList, WorldSection } from "./parts";
@@ -14,8 +15,17 @@ export function QuestsSection() {
         <p className="text-muted">{counts.internships} internships.</p>
       </WorldHeader>
       <ol className="grid gap-6">
-        {experience.map((xp) => (
-          <StickerCard key={xp.id} as="li" aria-labelledby={`quest-${xp.id}`} bodyClassName="grid gap-5 sm:p-7">
+        {experience.map((xp, i) => (
+          <StickerCard
+            key={xp.id}
+            as="li"
+            aria-labelledby={`quest-${xp.id}`}
+            bodyClassName="grid gap-5 sm:p-7"
+            tilt
+            tiltMax={3}
+            peelLabel={`Peek under the ${xp.company} quest card`}
+            peel={i === 2 ? <PeelDoodle name="byte" caption="BYTE was here." /> : <PeelFact n={i} />}
+          >
             <div className="flex flex-wrap items-start gap-4">
               <Emblem text={xp.emblem} />
               <div className="grid min-w-0 flex-1 gap-1">

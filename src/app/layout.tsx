@@ -5,11 +5,13 @@ import "./globals.css";
 import "./cursors.generated.css";
 import "./cursors.css";
 import "./game.css";
+import "./fx.css";
 import { CursorLayer } from "@/components/cursor/CursorLayer";
 import { GameRuntimeLoader } from "@/components/hud/GameRuntimeLoader";
 import { InlineScript } from "@/components/system/InlineScript";
 import { SmoothScroll } from "@/components/system/SmoothScroll";
 import { player } from "@/content/content";
+import { buildByteScript } from "@/content/quips";
 import { site, siteUrl } from "@/content/site";
 import { publicFileExists } from "@/lib/files";
 import { PREPAINT_SCRIPT } from "@/lib/prefs";
@@ -54,7 +56,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SmoothScroll />
         {/* HUD, pause menu, toasts, shortcuts, world tracking — lazy, client-only (PART 3). Before the content in the
             DOM, so Tab order matches the screen (skip link → HUD → main); the skip link bypasses it. */}
-        <GameRuntimeLoader resumeHref={publicFileExists(player.resumeUrl) ? player.resumeUrl : null} />
+        <GameRuntimeLoader
+          resumeHref={publicFileExists(player.resumeUrl) ? player.resumeUrl : null}
+          byteScript={buildByteScript()}
+        />
         {children}
         <CursorLayer />
       </body>

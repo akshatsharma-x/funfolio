@@ -3,6 +3,7 @@ import { counts, known } from "@/content/derived";
 import { Badge } from "@/components/ui/Badge";
 import { Chip } from "@/components/ui/Chip";
 import { Fact, Soon } from "@/components/ui/ComingSoon";
+import { PeelDoodle } from "@/components/ui/PeelSecrets";
 import { StickerCard } from "@/components/ui/StickerCard";
 import { WorldHeader } from "@/components/ui/WorldHeader";
 import { InfoList, LinkOrSoon, WorldSection } from "./parts";
@@ -21,7 +22,16 @@ export function LabSection() {
       </WorldHeader>
       <ol className="grid gap-6 lg:grid-cols-2">
         {research.map((paper) => (
-          <StickerCard key={paper.id} as="li" aria-labelledby={`paper-${paper.id}`} bodyClassName="grid gap-5">
+          <StickerCard
+            key={paper.id}
+            as="li"
+            aria-labelledby={`paper-${paper.id}`}
+            bodyClassName="grid gap-5"
+            tilt
+            tiltMax={4}
+            peelLabel={`Peek under the ${paper.boss.name} scroll`}
+            peel={<PeelDoodle name="coffee" caption="Fuel for boss fights." />}
+          >
             <p>
               <Badge tone="world" icon="scroll">
                 {paper.status}

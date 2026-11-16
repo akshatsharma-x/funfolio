@@ -21,6 +21,7 @@ import { sfx } from "@/lib/sfx";
 import { useSave, type Settings } from "@/lib/store";
 import { sweepTheme } from "@/lib/theme";
 import { isPauseTab, useUi } from "@/lib/ui";
+import { fx } from "@/lib/juice";
 import { warp } from "@/lib/warp";
 
 const TEXT_FIELDS =
@@ -126,6 +127,9 @@ export function useCommandHandler(resumeHref: string | null) {
           break;
         case "coin":
           store.collectCoin(c.id, c.origin);
+          break;
+        case "spare-coin":
+          if (store.collectSpare(c.id, c.origin) && c.origin) fx.burst(c.origin.x, c.origin.y, { shape: "coin", count: 8 });
           break;
         case "download":
           if (c.what === "resume" && resumeHref) {
@@ -265,6 +269,21 @@ export function useStatsTracker() {
       window.removeEventListener("pagehide", flush);
     };
   }, []);
+}
+
+/** Spare coins already pocketed (sticker peels) show as pocketed — server markup can't know the save. */
+export function useSpareCoinSync(routeKey: string) {
+  useEffect(() => {
+    const sync = (claims: string[]) => {
+      document.querySelectorAll<HTMLElement>("[data-spare-coin]").forEach((el) => {
+        el.toggleAttribute("data-pocketed", claims.includes(`spare:${el.dataset.spareCoin}`));
+      });
+    };
+    sync(useSave.getState().player.xpClaims);
+    return useSave.subscribe((s, prev) => {
+      if (s.player.xpClaims !== prev.player.xpClaims) sync(s.player.xpClaims);
+    });
+  }, [routeKey]);
 }
 
 export function useBusWiring() {

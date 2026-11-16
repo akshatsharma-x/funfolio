@@ -30,6 +30,9 @@ Progress (XP, levels, coins, achievements, settings) is saved in this browser on
 
 Shortcuts never fire while typing; inside a game or a dialog only `Esc` is global.
 
+BYTE, the robot mascot, lives in the bottom-right corner: click for a quip, drag or throw it, rub it for hearts,
+minimize it with the `–` button (or turn it off in Pause → Settings). `/playground` has a Juice kit & BYTE panel.
+
 ## Editing content
 
 All facts live in `src/content/content.ts`. Anything set to `"TODO"` renders as "Coming soon"; counts (internships,

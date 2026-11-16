@@ -24,6 +24,8 @@ export function TiltSurface({ as, max = 8, children, onPointerMove, onPointerLea
   const handleMove = (event: PointerEvent<HTMLElement>) => {
     onPointerMove?.(event);
     if (!enabled || event.pointerType !== "mouse") return;
+    // hold still while peeking under the corner: a tilting card would move the peel out from under the pointer
+    if (event.target instanceof Element && event.target.closest(".peel")) return;
     const el = event.currentTarget;
     const { clientX, clientY } = event;
     cancelAnimationFrame(frame.current);

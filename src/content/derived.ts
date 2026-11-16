@@ -3,8 +3,10 @@
 
 import {
   certificates,
+  education,
   experience,
   honors,
+  player,
   projects,
   research,
   skills,
@@ -71,4 +73,63 @@ export function resolveHighlight(ref: HighlightRef): ResolvedStat | null {
   const stat = owner?.stats.find((s) => s.label === ref.stat);
   if (!owner || !stat) return null;
   return { value: stat.value, label: stat.label, context: "company" in owner ? owner.company : owner.title };
+}
+
+// ── LED ticker dividers (PART 4): every item is computed from content.ts; unknown values are simply left out ──────
+
+export type TickerSet = "start" | "quests" | "lab" | "vault" | "arcade" | "skills" | "trophies" | "lobby" | "credits";
+
+const venueCode = () => {
+  const codes = [...new Set(research.map((r) => r.venue.match(/\b[A-Z]{2,}-\d{4}\b/)?.[0]).filter(known))];
+  return codes.length === 1 ? codes[0] : null;
+};
+/** "Smart India Hackathon — Qualifier" + "2024 & 2025" → "SIH Qualifier ×2". */
+const honorShort = (id: string) => {
+  const h = honors.find((x) => x.id === id);
+  if (!h) return null;
+  const [name, rank] = h.title.split(" — ");
+  const words = name.split(/\s+/);
+  const short = words.length >= 3 ? words.map((w) => w[0]).join("").toUpperCase() : name;
+  const years = h.year.split(/&|,/).map((y) => y.trim()).filter(Boolean).length;
+  return `${short}${rank ? ` ${rank}` : ""}${years > 1 ? ` ×${years}` : ""}`;
+};
+
+export function tickerItems(set: TickerSet): string[] {
+  const current = experience.find((e) => e.current);
+  const code = venueCode();
+  const items: (string | null | undefined)[] = (() => {
+    switch (set) {
+      case "start":
+        return [
+          `${counts.internships} internships`,
+          `${counts.papers} papers${code ? ` @ ${code}` : ""}`,
+          `${counts.projects} projects`,
+          honorShort("sih"),
+          known(education.cgpa) ? `CGPA ${education.cgpa.split("/")[0]}` : null,
+          current ? `Now: ${current.company}` : null,
+        ];
+      case "quests":
+        return [...experience.map((e) => e.company), `${counts.internships} internships`];
+      case "lab":
+        return [
+          `${counts.papers} papers ${research.every((r) => r.status === research[0]?.status) ? research[0]?.status.toLowerCase() : ""}`.trim(),
+          code,
+          ...research.map((r) => `Boss: ${r.boss.name}`),
+          ...research.map((r) => r.boss.domain),
+        ];
+      case "vault":
+        return [...projects.map((p) => p.title), `${counts.projects} cartridges`];
+      case "arcade":
+        return ["Bonus stage", "Insert coin", "Press start", "High score: you"];
+      case "skills":
+        return [`${counts.skills} skills`, ...ITEM_TYPES.map((t) => `${ITEM_META[t].name} · ${skills[t].label}`)];
+      case "trophies":
+        return [...honors.map((h) => `${h.title} · ${h.year}`), counts.certificates ? `${counts.certificates} certificates` : null];
+      case "lobby":
+        return ["Co-op lobby", "Say hi", player.email, "LinkedIn", "GitHub"];
+      case "credits":
+        return ["Thanks for playing", "GG", "No trackers · no cookies"];
+    }
+  })();
+  return items.filter((v): v is string => typeof v === "string" && known(v) && !/\bTODO\b/i.test(v));
 }

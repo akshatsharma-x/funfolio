@@ -18,7 +18,7 @@ type WorldHeaderProps = {
 /**
  * World number + game title + plain name (R9: the metaphor always sits next to its plain name).
  * Game titles are title case and uppercased with CSS so screen readers read words, not letters.
- * Intro animation lands in PART 4. Server-safe.
+ * PART 4's intro (src/components/fx/intros.ts) finds it by data-world-header. Server-safe.
  */
 export function WorldHeader({ world, as: Heading = "h2", id, compact = false, className, children }: WorldHeaderProps) {
   const w = worldById[world];
@@ -26,7 +26,7 @@ export function WorldHeader({ world, as: Heading = "h2", id, compact = false, cl
 
   if (compact) {
     return (
-      <p className={cn("world-header__kicker", className)}>
+      <p className={cn("world-header__kicker", className)} data-world-header={world}>
         {label ? <Badge tone="world">{label}</Badge> : null}
         <span>
           {w.gameTitle} <span aria-hidden="true">·</span>
@@ -37,7 +37,7 @@ export function WorldHeader({ world, as: Heading = "h2", id, compact = false, cl
   }
 
   return (
-    <header className={cn("world-header", className)}>
+    <header className={cn("world-header", className)} data-world-header={world}>
       {label || w.stage ? (
         <p className="world-header__kicker">
           {label ? <Badge tone="world">{label}</Badge> : null}

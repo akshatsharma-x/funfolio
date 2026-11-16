@@ -9,6 +9,8 @@ type StickerCardProps = Omit<HTMLAttributes<HTMLElement>, "children"> & {
   variant?: "default" | "world" | "holo";
   /** Pointer tilt ≤ 8° + glare (off on touch / reduced motion). */
   tilt?: boolean;
+  /** Max tilt in degrees (default 8; keep it low on text-heavy cards — R6). */
+  tiltMax?: number;
   /** Secret revealed by the corner peel. */
   peel?: ReactNode;
   peelLabel?: string;
@@ -26,6 +28,7 @@ export function StickerCard({
   as = "div",
   variant = "default",
   tilt = false,
+  tiltMax = 8,
   peel,
   peelLabel,
   pressable = false,
@@ -49,7 +52,7 @@ export function StickerCard({
 
   if (tilt) {
     return (
-      <TiltSurface as={as} {...shared}>
+      <TiltSurface as={as} max={Math.min(8, tiltMax)} {...shared}>
         {inner}
       </TiltSurface>
     );

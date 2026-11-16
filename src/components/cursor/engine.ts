@@ -3,7 +3,7 @@
 // The native cursor (truth layer, cursors.css) is never touched here — the follower is decoration on top of it.
 
 import { bus } from "@/lib/bus";
-import { createTrail } from "./trail";
+import { fx } from "@/lib/juice";
 
 export type EngineOptions = { reducedMotion: boolean };
 
@@ -37,12 +37,12 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
   const bounce = q<HTMLElement>("[data-fx-bounce]");
   const label = q<HTMLElement>("[data-fx-label]");
   const beacon = q<HTMLElement>("[data-fx-beacon]");
-  const canvas = q<HTMLCanvasElement>("[data-fx-trail]");
   const radars = Array.from(root.querySelectorAll<HTMLElement>("[data-fx-radar]"));
-  if (!pos || !bounce || !label || !beacon || !canvas) return () => {};
+  if (!pos || !bounce || !label || !beacon) return () => {};
 
   root.setAttribute("data-motion", reducedMotion ? "reduce" : "full");
-  const trail = reducedMotion ? null : createTrail(canvas);
+  // The pixel trail lives on the shared FX canvas since PART 4 (fx.trail — a no-op until the FX layer is up).
+  const trailOn = !reducedMotion;
 
   // pointer + follower state
   let tx = 0;
@@ -107,8 +107,7 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
       cy = ty;
     }
     pos.style.transform = `translate3d(${cx.toFixed(2)}px, ${cy.toFixed(2)}px, 0)`;
-    const trailAlive = trail ? trail.draw(now) : false;
-    if (cx !== tx || cy !== ty || trailAlive) raf = requestAnimationFrame(frame);
+    if (cx !== tx || cy !== ty) raf = requestAnimationFrame(frame);
   };
   const wake = () => {
     if (raf) return;
@@ -261,6 +260,11 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
     lastX = e.clientX;
     lastY = e.clientY;
     lastT = t;
+    // rubbing BYTE (petting, PART 4) is not "I lost my cursor"
+    if (e.target instanceof Element && e.target.closest("[data-byte]")) {
+      reversals.length = 0;
+      return;
+    }
     segMaxX = Math.max(segMaxX, Math.abs(dx) / dt);
     segMaxY = Math.max(segMaxY, Math.abs(dy) / dt);
     const sx = Math.abs(dx) > 1 ? Math.sign(dx) : 0;
@@ -300,7 +304,7 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
     root.setAttribute("data-visible", "");
     if (e.target !== lastTarget) classify(e.target);
     updateMagnet(tx, ty);
-    if (trail && mode !== "text") trail.add(tx, ty, rainbow ? RAINBOW[rainbowIndex++ % RAINBOW.length] : trailColor);
+    if (trailOn && mode !== "text") fx.trail(tx, ty, rainbow ? RAINBOW[rainbowIndex++ % RAINBOW.length] : trailColor);
     detectShake(e);
     restartIdle();
     wake();
@@ -310,7 +314,7 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
     if (e.pointerType === "touch") {
       // hybrid device: hide the follower until the mouse moves again (touch gets tap ripples in PART 4)
       root.removeAttribute("data-visible");
-      trail?.clear();
+      fx.clearTrail();
       return;
     }
     pressed = true;
@@ -406,7 +410,6 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
     releaseMagnet();
     htmlObserver.disconnect();
     offLocate();
-    trail?.destroy();
     window.removeEventListener("pointermove", onMove);
     window.removeEventListener("pointerdown", onDown);
     window.removeEventListener("pointerup", onUp);

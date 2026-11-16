@@ -1,14 +1,26 @@
-// Smooth scrolling (Bible §4): Lenis driven by the GSAP ticker, ScrollTrigger kept in sync.
+// Smooth scrolling (Bible §4): Lenis on its own sleeping rAF loop; GSAP ScrollTrigger on demand (loadScrollTrigger).
 // Off under reduced motion (the caller decides). Lenis, GSAP and ScrollTrigger load lazily so they stay out of the
 // initial bundle. Same-page anchors are handled here (not by Lenis' `anchors` option) so focus moves to the target
 // like a native jump — skip links keep working for keyboard and screen-reader users.
 
 import type Lenis from "lenis";
+import type { ScrollTrigger as ScrollTriggerType } from "gsap/ScrollTrigger";
 import { warp } from "./warp";
 
 let instance: Lenis | null = null;
 const listeners = new Set<() => void>();
 let lockCount = 0;
+let wakeLoop: () => void = () => {};
+
+export type ScrollMotion = { y: number; v: number };
+const motionListeners = new Set<(m: ScrollMotion) => void>();
+
+/** Smooth-scroll position + velocity (px per frame) on every Lenis frame — for velocity-linked FX (tickers, decor).
+ *  Silent without Lenis (reduced motion), where those effects are static anyway. */
+export function onScrollMotion(fn: (m: ScrollMotion) => void): () => void {
+  motionListeners.add(fn);
+  return () => motionListeners.delete(fn);
+}
 
 function setInstance(next: Lenis | null) {
   instance = next;
@@ -43,6 +55,7 @@ export function scrollToElement(el: HTMLElement, opts: { focus?: boolean } = {})
   };
   if (instance) {
     instance.scrollTo(el, { offset: -HUD_OFFSET, onComplete: done });
+    wakeLoop();
   } else {
     el.scrollIntoView({ block: "start" });
     done();
@@ -68,26 +81,64 @@ export function startSmoothScroll(): () => void {
   let teardown = () => {};
 
   void (async () => {
-    const [{ default: LenisCtor }, { gsap }, { ScrollTrigger }] = await Promise.all([
-      import("lenis"),
-      import("gsap"),
-      import("gsap/ScrollTrigger"),
-    ]);
+    const { default: LenisCtor } = await import("lenis");
     if (disposed) return;
 
-    gsap.registerPlugin(ScrollTrigger);
     const lenis = new LenisCtor({ autoRaf: false, lerp: 0.12, smoothWheel: true });
-    const offScroll = lenis.on("scroll", () => ScrollTrigger.update());
-    const tick = (time: number) => lenis.raf(time * 1000);
-    gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
+    // Motion listeners (decor, tickers) run on the next animation frame, never inside a native scroll event:
+    // Lenis emits "scroll" synchronously from its native-scroll handler, and style writes there are a
+    // scroll-linked effect (janky with async panning; Firefox warns). Coalesced: at most one dispatch per frame.
+    let pendingMotion: ScrollMotion | null = null;
+    let motionRaf = 0;
+    const flushMotion = () => {
+      motionRaf = 0;
+      const m = pendingMotion;
+      pendingMotion = null;
+      if (m) motionListeners.forEach((fn) => fn(m));
+    };
+    const offScroll = lenis.on("scroll", (l: Lenis) => {
+      scrollTriggerUpdate?.();
+      if (!motionListeners.size) return;
+      pendingMotion = { y: l.animatedScroll, v: l.velocity };
+      if (!motionRaf) motionRaf = requestAnimationFrame(flushMotion);
+    });
+
+    // Own rAF loop that SLEEPS when Lenis is idle (the GSAP ticker would wake the CPU 60×/s forever — PART 4
+    // "the CPU idles when nothing moves"). Woken by anything that can start a scroll. Lenis only needs time deltas,
+    // so it gets a virtual clock whose steps are clamped: the first frame after a nap is not a huge jump.
+    let raf = 0;
+    let lastT = 0;
+    let virtual = 0;
+    let awakeUntil = 0;
+    const loop = (t: number) => {
+      const dt = lastT ? Math.min(t - lastT, 34) : 16;
+      lastT = t;
+      virtual += dt;
+      lenis.raf(virtual);
+      if (lenis.isScrolling || performance.now() < awakeUntil) raf = requestAnimationFrame(loop);
+      else {
+        raf = 0;
+        lastT = 0;
+      }
+    };
+    const wake = () => {
+      awakeUntil = performance.now() + 250;
+      if (!raf) raf = requestAnimationFrame(loop);
+    };
+    wakeLoop = wake;
+    const wakeEvents = ["wheel", "touchstart", "touchmove", "keydown", "pointerdown", "scroll"] as const;
+    wakeEvents.forEach((type) => window.addEventListener(type, wake, { passive: true, capture: true }));
+    wake();
     if (lockCount > 0) lenis.stop();
     document.addEventListener("click", onAnchorClick);
     setInstance(lenis);
 
     teardown = () => {
       document.removeEventListener("click", onAnchorClick);
-      gsap.ticker.remove(tick);
+      wakeEvents.forEach((type) => window.removeEventListener(type, wake, { capture: true }));
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(motionRaf);
+      wakeLoop = () => {};
       offScroll();
       lenis.destroy();
       setInstance(null);
@@ -98,6 +149,24 @@ export function startSmoothScroll(): () => void {
     disposed = true;
     teardown();
   };
+}
+
+let scrollTriggerUpdate: (() => void) | null = null;
+let scrollTriggerPromise: Promise<typeof ScrollTriggerType> | null = null;
+
+/**
+ * GSAP + ScrollTrigger, loaded on first use and kept in sync with Lenis. Not loaded at startup: while enabled,
+ * ScrollTrigger keeps a perpetual requestAnimationFrame loop alive, so the page would never idle (PART 4) — the first
+ * part that really needs scroll choreography pays for it.
+ */
+export function loadScrollTrigger(): Promise<typeof ScrollTriggerType> {
+  scrollTriggerPromise ??= Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(([{ gsap }, { ScrollTrigger }]) => {
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.ticker.lagSmoothing(0);
+    scrollTriggerUpdate = () => ScrollTrigger.update();
+    return ScrollTrigger;
+  });
+  return scrollTriggerPromise;
 }
 
 /** Ref-counted scroll lock for modals/games. Keeps Lenis in sync (stop/start) and blocks native scroll. */
@@ -114,6 +183,7 @@ export function unlockScroll() {
   lockCount -= 1;
   if (lockCount === 0) {
     instance?.start();
+    wakeLoop();
     document.documentElement.removeAttribute("data-scroll-lock");
   }
 }

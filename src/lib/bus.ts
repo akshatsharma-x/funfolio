@@ -1,6 +1,8 @@
 // Typed event bus for side effects (Bible §6: "side effects go through src/lib/bus.ts so the store stays pure").
 // The store emits; toasts, sfx, fx, banners and later-part systems listen.
 
+import type { ByteMood } from "./byte";
+
 export type Point = { x: number; y: number };
 
 export type BusEvents = {
@@ -26,6 +28,12 @@ export type BusEvents = {
   "save:reset": Record<string, never>;
   /** Backtick (PART 16). */
   "terminal:toggle": Record<string, never>;
+  /** BYTE (PART 4) — use the facade in src/lib/byte.ts. */
+  "byte:say": { text: string; mood?: ByteMood; ms?: number };
+  "byte:react": { mood: ByteMood };
+  "byte:point": { selector: string };
+  /** A WorldHeader intro started (PART 4). */
+  "world:intro": { id: string };
 };
 
 type EventName = keyof BusEvents;

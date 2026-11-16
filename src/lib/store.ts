@@ -49,6 +49,9 @@ export type SaveData = {
   settings: Settings;
   stats: { clicks: number; sessionStart: number; timePlayedMs: number; eggsFound: string[] };
   meta: { saveVersion: number; lastVisit: number | null; lastSeenPatch: string | null };
+  /** BYTE (PART 4): home position as fractions of the free viewport (null = docked bottom-right), minimized, and the
+   *  once-only lines already said (world lines, first-run tips). Position + minimized survive a reset. */
+  byte: { fx: number | null; fy: number | null; minimized: boolean; said: string[] };
 };
 
 export type SaveActions = {
@@ -67,6 +70,12 @@ export type SaveActions = {
   addStats: (clicks: number, playedMs: number) => void;
   markPatchSeen: (version: string) => void;
   findEgg: (id: string) => boolean;
+  /** A spare coin (sticker peels…): +1 wallet once per id — not one of the 12 hidden coins. */
+  collectSpare: (id: string, origin?: Point) => boolean;
+  setBytePos: (fx: number | null, fy: number | null) => void;
+  setByteMinimized: (minimized: boolean) => void;
+  /** Marks a once-only BYTE line as said; false if it already was. */
+  markByteSaid: (key: string) => boolean;
 };
 
 export type SaveStore = SaveData & SaveActions;
@@ -82,7 +91,8 @@ const DEFAULT_SETTINGS: Settings = {
   byteVisible: true,
 };
 
-const ONE_TIME_REASON = /^(visit|open|cta|coin|achievement):/;
+const ONE_TIME_REASON = /^(visit|open|cta|coin|spare|achievement):/;
+const SPARE_XP = 10;
 /** Explorer = every world except the credits (credits = completionist). */
 const EXPLORER_WORLDS = WORLDS.map((w) => w.id).filter((id) => id !== "credits");
 let sessionGameXp = 0;
@@ -97,6 +107,7 @@ function freshData(now = Date.now()): SaveData {
     settings: { ...DEFAULT_SETTINGS },
     stats: { clicks: 0, sessionStart: now, timePlayedMs: 0, eggsFound: [] },
     meta: { saveVersion: SAVE_VERSION, lastVisit: null, lastSeenPatch: null },
+    byte: { fx: null, fy: null, minimized: false, said: [] },
   };
 }
 
@@ -131,6 +142,8 @@ export function normalizeSave(input: unknown): SaveData {
   const stats = isObj(s.stats) ? s.stats : {};
   const meta = isObj(s.meta) ? s.meta : {};
   const games = isObj(s.games) ? s.games : {};
+  const byte = isObj(s.byte) ? s.byte : {};
+  const frac = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : null);
   const worldIds = WORLDS.map((w) => w.id);
 
   const xp = num(player.xp, 0);
@@ -181,6 +194,7 @@ export function normalizeSave(input: unknown): SaveData {
       lastVisit: typeof meta.lastVisit === "number" ? meta.lastVisit : null,
       lastSeenPatch: typeof meta.lastSeenPatch === "string" ? meta.lastSeenPatch : null,
     },
+    byte: { fx: frac(byte.fx), fy: frac(byte.fy), minimized: byte.minimized === true, said: strs(byte.said).slice(0, 64) },
   };
 }
 
@@ -213,6 +227,7 @@ const pickData = (s: SaveStore): SaveData => ({
   settings: s.settings,
   stats: s.stats,
   meta: s.meta,
+  byte: s.byte,
 });
 
 export const useSave = create<SaveStore>()(
@@ -365,7 +380,12 @@ export const useSave = create<SaveStore>()(
         const s = get();
         const fresh = freshData();
         sessionGameXp = 0;
-        set({ ...fresh, settings: { ...s.settings, theme: s.settings.theme === "retro" ? "night" : s.settings.theme }, meta: { ...fresh.meta, lastVisit: Date.now() } });
+        set({
+          ...fresh,
+          settings: { ...s.settings, theme: s.settings.theme === "retro" ? "night" : s.settings.theme },
+          meta: { ...fresh.meta, lastVisit: Date.now() },
+          byte: { ...fresh.byte, fx: s.byte.fx, fy: s.byte.fy, minimized: s.byte.minimized },
+        });
         bus.emit("save:reset", {});
       },
 
@@ -391,6 +411,33 @@ export const useSave = create<SaveStore>()(
         const s = get();
         if (s.stats.eggsFound.includes(id)) return false;
         set({ stats: { ...s.stats, eggsFound: [...s.stats.eggsFound, id] } });
+        return true;
+      },
+
+      collectSpare(id, origin) {
+        const s = get();
+        const reason = `spare:${id}`;
+        if (!id || s.player.xpClaims.includes(reason)) return false;
+        set({ player: { ...s.player, wallet: s.player.wallet + 1 } });
+        bus.emit("item:acquired", { title: "Spare coin", detail: "+1 wallet coin (spend it at the Prize Counter)", icon: "coin" });
+        get().addXp(SPARE_XP, reason, origin); // also records the one-time claim
+        return true;
+      },
+
+      setBytePos(fx, fy) {
+        const s = get();
+        if (s.byte.fx !== fx || s.byte.fy !== fy) set({ byte: { ...s.byte, fx, fy } });
+      },
+
+      setByteMinimized(minimized) {
+        const s = get();
+        if (s.byte.minimized !== minimized) set({ byte: { ...s.byte, minimized } });
+      },
+
+      markByteSaid(key) {
+        const s = get();
+        if (s.byte.said.includes(key)) return false;
+        set({ byte: { ...s.byte, said: [...s.byte.said, key] } });
         return true;
       },
     }),

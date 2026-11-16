@@ -426,7 +426,11 @@
     background: var(--world);
     box-shadow: 0 2px 0 var(--ink);
   }
-  .rail__item[aria-current="location"] > .pixel-icon:first-child {
+  .rail__icon {
+    display: grid;
+    line-height: 0;
+  }
+  .rail__item[aria-current="location"] > .rail__icon {
     animation: rail-bounce 1.6s var(--ease-pop) infinite;
     animation-play-state: var(--play);
   }

@@ -57,7 +57,6 @@ function CursorFollower({ reducedMotion }: { reducedMotion: boolean }) {
 
   return (
     <div ref={ref} className="cursor-fx" popover="manual" aria-hidden="true" data-mode="idle">
-      <canvas className="cursor-fx__trail" data-fx-trail="" />
       <div className="cursor-fx__pos" data-fx-pos="">
         <span className="cursor-fx__beacon" data-fx-beacon="" />
         <span className="cursor-fx__radar" data-fx-radar="" />

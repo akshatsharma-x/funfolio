@@ -50,7 +50,10 @@ export function LevelRail() {
                 data-visited={isVisited ? "" : undefined}
                 aria-label={`${name}${isVisited ? " (visited)" : ""}`}
               >
-                <PixelIcon name={icon} />
+                {/* HTML wrapper: the bounce must not animate the <svg> itself (SVG targets can't be composited) */}
+                <span className="rail__icon">
+                  <PixelIcon name={icon} />
+                </span>
                 {isVisited ? (
                   <span className="rail__check" aria-hidden="true">
                     <PixelIcon name="check" />

@@ -9,6 +9,7 @@ import { SkillsSection } from "@/components/sections/SkillsSection";
 import { TitleSection } from "@/components/sections/TitleSection";
 import { TrophiesSection } from "@/components/sections/TrophiesSection";
 import { VaultSection } from "@/components/sections/VaultSection";
+import { TickerDivider } from "@/components/fx/TickerDivider";
 import { player } from "@/content/content";
 import { assertContent } from "@/content/schema";
 import { publicFileExists } from "@/lib/files";
@@ -26,15 +27,24 @@ export default function Home() {
     <>
       <main id="main">
         <TitleSection resumeAvailable={resumeAvailable} />
+        <TickerDivider set="start" world="profile" />
         <ProfileSection />
+        <TickerDivider set="quests" world="launchpad" reverse />
         <LaunchpadSection />
         <QuestsSection />
+        <TickerDivider set="lab" world="lab" />
         <LabSection />
+        <TickerDivider set="vault" world="vault" reverse />
         <VaultSection />
+        <TickerDivider set="arcade" world="arcade" />
         <ArcadeSection />
+        <TickerDivider set="skills" world="skills" reverse />
         <SkillsSection />
+        <TickerDivider set="trophies" world="trophies" />
         <TrophiesSection />
+        <TickerDivider set="lobby" world="lobby" reverse />
         <LobbySection resumeAvailable={resumeAvailable} />
+        <TickerDivider set="credits" world="credits" />
       </main>
       <CreditsSection />
     </>

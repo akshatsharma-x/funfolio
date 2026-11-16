@@ -9,6 +9,8 @@ export type Command =
   | { type: "achievement"; id: string }
   | { type: "xp"; amount: number; reason: string; origin?: Point }
   | { type: "coin"; id: string; origin?: Point }
+  /** A spare coin (sticker peels): +1 wallet once per id — not one of the 12 hidden coins. */
+  | { type: "spare-coin"; id: string; origin?: Point }
   | { type: "download"; what: "resume" }
   | { type: "speedrun"; on: boolean | "toggle" }
   | { type: "theme"; value: "night" | "day" | "retro" | "toggle"; origin?: Point }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CursorLab } from "@/components/playground/CursorLab";
+import { JuiceLab } from "@/components/playground/JuiceLab";
 import { KitShowcase } from "@/components/playground/KitShowcase";
 import { PlaygroundControls } from "@/components/playground/PlaygroundControls";
 import { StyleTile } from "@/components/playground/StyleTile";
@@ -33,6 +34,7 @@ export default function PlaygroundPage() {
       </header>
       <StyleTile />
       <CursorLab />
+      <JuiceLab />
       {THEMES.map((t) => (
         <section key={t} data-theme={t} aria-labelledby={`panel-${t}`} className="py-14">
           <div className="shell">

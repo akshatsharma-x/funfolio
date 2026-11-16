@@ -83,7 +83,7 @@ export function ArcadeButton(props: ArcadeButtonProps) {
     const origin = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     // attach the click origin so "+XP" ghosts fly from the button
     const withOrigin = (c: Command): Command =>
-      c.type === "cta" || c.type === "xp" || c.type === "coin" || c.type === "theme" ? { ...c, origin } : c;
+      c.type === "cta" || c.type === "xp" || c.type === "coin" || c.type === "spare-coin" || c.type === "theme" ? { ...c, origin } : c;
     runCommand(...(Array.isArray(command) ? command : [command]).map(withOrigin));
   };
 
