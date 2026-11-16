@@ -4,6 +4,17 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.9.0",
+    date: "2026-11-17",
+    title: "The Lab",
+    notes: [
+      "The research world is a lab of boss battles: each paper is a monster, and you watch it fall.",
+      "A dotted globe traces the research route to SCI-2026 — drag it, pause it, or let it spin.",
+      "The Smog Golem hides in grey air. Clear the sky and something shiny appears.",
+      "Open the scrolls for each paper's details; open both and you earn a title.",
+    ],
+  },
+  {
     version: "0.8.0",
     date: "2026-11-17",
     title: "Quest Log",

@@ -9,7 +9,8 @@ import { PeelDoodle, PeelFact } from "@/components/ui/PeelSecrets";
 import { StickerCard } from "@/components/ui/StickerCard";
 import { StatList } from "../parts";
 import { ActiveWidgets } from "./ActiveWidgets";
-import { Checklist, LootList, Objectives, QuestEmblem, Stamp, SubHead } from "./QuestParts";
+import { Stamp } from "@/components/ui/Stamp";
+import { Checklist, LootList, Objectives, QuestEmblem, SubHead } from "./QuestParts";
 
 function QuestHead({ q, children }: { q: Quest; children?: ReactNode }) {
   const mode = workMode(q);

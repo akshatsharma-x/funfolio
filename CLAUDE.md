@@ -63,4 +63,9 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   Components in `src/components/sections/quests/`: server cards render the final state; `QuestLogFx` (one delegated
   island) arms and plays the one-shots; `QuestTrail` scrubs the trail on scroll — no ScrollTrigger (#95). Skills keep
   `id="skill-<slug>"` anchors (`skillAnchor()`), the loot chips' targets.
+- The Lab (PART 9): bosses, stats and the research route are computed in `src/content/lab.ts` (server-only; it reads
+  `public/data/ne_110m_land.geojson` for the flat map); boss sprites + damage words in `src/content/bossArt.ts`; geo
+  math in `src/lib/geo.ts`. The globe is `src/components/three/GlobeCanvas.tsx` (lazy, HIGH tier + fine pointer,
+  `GlobeStage` decides); after replacing the land file run `npm run globe` (→ `public/data/land-dots.json`). The
+  battle and the smog purifier are `LabFx` (one delegated island); `Stamp` lives in the UI kit.
 - Keep the page idle (docs/DECISIONS.md #40–41): no always-on rAF loops, continuous CSS animations only on HTML elements' transform/opacity (never on SVG elements), no style writes inside scroll events (use `onScrollMotion`), and get GSAP/ScrollTrigger via `loadScrollTrigger()` only where needed.

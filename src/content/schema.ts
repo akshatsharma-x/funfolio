@@ -37,6 +37,7 @@ const player = z
     availability: textOrTodo,
     photo: textOrTodo,
     funFacts: z.array(text),
+    researchInterests: z.array(text),
   })
   .refine((p) => !p.showPhone || p.phone.trim().length > 0, {
     message: "showPhone is true but phone is empty",

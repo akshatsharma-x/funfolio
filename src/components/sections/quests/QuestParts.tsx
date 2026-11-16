@@ -1,10 +1,10 @@
 // Quest card building blocks (PART 8). Server components: the final state is rendered here; QuestLogFx arms and
 // plays the one-shot animations (ticks, stamps, widgets) only for cards that are below the fold.
 
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 import { ITEM_META } from "@/content/derived";
 import type { Loot } from "@/content/quests";
-import { PixelIcon, type PixelIconName } from "@/components/ui/PixelIcon";
+import { PixelIcon } from "@/components/ui/PixelIcon";
 import { Tooltip } from "@/components/ui/Tooltip";
 
 /** "OBJECTIVES · What I did" — the game label next to its plain name (R9). */
@@ -101,12 +101,3 @@ export function LootList({ items, labelledBy }: { items: Loot[]; labelledBy: str
   );
 }
 
-/** A rubber stamp: "Complete" (every finished quest) or "Regulated env" (EY's stand-in for a side quest). */
-export function Stamp({ kind, icon, children }: { kind: "complete" | "regulated"; icon: PixelIconName; children: ReactNode }) {
-  return (
-    <span className={`stamp stamp--${kind}`} data-stamp={kind}>
-      <PixelIcon name={icon} mono size={16} />
-      <span>{children}</span>
-    </span>
-  );
-}

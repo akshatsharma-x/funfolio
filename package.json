@@ -1,6 +1,6 @@
 {
   "name": "funfolio",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,7 +11,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "check": "npm run lint && npm run typecheck",
     "images": "node scripts/optimize-images.mjs",
-    "cursors": "node --experimental-strip-types --no-warnings scripts/build-cursors.mjs"
+    "cursors": "node --experimental-strip-types --no-warnings scripts/build-cursors.mjs",
+    "globe": "node --experimental-strip-types --no-warnings scripts/globe-dots.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
@@ -43,7 +44,7 @@
     "tailwindcss": "4.3.3",
     "typescript": "^5"
   },
-  "description": "AKSHAT.EXE — The Funfolio: Akshat Sharma's game-themed, fully static portfolio.",
+  "description": "AKSHAT.EXE \u2014 The Funfolio: Akshat Sharma's game-themed, fully static portfolio.",
   "engines": {
     "node": ">=20.9"
   }

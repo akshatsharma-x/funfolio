@@ -39,6 +39,8 @@ export type Player = {
   availability: string;
   photo: string;
   funFacts: string[];
+  /** Optional: research interests, shown as chips in The Lab (PART 9) only while the list has entries. */
+  researchInterests: string[];
 };
 
 export type PreviousSchool = { name: string; score: string; year: string };
@@ -138,6 +140,7 @@ export const player: Player = {
   availability: "TODO", // roles + start date
   photo: "TODO",
   funFacts: [], // TODO
+  researchInterests: [], // TODO (optional): chips in The Lab — hidden while empty
 };
 
 export const education: Education = {

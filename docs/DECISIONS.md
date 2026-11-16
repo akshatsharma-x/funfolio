@@ -443,3 +443,45 @@ change an entry only when the decision itself changes.
 99. **The gate's frost no longer dims** (PART 7, #79): blur + desaturation + the chains say "locked"; the 60% opacity
     went, because the new cards' muted labels, the violet loot chips and deep lime on day sit near 4.5:1 and fell
     under it (axe) while frosted.
+
+## PART 9 — World 3: The Lab
+
+100. **A custom R3F globe, not react-globe.gl.** Lighter, and it shares three + R3F with the Title island (no new
+     dependency). HIGH tier on fine pointers only; LOW / NONE tiers, touch-first devices, Speedrun Mode and no-JS get a
+     server-rendered flat dot map with the same arc, pins and labels. The land is Natural Earth 1:110m (public domain)
+     bundled in `public/data/`; `npm run globe` turns it into `land-dots.json` (4,618 dots, 16.5 KB gzip) — the only
+     file the globe fetches, from the site itself (R10; measured: zero third-party requests). Hexagon dots (one
+     InstancedMesh), a violet fresnel atmosphere, a dashed great-circle arc (drei Line) with a gliding paper plane,
+     pulsing pins and HTML labels projected every frame (hidden behind the globe). The spin lingers while the route
+     faces you, pauses on hover and drag, has a "Pause spin" toggle (WCAG 2.2.2) and "Show the route". It renders only
+     while on screen, unpaused and awake, and unmounts beyond a viewport (measured: no frames off screen, at the idle
+     nap or in the pause menu); reduced motion renders one still frame.
+101. **The route stays inside the facts (R1).** Coordinates come from the brief (Jaipur 26.84 N 75.56 E, Hanoi
+     21.03 N 105.83 E); the route exists only while a paper's host names Hanoi, so the PM2.5 paper's unknown host
+     borrows nothing (#3). Labels and caption say "Presented at SCI-2026 · April 28–29, 2026 · Springer LNNS" — the
+     dates exactly as written, never "travelled" — and the figure is labelled "Research route · illustrative".
+102. **Lab stats are computed** from the venues: conference codes (`SCI-2026`), the series in parentheses (Springer
+     LNNS), "international" when a venue says so, plus `counts.papers` → "2 papers · 1 international conference ·
+     Springer LNNS · SCI-2026".
+103. **Boss cards.** Original 24×24 sprites in `src/content/bossArt.ts` (editable rows, two frames; each frame is an
+     HTML-wrapped SVG, so the steps() idle stays compositor-only). The full title in Unbounded (1.05–1.4rem), never
+     truncated; PM2.5's host and dates "Coming soon". On first view below the fold: 3 hits 650ms apart (≈ 1.5 flashes
+     per second, R5) with the brief's damage words (game copy, kept in bossArt.ts) in the display face and a
+     playfield-only shake, then DEFEATED and a small burst. The server HTML is the defeated state (no JS, reduced
+     motion, Speedrun Mode, already on screen). No tilt on boss cards (the arena is a play area).
+104. **The Smog Golem.** 28 seeded smog blobs behind the arena's content (the boss name sits on a dark plate, R6); the
+     pointer is an air purifier — a dashed ring follows it, taps clear too — and "Run the air purifier" is the
+     keyboard path (R5). ~90% cleared → blue sky, the golem shrinks, coin #7. Replayable; the coin pays once.
+105. **The scroll.** "Read the scroll · Abstract" opens the Modal as parchment between two rollers, unrolling in 7
+     steps (instant under reduced motion); it redefines the semantic tokens locally, so every component inside keeps
+     its contrast. It shows the boss, the abstract ("Coming soon"), keywords, the conference details and links only
+     when they exist. A `scroll` command pays +10 XP once per paper; both opened → Bookworm. "Cite · BibTeX" copies the
+     BibTeX ("Item acquired · Citation") once content has it; until then it is disabled with "BibTeX coming soon".
+106. **The room.** `#lab` is deep violet (lavender in the day theme) with a hex grid, a sheen masked to the hex lines
+     and 12 rising pixel bubbles — compositor-only loops on `--play`, hidden in Speedrun Mode. The globe's view is dark
+     in every theme (a screen, like the Launchpad).
+107. **BYTE's Lab line** ("Boss fights ahead. Bring snacks.") plays now that `[data-boss-fight]` exists (#45).
+108. **Research interests:** `player.researchInterests` (new, empty) — chips only when it has entries.
+109. **Pixel-face candidates** (#97 follow-up): a comparison sheet of the misread strings. Tiny5 keeps Pixelify's width
+     and look and separates B/G, C/O and 5/S; Silkscreen is clearest but ~40% wider; Jersey 10 / Handjet are
+     condensed. Recommendation: Tiny5 — Akshat's call (the Bible names Pixelify Sans).

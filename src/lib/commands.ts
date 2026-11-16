@@ -21,7 +21,9 @@ export type Command =
   /** Opens a soft gate (PART 7: the Quest Log behind the Launchpad) — however it happened. */
   | { type: "gate"; id: "quest-log"; how: GateHow }
   /** Starts a side quest / arcade cartridge (src/content/games.ts). Until PART 11 builds the Arcade: a toast. */
-  | { type: "openGame"; id: string; origin?: Point };
+  | { type: "openGame"; id: string; origin?: Point }
+  /** A research scroll was opened (PART 9): +10 XP once; every scroll in `all` opened → Bookworm. */
+  | { type: "scroll"; id: string; all: string[] };
 
 /** cleared = every bug popped · played = out of shots · skipped = Skip ▶▶ · scrolled / focus = walked right past it */
 export type GateHow = "cleared" | "played" | "skipped" | "scrolled" | "focus";

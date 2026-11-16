@@ -13,6 +13,7 @@ no server, no API keys, no runtime third-party requests.
 | `npm run check` | ESLint + TypeScript |
 | `npm run images` | Pre-builds AVIF/WebP variants from `assets/images/` into `public/img/` |
 | `npm run cursors` | Rebuilds the pixel cursors (6 skins × 3 sizes × 7 variants) and their CSS |
+| `npm run globe` | Rebuilds the Lab globe's land dots (`public/data/land-dots.json`) from the bundled Natural Earth land file |
 
 ## Playing
 
@@ -54,6 +55,11 @@ its real numbers (a cost dial, a token squeeze, a SHA-256 cache hit, a knowledge
 The COMPLETED QUESTS follow, newest first, on a trail that draws itself as you scroll while a tiny BYTE walks it (a
 straight rail on phones): checklists tick, stamps thump down, emblems spin when clicked, and every loot chip opens its
 Skill Tree entry. Side quest buttons say "coming soon" until the Arcade exists. Reading a card for 3s pays +10 XP once.
+
+World 3 (The Lab) has a research-route globe — drag it, pause its spin, "Show the route" — from Manipal University
+Jaipur to SCI-2026 (a flat map on phones and without 3D). Each paper is a boss: scroll it into view to watch the
+battle, sweep the smog off the Smog Golem with your pointer (or press "Run the air purifier"), and open "Read the
+scroll" for the details. Abstracts, links and BibTeX show "Coming soon" until they are in content.ts.
 
 BYTE, the robot mascot, lives in the bottom-right corner: click for a quip, drag or throw it, rub it for hearts,
 minimize it with the `–` button (or turn it off in Pause → Settings). `/playground` has a Juice kit & BYTE panel.
