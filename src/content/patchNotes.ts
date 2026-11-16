@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.6.0",
+    date: "2026-11-16",
+    title: "Player Profile",
+    notes: [
+      "World 1 is a character sheet: class, guild, status, grades, perks and a radar of what the résumé shows.",
+      "Flip the perk cards (hover, Tab or tap) — every number on them comes straight from the résumé.",
+      "Wave at the avatar for a high-five from BYTE.",
+      "Something on the sheet rattles when you hit it…",
+      "Decorative animations rest after 30 seconds without input, and pick up again the moment you move.",
+    ],
+  },
+  {
     version: "0.5.0",
     date: "2026-11-16",
     title: "Boot sequence & Title Screen",

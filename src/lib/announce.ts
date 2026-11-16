@@ -16,13 +16,23 @@ function pageRegion(): HTMLElement {
   return region;
 }
 
+// Messages are spaced ≥ 1s apart: two at once (a coin toast + the crate bursting open, an achievement + a level-up)
+// would otherwise replace each other before a screen reader got to the first.
+const SPACING = 1000;
+let nextAt = 0;
+
 export function announce(text: string): void {
   if (typeof document === "undefined") return;
-  const dialog = document.querySelector<HTMLElement>("dialog[open] [data-announcer]");
-  const target = dialog ?? pageRegion();
-  // Clear first so the same message twice is still announced.
-  target.textContent = "";
+  const now = performance.now();
+  const at = Math.max(now, nextAt);
+  nextAt = at + SPACING;
   window.setTimeout(() => {
-    target.textContent = text;
-  }, 40);
+    const dialog = document.querySelector<HTMLElement>("dialog[open] [data-announcer]");
+    const target = dialog ?? pageRegion();
+    // Clear first so the same message twice is still announced.
+    target.textContent = "";
+    window.setTimeout(() => {
+      target.textContent = text;
+    }, 40);
+  }, at - now);
 }

@@ -261,6 +261,14 @@
 :root[data-paused] {
   --play: paused;
 }
+/* Idle nap: 30s without input → decorative loops rest until the next move (docs/DECISIONS.md #67). */
+:root[data-idle] {
+  --play: paused;
+}
+/* A world that isn't on screen rests too (the runtime sets it; docs/DECISIONS.md #78). */
+[data-offscreen] {
+  --play: paused;
+}
 :root[data-fx="chill"] {
   --fx: 0.5;
 }
@@ -310,6 +318,7 @@
     line-height: 1.08;
     letter-spacing: -0.02em;
     text-wrap: balance;
+    overflow-wrap: break-word; /* a last resort at 320px (WCAG 1.4.10): break a word rather than the layout */
   }
   p,
   li,
@@ -1138,8 +1147,9 @@ html[data-theme="retro"]::after {
   }
   .world-header__title {
     margin: 0;
-    font-size: var(--text-2xl);
+    font-size: min(var(--text-2xl), 11vw); /* "LAUNCHPAD" must fit a 320px screen (WCAG 1.4.10) */
     font-weight: 900;
+    overflow-wrap: break-word;
   }
   .world-header__game {
     color: var(--world-fg);

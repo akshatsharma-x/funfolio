@@ -38,6 +38,10 @@ renderer) it is a flat isometric drawing with the same buttons; phones switch to
 
 Shortcuts never fire while typing; inside a game or a dialog only `Esc` is global.
 
+World 1 (Player Profile) is a character sheet: wave at the avatar (click or Enter) for a high-five from BYTE, flip
+the perk cards (hover, Tab or tap), and hit the mystery crate three times. The Focus Radar counts the résumé entries
+behind each area — it is not a self-rating. Decorative animations rest after 30s without input.
+
 BYTE, the robot mascot, lives in the bottom-right corner: click for a quip, drag or throw it, rub it for hearts,
 minimize it with the `–` button (or turn it off in Pause → Settings). `/playground` has a Juice kit & BYTE panel.
 
@@ -46,3 +50,7 @@ minimize it with the `–` button (or turn it off in Pause → Settings). `/play
 All facts live in `src/content/content.ts`. Anything set to `"TODO"` renders as "Coming soon"; counts (internships,
 projects, papers, skills, honors) are computed. Rules: [`docs/FUNFOLIO_BIBLE.md`](docs/FUNFOLIO_BIBLE.md) ·
 choices: [`docs/DECISIONS.md`](docs/DECISIONS.md). Design check: `/playground`.
+
+While `player.bio` is `"TODO"`, the Profile shows a DRAFT bio assembled only from these facts — write your own in
+`player.bio` to replace it. Until `player.photo` is set, the Character Card shows a pixel avatar; its colors are in
+`src/content/avatar.ts`. Perk names and the Focus Radar's domain buckets live in `src/content/profile.ts`.

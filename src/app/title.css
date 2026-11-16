@@ -423,6 +423,14 @@
     opacity: 1;
     translate: -50% 0;
   }
+  @media (max-width: 26rem) {
+    .hotspot__label {
+      width: max-content;
+      max-width: 11rem; /* wraps instead of running off a 320px screen */
+      white-space: normal;
+      text-align: center;
+    }
+  }
   /* near an edge the label anchors to that side (SVG tier: static positions; 3D tier: projected every frame) */
   .island:not([data-live]) .hotspot[data-edge="end"] .hotspot__label,
   .island[data-live] .hotspot[data-edge-live="end"] .hotspot__label {

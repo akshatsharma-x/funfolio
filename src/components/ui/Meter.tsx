@@ -12,6 +12,8 @@ type MeterProps = {
   valueText?: string;
   showLabel?: boolean;
   tone?: Tone | "world";
+  /** "floor" never lights a segment that isn't fully earned (real scores: 95.4% of 20 segments → 19). */
+  rounding?: "round" | "floor";
   className?: string;
 };
 
@@ -19,9 +21,9 @@ type MeterProps = {
  * Segmented pixel bar (XP, timers, progress). Only feed it real or game-state values — never invented skill levels (R1).
  * Server-safe.
  */
-export function Meter({ value, max = 100, segments = 10, label, valueText, showLabel = true, tone, className }: MeterProps) {
+export function Meter({ value, max = 100, segments = 10, label, valueText, showLabel = true, tone, rounding = "round", className }: MeterProps) {
   const clamped = Math.max(0, Math.min(value, max));
-  const lit = Math.round((clamped / max) * segments);
+  const lit = (rounding === "floor" ? Math.floor : Math.round)((clamped / max) * segments);
   const text = valueText ?? `${clamped}/${max}`;
   const style = tone ? ({ "--meter-fill": "var(--tone)" } as CSSProperties) : undefined;
 

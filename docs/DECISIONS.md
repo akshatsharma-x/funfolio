@@ -274,3 +274,59 @@ change an entry only when the decision itself changes.
     (its right edge is measured with the pin check and shared through `island.textRight`). BYTE's fixed speech bubble
     re-checks what it covers when the page scrolls under it (≤ every 120ms, only while speaking) and lets the
     pointer through over anything interactive — sticker peel corners now count as interactive, for BYTE's body too.
+
+## PART 6 — Player Profile
+
+66. **Character-sheet bento** (`src/components/sections/ProfileSection.tsx`): 12 columns on desktop, 2 on tablets, 1 on
+    phones, dense packing so the tablet layout leaves no holes. Every tile is a StickerCard titled "GAME NAME · plain
+    name" (R9: "XP STATS · Grades"); text tiles tilt ≤ 3–4°, the perks and the crate don't tilt (they move by
+    themselves); five tiles hide a peel secret. The spawn-point tile is left out while `player.base` is "TODO" and
+    becomes a full-width strip once it exists.
+67. **Idle nap** (PART 5 finding): after 30s without input `html[data-idle]` pauses every decorative CSS loop (they all
+    run on `--play`); the next pointer move, key, wheel, touch or scroll resumes them at once. Measured after the nap:
+    0.5% main-thread time (vs ~4–20% before). The living grid's attract mode keeps its ≤ 60s show (#39), then sleeps.
+68. **Everything on the sheet is computed** (`src/content/profile.ts`, server-side): Class = the first class, Subclass =
+    the Full-Stack class, Guild = the school, Status = the current role's company; quick stats are `counts`;
+    "Currently playing" = the current role, "since" its start, and headline phrases shown only while they appear
+    verbatim in its bullets ("LLM Model Monitoring", "Cartographer").
+69. **DRAFT bio** (#7): `bioDraft()` writes three first-person sentences from content values only — degree, school,
+    period and CGPA; the current role and its first bullet; internship / project / paper counts, two project genres
+    and the venue code. Marked DRAFT in code (and `data-draft` in the DOM); `player.bio` replaces it when written.
+    Fun facts, once added, are also listed visibly in this tile (R3), not only in peels and the crate.
+70. **Perks restate facts.** The names are game labels; every back face is a content value (a stat or an honor) with
+    its source, and schema.ts fails the build when a perk's fact disappears. Flipping is purely visual: both faces
+    are in the button's text, so screen readers always get name + fact + source. Hover (real hover devices only) and
+    keyboard focus flip; a click or tap pins it (aria-pressed); reduced motion crossfades instead of turning.
+71. **Focus radar = evidence counts**, never a self-rating: each axis counts the résumé entries (roles and projects)
+    whose stack lists at least one of the domain's items; Research = the number of papers. The buckets are a
+    classification in profile.ts (schema.ts checks every item exists in some stack — a typo would undercount).
+    Today: GenAI 2 · ML & Data 3 · Backend 4 · Frontend 5 · Java & OOP 2 · Research 2. The legend names the entries
+    behind every number. The SVG is geometry only; its labels are HTML placed with container units so they stay
+    ≥ 12px at 320px, and the two longest labels sit at the top and bottom. Draws in on first view.
+72. **XP stats.** The ring fills to the CGPA's real ratio on first view and shows it exactly as written ("8.79/10").
+    "Previous saves" are 20-segment meters, floored so a score is never over-lit (95.4% → 19 segments).
+73. **Avatar + high-five.** Until `player.photo` exists: original pixel art (`src/content/avatar.ts`, colors editable)
+    that breathes, framed by a holo-foil ring — a rotating conic layer under a static mask, compositor-only (the
+    shared `.sticker[data-variant="holo"]` animates a custom property on the main thread). A click / Enter waves and
+    calls `byte.visit()`: BYTE glides next to the avatar (never onto anything clickable; a scroll ends the visit),
+    a star burst and "High five!" (it interrupts BYTE's current line), then back home. Under reduced motion, on phones
+    or without free room it answers from its corner. One-time +5 XP (cta).
+74. **Mystery crate** (coin #4): an original pixel loot crate (no "?" — R4) that wiggles; three hits (click, Enter or
+    Space), with cracks and a narrated countdown, burst it open → Crate Coin + a fun fact, or "More secrets loading…"
+    while there are none (R1). Opened stays opened (the save marks it). Hidden in Speedrun Mode.
+75. **The deal** + one-shot animations: the first time the bento comes into view its tiles fly from a deck in the
+    middle of the visible grid (50ms stagger, back.out); under reduced motion they fade in. Tiles are never hidden
+    without JS, in Speedrun Mode, on a deep link (`/#profile`) or when already on screen at load. The ring and radar
+    use the same "server renders the final state, JS arms it below the fold" pattern (`PlayOnView`, ui kit).
+76. **Announcements are spaced ≥ 1s** (`src/lib/announce.ts`): two messages at once (a coin toast + the crate bursting
+    open, an achievement + a level-up) replaced each other in the single live region before a screen reader got to
+    the first.
+77. **320px reflow** (WCAG 1.4.10) for the whole page, not just the Profile: world titles cap at 11vw ("LAUNCHPAD"),
+    headings may break an over-long word as a last resort, quest cards put the emblem above the name below 25rem,
+    the character sheet stacks labels above values below 26rem and the Title's landmark labels wrap. Measured: the
+    page is exactly 320px wide.
+78. **Off-screen worlds rest.** The runtime marks every world section that isn't on screen (IntersectionObserver,
+    64px margin) with `data-offscreen`, which sets `--play: paused` for everything inside it. Chrome ticks even unseen
+    compositor loops on the main thread, and the Profile alone added eleven (holo ring, breathing avatar, equalizer,
+    crate): with them running below the fold the Title's idle main-thread time rose from ≤ 3% to 9%; paused, it's
+    back under 3%. Together with the idle nap (#67), a loop only runs while its world is on screen and someone's there.

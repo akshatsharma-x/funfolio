@@ -260,6 +260,14 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     if (typing) finishTyping(1600);
     else nextLine();
   };
+  /** Interrupts whatever BYTE is saying (a direct answer to the visitor, e.g. the high-five). */
+  const sayNow = (line: Line): boolean => {
+    if (minimized || tucked) return false;
+    queue.length = 0;
+    queue.push(line);
+    nextLine();
+    return true;
+  };
   const syncPending = () => {
     root.toggleAttribute("data-pending", pending.length > 0);
     if (!minimized) bot.setAttribute("aria-label", pending.length ? PENDING_LABEL : LABEL);
@@ -338,8 +346,9 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
   };
   let dragging = false;
   let flying = false;
+  let visiting = false;
   function avoid(glide: boolean) {
-    if (minimized || dragging || flying) return;
+    if (minimized || dragging || flying || visiting) return;
     const b = bounds();
     const target = { x: clamp(home.x, b.minX, b.maxX), y: clamp(home.y, b.minY, b.maxY) };
     const rects = interactiveRects();
@@ -598,6 +607,53 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     }, 2200);
   };
 
+  // ── visit (PART 6): fly next to an element for a high-five, then home ───────────────────────────────────────────
+  let visitTimer = 0;
+  function endVisit() {
+    if (!visiting) return;
+    visiting = false;
+    cancel(visitTimer);
+    root.removeAttribute("data-visiting");
+    avoid(true); // glides home (or to the nearest free spot)
+  }
+  const visit = (selector: string, text = "High five!") => {
+    let el: HTMLElement | null = null;
+    try {
+      el = document.querySelector<HTMLElement>(selector);
+    } catch {
+      return; // bad selector
+    }
+    if (!el || minimized || dragging || flying || visiting) return;
+    const fromHere = () => {
+      if (sayNow({ text, mood: "love", ms: 1500 })) react("love", 1800);
+    };
+    if (prefersReducedMotion() || narrow.matches || tucked) return fromHere();
+    const r = el.getBoundingClientRect();
+    const b = bounds();
+    const rects = interactiveRects();
+    const cy = clamp(r.top + r.height / 2 - BYTE_H / 2, b.minY, b.maxY);
+    const spot = [
+      { x: r.right + 10, y: cy },
+      { x: r.left - BYTE_W - 10, y: cy },
+      { x: clamp(r.left + r.width / 2 - BYTE_W / 2, b.minX, b.maxX), y: r.top - BYTE_H - 10 },
+    ].find((c) => c.x >= b.minX && c.x <= b.maxX && c.y >= b.minY && c.y <= b.maxY && !overlaps(rects, c.x, c.y));
+    if (!spot) return fromHere();
+    visiting = true;
+    root.setAttribute("data-visiting", "");
+    pos = spot;
+    render(true);
+    cancel(visitTimer);
+    visitTimer = later(() => {
+      // the near hand meets the target: a little star burst at the contact point
+      const fromRight = spot.x > r.left;
+      fx.burst(fromRight ? spot.x + 6 : spot.x + BYTE_W - 6, spot.y + BYTE_H * 0.4, { shape: "star", count: 8 });
+      sfx.play("pop");
+      point(selector);
+      sayNow({ text, mood: "love", ms: 1400 });
+      visitTimer = later(endVisit, 1700);
+    }, 380);
+  };
+
   // ── world lines + first-run tips ────────────────────────────────────────────────────────────────────────────
   const sayOnce = (key: string, line: Line, requires?: string) => {
     if (requires && !document.querySelector(requires)) return; // the feature it talks about isn't on the page yet
@@ -637,6 +693,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     }),
     bus.on("byte:react", ({ mood: m }) => react(m)),
     bus.on("byte:point", ({ selector }) => point(selector)),
+    bus.on("byte:visit", ({ selector, text }) => visit(selector, text)),
     bus.on("achievement:unlocked", () => react("happy", 1400)),
     bus.on("coin:collected", () => react("love", 1400)),
     bus.on("level:up", () => react("cool", 2200)),
@@ -669,6 +726,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     "scroll",
     () => {
       onInput();
+      if (visiting) endVisit(); // the target scrolled away: go home
       avoidSoon(200);
     },
     { passive: true },
@@ -703,6 +761,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     cancelAnimationFrame(eyeRaf);
     cancelAnimationFrame(flightRaf);
     cancelAnimationFrame(scrollFrame);
+    cancel(visitTimer);
     layoutObserver.disconnect();
     offs.forEach((off) => off());
   };

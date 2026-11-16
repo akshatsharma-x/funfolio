@@ -1,127 +1,224 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { education, player } from "@/content/content";
-import { counts, known } from "@/content/derived";
+import { known } from "@/content/derived";
+import { bio, cgpa, characterSheet, crateFact, focusRadar, nowPlaying, perks, previousSaves, quickStats, spawnPoint } from "@/content/profile";
+import { Badge } from "@/components/ui/Badge";
 import { Chip } from "@/components/ui/Chip";
-import { Fact, Soon } from "@/components/ui/ComingSoon";
+import { Soon } from "@/components/ui/ComingSoon";
+import { Meter } from "@/components/ui/Meter";
 import { NumberRoll } from "@/components/ui/NumberRoll";
-import { PixelIcon } from "@/components/ui/PixelIcon";
+import { PeelDoodle, PeelFact, PeelJoke } from "@/components/ui/PeelSecrets";
 import { StickerCard } from "@/components/ui/StickerCard";
 import { WorldHeader } from "@/components/ui/WorldHeader";
-import { InfoList, WorldSection } from "./parts";
+import { AvatarButton } from "./profile/AvatarButton";
+import { Equalizer } from "./profile/Equalizer";
+import { FocusRadar } from "./profile/FocusRadar";
+import { MysteryCrate } from "./profile/MysteryCrate";
+import { PerkCard } from "./profile/PerkCard";
+import { PixelAvatar } from "./profile/PixelAvatar";
+import { ProfileDeal } from "./profile/ProfileDeal";
+import { XpRing } from "./profile/XpRing";
+import { WorldSection } from "./parts";
 
-const QUICK_STATS = [
-  { label: "Internships", value: counts.internships },
-  { label: "Projects", value: counts.projects },
-  { label: "Papers", value: counts.papers },
-  { label: "Skills", value: counts.skills },
-  { label: "Honors", value: counts.honors },
-];
+/** "GAME NAME · plain name" (R9): every tile says what it is in plain words too. */
+function TileTitle({ id, game, plain }: { id: string; game: string; plain: string }) {
+  return (
+    <h3 id={id} className="tile-title">
+      <span className="tile-title__game">{game}</span> <span className="tile-title__plain">· {plain}</span>
+    </h3>
+  );
+}
 
-/** World 1 · PLAYER PROFILE · About. PART 6 turns this into the character-sheet bento. */
+function Tile({ area, id, game, plain, tilt = 4, peel, peelLabel, speedrun, children }: { area: string; id: string; game: string; plain: string; tilt?: number | false; peel?: ReactNode; peelLabel?: string; speedrun?: "hide"; children: ReactNode }) {
+  return (
+    <StickerCard
+      as="article"
+      className={`bento__tile bento__tile--${area}`}
+      bodyClassName="bento__body"
+      aria-labelledby={id}
+      tilt={tilt !== false}
+      tiltMax={tilt || 0}
+      peel={peel}
+      peelLabel={peelLabel}
+      data-speedrun={speedrun}
+    >
+      <TileTitle id={id} game={game} plain={plain} />
+      {children}
+    </StickerCard>
+  );
+}
+
+/** World 1 · PLAYER PROFILE · About — the character-sheet bento (PART 6). Every value comes from content.ts (R1). */
 export function ProfileSection() {
+  const sheet = characterSheet();
+  const story = bio();
+  const gpa = cgpa();
+  const now = nowPlaying();
+  const spawn = spawnPoint();
+
   return (
     <WorldSection id="profile" world="profile" labelledBy="profile-title">
       <WorldHeader world="profile" id="profile-title" />
-      <div className="grid gap-5 lg:grid-cols-12">
-        <StickerCard as="article" className="lg:col-span-5" aria-labelledby="profile-character">
-          <h3 id="profile-character" className="mb-4 text-xl">
-            Character card
-          </h3>
-          <div className="relative mb-5 grid aspect-[4/3] place-items-center overflow-hidden rounded-xl border-[3px] border-dashed border-line bg-surface-2">
-            {known(player.photo) ? (
-              <Image src={player.photo} alt={`Photo of ${player.name}`} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
-            ) : (
-              <Soon label="Photo coming soon" />
-            )}
+      <ProfileDeal className="bento">
+        <Tile area="character" id="profile-character" game="Character card" plain="Profile" peel={<PeelDoodle name="byte" caption="BYTE approves." />} peelLabel="Peek under the character card">
+          <div className="char">
+            <div className="char__frame">
+              <span className="holo-ring" aria-hidden="true">
+                <span className="holo-ring__spin" />
+              </span>
+              <AvatarButton label="Wave at the avatar — BYTE flies in for a high-five">
+                {known(player.photo) ? (
+                  <Image src={player.photo} alt={`Photo of ${player.name}`} fill sizes="(min-width: 1024px) 20vw, 60vw" className="object-cover" />
+                ) : (
+                  <span className="avatar-breath">
+                    <PixelAvatar />
+                  </span>
+                )}
+              </AvatarButton>
+            </div>
+            <dl className="char__sheet">
+              <div className="char__row char__row--name">
+                <dt>Name</dt>
+                <dd>{sheet.name}</dd>
+              </div>
+              {sheet.className ? (
+                <div className="char__row">
+                  <dt>Class</dt>
+                  <dd>{sheet.className}</dd>
+                </div>
+              ) : null}
+              {sheet.subclass ? (
+                <div className="char__row">
+                  <dt>Subclass</dt>
+                  <dd>{sheet.subclass}</dd>
+                </div>
+              ) : null}
+              <div className="char__row">
+                <dt>Guild</dt>
+                <dd>{sheet.guild}</dd>
+              </div>
+              {sheet.online ? (
+                <div className="char__row">
+                  <dt>Status</dt>
+                  <dd>
+                    <span className="status-dot" aria-hidden="true" /> <span className="char__online">Online</span> @ {sheet.online}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
           </div>
-          <InfoList
-            rows={[
-              { label: "Name", value: player.name },
-              { label: "Handle", value: player.handle },
-              { label: "Status", value: player.status },
-              { label: "Spawn point", value: <Fact value={player.base} /> },
-              { label: "Availability", value: <Fact value={player.availability} /> },
-            ]}
-          />
-        </StickerCard>
+        </Tile>
 
-        <StickerCard as="article" className="lg:col-span-7" aria-labelledby="profile-bio">
-          <h3 id="profile-bio" className="mb-4 text-xl">
-            Bio
-          </h3>
-          <p className="read mb-6">
-            <Fact value={player.bio} />
+        <Tile area="origin" id="profile-origin" game="Origin story" plain="Bio" tilt={3} peel={<PeelFact n={0} />}>
+          {/* DRAFT while player.bio is "TODO": bioDraft() in content/profile.ts, built only from content.ts facts */}
+          <p className="read origin__text" data-draft={story.draft ? "" : undefined}>
+            {story.lines.join(" ")}
           </p>
-          <h4 className="mb-3 text-lg">Classes</h4>
-          <ul aria-label="Classes" className="mb-6 flex flex-wrap gap-2">
-            {player.classes.map((c) => (
-              <li key={c}>
-                <Chip tone="world" icon="star">
-                  {c}
-                </Chip>
-              </li>
-            ))}
-          </ul>
-          <h4 className="mb-3 text-lg">Fun facts</h4>
           {player.funFacts.length > 0 ? (
-            <ul className="read grid list-disc gap-1 pl-5">
-              {player.funFacts.map((f) => (
-                <li key={f}>{f}</li>
-              ))}
-            </ul>
+            <>
+              <h4 className="tile-sub">Fun facts</h4>
+              <ul className="read grid list-disc gap-1 pl-5">
+                {player.funFacts.map((f) => (
+                  <li key={f}>{f}</li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+        </Tile>
+
+        <Tile area="xp" id="profile-xp" game="XP stats" plain="Grades" peel={<PeelJoke n={3} />}>
+          <div className="xp">
+            {gpa ? <XpRing value={gpa.text} max={gpa.max} ratio={gpa.ratio} label="CGPA" /> : <Soon />}
+            <p className="xp__degree">
+              <span className="xp__label">CGPA</span>
+              <span>{education.degree}</span>
+              <span className="text-muted">{education.period}</span>
+            </p>
+          </div>
+          <h4 className="tile-sub">Previous saves</h4>
+          <div className="grid gap-3">
+            {previousSaves().map((s) => (
+              <Meter key={s.name} label={s.name} value={s.percent} max={100} segments={20} rounding="floor" valueText={`${s.score} · ${s.year}`} tone="world" />
+            ))}
+          </div>
+        </Tile>
+
+        <Tile area="now" id="profile-now" game="Currently playing" plain="Current role">
+          {now ? (
+            <div className="now">
+              <Equalizer />
+              <p className="now__role">
+                <strong>{now.role}</strong> @ {now.company} <span className="now__since">· since {now.since}</span>
+              </p>
+              {now.focus.length ? (
+                <ul className="now__focus" aria-label="Working on">
+                  {now.focus.map((f) => (
+                    <li key={f}>
+                      <Chip tone="world">{f}</Chip>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
           ) : (
             <Soon />
           )}
-        </StickerCard>
+        </Tile>
 
-        <StickerCard as="article" className="lg:col-span-7" aria-labelledby="profile-education">
-          <h3 id="profile-education" className="mb-1 text-xl">
-            Guild · Education
-          </h3>
-          <p className="mb-4 font-semibold">
-            {education.degree} — {education.school}
-          </p>
-          <InfoList
-            className="mb-5"
-            rows={[
-              { label: "Period", value: education.period },
-              { label: "CGPA", value: <NumberRoll value={education.cgpa} className="font-display font-bold" /> },
-            ]}
-          />
-          <h4 className="mb-2 text-lg">Previous saves · School</h4>
-          <ul className="mb-5 grid gap-1">
-            {education.previous.map((p) => (
-              <li key={p.name}>
-                {p.name} — <span className="font-semibold">{p.score}</span> <span className="text-muted">({p.year})</span>
+        <Tile area="perks" id="profile-perks" game="Perks" plain="Highlights" tilt={false} peel={<PeelJoke n={5} />}>
+          <p className="tile-hint">Hover, focus or tap a card to flip it.</p>
+          <ul className="perks">
+            {perks().map((p) => (
+              <li key={p.id}>
+                <PerkCard perk={p} />
               </li>
             ))}
           </ul>
-          <h4 className="mb-3 text-lg">Coursework</h4>
-          <ul aria-label="Coursework" className="flex flex-wrap gap-2">
-            {education.coursework.map((c) => (
-              <li key={c}>
-                <Chip>{c}</Chip>
-              </li>
-            ))}
-          </ul>
-        </StickerCard>
+        </Tile>
 
-        <StickerCard as="article" variant="world" className="lg:col-span-5" aria-labelledby="profile-stats">
-          <h3 id="profile-stats" className="mb-4 flex items-center gap-2 text-xl">
-            <PixelIcon name="star" mono size={24} /> Quick stats
-          </h3>
-          <dl className="grid grid-cols-2 gap-4">
-            {QUICK_STATS.map((s) => (
-              <div key={s.label}>
-                <dt className="font-pixel text-sm uppercase tracking-wider">{s.label}</dt>
-                <dd className="font-display text-2xl font-black">
+        <Tile area="stats" id="profile-stats" game="Quick stats" plain="Totals" peel={<PeelFact n={1} />}>
+          <dl className="qstats">
+            {quickStats().map((s) => (
+              <div key={s.label} className="qstats__item">
+                <dt>{s.label}</dt>
+                <dd>
                   <NumberRoll value={String(s.value)} />
                 </dd>
               </div>
             ))}
           </dl>
-        </StickerCard>
-      </div>
+        </Tile>
+
+        <Tile area="radar" id="profile-radar" game="Focus radar" plain="Experience by area" tilt={3}>
+          <FocusRadar axes={focusRadar()} titleId="profile-radar" />
+        </Tile>
+
+        <Tile area="training" id="profile-training" game="Training grounds" plain="Coursework" peel={<PeelDoodle name="coffee" caption="Exam fuel." />}>
+          <ul className="training">
+            {education.coursework.map((c) => (
+              <li key={c}>
+                <Badge tone="world" icon="scroll" className="training__badge">
+                  {c}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </Tile>
+
+        <Tile area="crate" id="profile-crate" game="Mystery crate" plain="Easter egg" tilt={false} speedrun="hide">
+          <MysteryCrate fact={crateFact()} />
+        </Tile>
+
+        {spawn ? (
+          <Tile area="spawn" id="profile-spawn" game="Spawn point" plain="Location" tilt={false}>
+            <p className="spawn">
+              <span className="spawn__pin" aria-hidden="true" />
+              {spawn}
+            </p>
+          </Tile>
+        ) : null}
+      </ProfileDeal>
     </WorldSection>
   );
 }

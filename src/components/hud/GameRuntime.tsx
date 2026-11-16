@@ -16,6 +16,8 @@ import {
   useBusWiring,
   useCommandHandler,
   useDocumentSync,
+  useIdleNap,
+  useOffscreenPause,
   useKeyboardShortcuts,
   useSpareCoinSync,
   useStatsTracker,
@@ -45,6 +47,8 @@ export default function GameRuntime({ resumeHref, byteScript, bootScript }: { re
   useSpareCoinSync(pathname);
   useStatsTracker();
   useBusWiring();
+  useIdleNap();
+  useOffscreenPause();
   const pauseOpen = useUi((s) => s.pauseOpen);
   const pauseEverOpened = useUi((s) => s.pauseEverOpened);
   const byteVisible = useSave((s) => s.settings.byteVisible);

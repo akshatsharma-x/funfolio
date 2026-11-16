@@ -24,4 +24,11 @@ export const byte = {
   point(selector: string): void {
     bus.emit("byte:point", { selector });
   },
+  /**
+   * Flies next to an element for a moment — a high-five — then glides home. Never lands on anything clickable; under
+   * reduced motion, on phones or with no free spot it answers from where it is.
+   */
+  visit(selector: string, text?: string): void {
+    bus.emit("byte:visit", { selector, text });
+  },
 };

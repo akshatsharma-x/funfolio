@@ -32,6 +32,7 @@ export type BusEvents = {
   "byte:say": { text: string; mood?: ByteMood; ms?: number };
   "byte:react": { mood: ByteMood };
   "byte:point": { selector: string };
+  "byte:visit": { selector: string; text?: string };
   /** A WorldHeader intro started (PART 4). */
   "world:intro": { id: string };
   /** The boot screen is gone and the Title Screen is revealed (PART 5) — typewriters, blinks and BYTE's tips start. */

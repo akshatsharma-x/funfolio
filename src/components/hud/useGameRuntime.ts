@@ -91,6 +91,59 @@ export function jumpToWorld(n: number) {
   scrollToElement(el, { focus: true });
 }
 
+/**
+ * Idle nap (PART 6 · docs/DECISIONS.md #67): after 30s without input, html[data-idle] pauses every decorative CSS loop
+ * (they all run on --play), so a page left open stops costing main-thread time; any input resumes them at once.
+ */
+const IDLE_NAP_MS = 30_000;
+export function useIdleNap() {
+  useEffect(() => {
+    const root = document.documentElement;
+    let last = performance.now();
+    let timer = 0;
+    const check = () => {
+      const quiet = performance.now() - last;
+      if (quiet >= IDLE_NAP_MS) root.setAttribute("data-idle", "");
+      else timer = window.setTimeout(check, IDLE_NAP_MS - quiet + 50);
+    };
+    const onInput = () => {
+      last = performance.now();
+      if (root.hasAttribute("data-idle")) {
+        root.removeAttribute("data-idle");
+        window.clearTimeout(timer);
+        timer = window.setTimeout(check, IDLE_NAP_MS);
+      }
+    };
+    const events = ["pointermove", "pointerdown", "keydown", "wheel", "touchstart", "scroll"] as const;
+    events.forEach((t) => window.addEventListener(t, onInput, { passive: true }));
+    timer = window.setTimeout(check, IDLE_NAP_MS);
+    return () => {
+      window.clearTimeout(timer);
+      events.forEach((t) => window.removeEventListener(t, onInput));
+      root.removeAttribute("data-idle");
+    };
+  }, []);
+}
+
+/**
+ * Off-screen worlds rest (PART 6): a world section that isn't on screen gets [data-offscreen], which pauses its
+ * decorative loops (--play) — eleven of them live in the Profile alone, and Chrome ticks even unseen ones.
+ */
+export function useOffscreenPause() {
+  useEffect(() => {
+    const sections = [...document.querySelectorAll<HTMLElement>("main section[data-world]")];
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => (e.target as HTMLElement).toggleAttribute("data-offscreen", !e.isIntersecting)),
+      { rootMargin: "64px 0px" },
+    );
+    sections.forEach((s) => io.observe(s));
+    return () => {
+      io.disconnect();
+      sections.forEach((s) => s.removeAttribute("data-offscreen"));
+    };
+  }, []);
+}
+
 export function useDocumentSync() {
   useEffect(() => {
     runtime.overrides = readUrlOverrides();

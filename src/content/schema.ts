@@ -4,6 +4,7 @@
 import { z } from "zod";
 import * as content from "./content";
 import { resolveHighlight } from "./derived";
+import { PERK_DEFS, radarItems } from "./profile";
 
 const todo = z.literal("TODO");
 const text = z.string().trim().min(1);
@@ -146,6 +147,14 @@ const schema = z
       for (const ref of tile.refs) {
         if (!resolveHighlight(ref)) ctx.addIssue({ code: "custom", message: `speedrun highlight points at a missing fact: ${JSON.stringify(ref)}`, path: ["speedrun"] });
       }
+    }
+    // PART 6 · Player Profile: perks restate facts; the radar buckets name real stack items (a typo would undercount)
+    for (const perk of PERK_DEFS) {
+      if (!perk.build()) ctx.addIssue({ code: "custom", message: `perk "${perk.name}" points at a missing fact (src/content/profile.ts)`, path: ["profile"] });
+    }
+    const stacks = new Set([...c.experience, ...c.projects].flatMap((e) => e.stack));
+    for (const item of radarItems()) {
+      if (!stacks.has(item)) ctx.addIssue({ code: "custom", message: `focus radar item "${item}" is in no experience/project stack (src/content/profile.ts)`, path: ["profile"] });
     }
     const all = new Set([c.skills.weapons, c.skills.spells, c.skills.gear, c.skills.gadgets, c.skills.runes].flatMap((s) => s.items));
     for (const s of c.skills.signature) {

@@ -28,8 +28,9 @@ export function QuestsSection() {
           >
             <div className="flex flex-wrap items-start gap-4">
               <Emblem text={xp.emblem} />
-              <div className="grid min-w-0 flex-1 gap-1">
-                <h3 id={`quest-${xp.id}`} className="text-xl">
+              {/* below 25rem the name goes under the emblem: "WalkingTree Technologies" needs the full width at 320px */}
+              <div className="grid min-w-0 flex-1 basis-full gap-1 min-[25rem]:basis-0">
+                <h3 id={`quest-${xp.id}`} className="text-xl [overflow-wrap:break-word]">
                   {xp.company}
                 </h3>
                 <p className="font-semibold">{xp.role}</p>

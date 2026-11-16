@@ -34,6 +34,15 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   `src/lib/heroLoad.ts`. Landmarks: `src/content/landmarks.ts`. No raycasting — hit targets are HTML buttons.
   The Title pins (`#title[data-pin]`, set by `TitleIsland`) only when its whole overlay fits the viewport; nothing
   there may widen the page (labels near an edge anchor to that side).
+- Player Profile (PART 6): every value on the sheet is computed server-side in `src/content/profile.ts` (character
+  fields, the DRAFT bio, perks, the radar's domain buckets, quick stats); perk facts and radar items are checked by
+  schema.ts. Avatar pixel art + editable colors: `src/content/avatar.ts`. Tiles live in `src/components/sections/profile/`.
+- One-shot "play on first view" animations wrap their element in `PlayOnView` (`src/components/ui/PlayOnView.tsx`):
+  render the FINAL state on the server; CSS animates from `[data-play="armed"]` to `[data-play="run"]`.
+- `byte.visit(selector, text?)` flies BYTE next to an element for a moment (never onto anything clickable).
+- Idle nap (#67) + off-screen pause (#78): after 30s without input `html[data-idle]`, and on any world section that
+  isn't on screen `[data-offscreen]`, set `--play: paused` — every new continuous CSS loop must use
+  `animation-play-state: var(--play)` (and live inside its world's section). `announce()` spaces messages ≥ 1s (#76).
 - Reading zones (R6): `src/components/fx/readZones.ts` defines them once — `READ` (text people read: click juice stays
   silent near it) and `TEXT` (READ + labelled controls: confetti is masked out of it). Reuse them for any new effect
   that could land on text.
