@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { ArcadeData } from "@/content/arcade";
 import { useUi } from "@/lib/ui";
 import { Modal } from "@/components/ui/Modal";
@@ -17,6 +17,20 @@ export default function GameHost({ data }: { data: ArcadeData }) {
   const shown = useUi((s) => s.lastGame);
   const shell = useRef<ShellHandle>(null);
   const def = shown ? data.games[shown.id] : null;
+
+  // While a game is open the page behind its dialog rests (html[data-game-open]: CSS loops, the living grid, 3D
+  // stages). Once the dialog has animated out, the shell unmounts — a closed dialog must not keep the last game (and
+  // its WebGL context, its listeners) alive.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (game) {
+      root.setAttribute("data-game-open", "");
+      return;
+    }
+    root.removeAttribute("data-game-open");
+    const t = window.setTimeout(() => useUi.getState().clearLastGame(), 400);
+    return () => window.clearTimeout(t);
+  }, [game]);
 
   return (
     <Modal

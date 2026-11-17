@@ -10,6 +10,7 @@ import { Line, OrbitControls } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import * as THREE from "three";
+import "./quietThree";
 import type { Line2 } from "three-stdlib";
 import { greatCircleArc, toVec3, type LatLon } from "@/lib/geo";
 

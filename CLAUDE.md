@@ -81,7 +81,10 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   `GameHost.tsx` (the full-size Modal; `command({ type: "openGame", id })` from anywhere), `engine.ts` (fixed-timestep
   loop, `fitCanvas`, DOM floaters, seeded RNG). A new game = a module implementing `GameProps` + a registry entry + its
   `BASED_ON`/fact in arcade.ts + `ready: true` in games.ts. Inside a game, draw effects with `api.float` (the FX canvas
-  is under the dialog); toasts and the level-up banner wait until the game closes. The Prize Counter is
+  is under the dialog); toasts and the level-up banner wait until the game closes. Canvas games render in
+  `api.onFrame` (simulate in `onTick`); a game with its own loop (R3F) stops it on the `paused` prop. Every R3F canvas
+  imports `@/components/three/quietThree` first. While a game is open `html[data-game-open]` rests the page behind it
+  (`--play`, the grid, 3D stages) — honour it in any new background loop. The Prize Counter is
   `src/components/prizes/PrizeCounter.tsx` (booth portal + pause-menu tab); BYTE's hats are `src/components/byte/hats.tsx`.
 - `@keyframes` names are global across every stylesheet: prefix new ones by feature (`funsole-on`, `quest-pop`); the
   build fails on a name defined twice with different bodies (#120).

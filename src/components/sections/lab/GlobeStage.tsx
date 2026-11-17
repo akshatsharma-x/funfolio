@@ -23,7 +23,9 @@ export function GlobeStage({ route, caption, children }: { route: { from: Place;
   const fine = useMediaQuery("(hover: hover) and (pointer: fine)");
   const reduced = useReducedMotion();
   const mode = useHtmlAttribute("data-mode", "play");
-  const paused = useHtmlAttribute("data-paused", "no") !== "no";
+  const pauseMenu = useHtmlAttribute("data-paused", "no") !== "no";
+  const gameOpen = useHtmlAttribute("data-game-open", "no") !== "no"; // an arcade game covers the page (PART 12)
+  const paused = pauseMenu || gameOpen;
   const idle = useHtmlAttribute("data-idle", "no") !== "no";
   const [near, setNear] = useState(false);
   const [visible, setVisible] = useState(false);

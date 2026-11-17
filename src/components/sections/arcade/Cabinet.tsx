@@ -42,6 +42,31 @@ function Attract({ id }: { id: string }) {
         ))}
       </span>
     );
+  if (id === "rag-catcher")
+    return (
+      <span className="att att-rc">
+        {[0, 1, 2].map((i) => (
+          <i key={i} style={{ "--i": i } as CSSProperties} />
+        ))}
+        <b />
+      </span>
+    );
+  if (id === "pipeline")
+    return (
+      <span className="att att-pl">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <i key={i} style={{ "--i": i } as CSSProperties} />
+        ))}
+        <b />
+      </span>
+    );
+  if (id === "gradient-descent")
+    return (
+      <span className="att att-gd">
+        <i />
+        <b />
+      </span>
+    );
   return (
     <span className="att att-bw">
       {Array.from({ length: 9 }, (_, i) => (

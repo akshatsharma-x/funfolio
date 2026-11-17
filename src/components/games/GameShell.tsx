@@ -56,6 +56,7 @@ export function GameShell({ id, data, active, ref }: { id: string; data: ArcadeD
   const [summary, setSummary] = useState<Summary | null>(null);
   const phaseRef = useRef<Phase>("title");
   const ticks = useRef(new Set<(dt: number) => void>());
+  const frames = useRef(new Set<(alpha: number) => void>());
   const loopRef = useRef<Loop | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -84,9 +85,14 @@ export function GameShell({ id, data, active, ref }: { id: string; data: ArcadeD
 
   // one fixed-timestep loop, running only while playing in an open dialog
   useEffect(() => {
-    const loop = createLoop((dt) => {
-      for (const fn of ticks.current) fn(dt);
-    });
+    const loop = createLoop(
+      (dt) => {
+        for (const fn of ticks.current) fn(dt);
+      },
+      (alpha) => {
+        for (const fn of frames.current) fn(alpha);
+      },
+    );
     loopRef.current = loop;
     return () => loop.stop();
   }, []);
@@ -128,6 +134,7 @@ export function GameShell({ id, data, active, ref }: { id: string; data: ArcadeD
 
   const start = () => {
     ticks.current.clear();
+    frames.current.clear();
     setHud(EMPTY_HUD);
     setSummary(null);
     setWhy(null);
@@ -169,6 +176,12 @@ export function GameShell({ id, data, active, ref }: { id: string; data: ArcadeD
         ticks.current.add(fn);
         return () => {
           ticks.current.delete(fn);
+        };
+      },
+      onFrame: (fn) => {
+        frames.current.add(fn);
+        return () => {
+          frames.current.delete(fn);
         };
       },
       setScore: (score) => setHud((h) => (h.score === score ? h : { ...h, score })),
@@ -303,7 +316,7 @@ export function GameShell({ id, data, active, ref }: { id: string; data: ArcadeD
         {playing ? (
           <div ref={fieldRef} className="gshell__field" inert={phase === "paused"} data-reduced={reduced ? "" : undefined}>
             {Game ? (
-              <Game key={round} api={api} reduced={reduced} game={game} data={data} seed={seed} />
+              <Game key={round} api={api} reduced={reduced} game={game} data={data} seed={seed} paused={phase === "paused"} />
             ) : (
               <p className="gshell__msg">{failed ? "Oops — that's a glitch. The game didn't load. Try again?" : "Loading the cartridge…"}</p>
             )}

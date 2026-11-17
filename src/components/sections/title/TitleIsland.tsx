@@ -31,7 +31,9 @@ export function TitleIsland({ spots, ratio, children }: { spots: Spots; ratio: n
   const { tier } = useQualityTier();
   const reduced = useReducedMotion();
   const mode = useHtmlAttribute("data-mode", "play");
-  const paused = useHtmlAttribute("data-paused", "no") !== "no";
+  const pauseMenu = useHtmlAttribute("data-paused", "no") !== "no";
+  const gameOpen = useHtmlAttribute("data-game-open", "no") !== "no"; // an arcade game covers the page (PART 12)
+  const paused = pauseMenu || gameOpen;
   // behind the boot screen the island only renders its warm-up frames (shaders compiled), then waits — and it doesn't
   // even start loading until the boot screen is up (its parse/compile must not delay the boot's first paint)
   const bootAttr = useHtmlAttribute("data-boot", "none");

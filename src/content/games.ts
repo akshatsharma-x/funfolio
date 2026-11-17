@@ -9,9 +9,9 @@ export const GAMES: readonly GameDef[] = [
   { id: "cache-hit", name: "Cache Hit!", ready: true, arcade: true },
   { id: "bug-whack", name: "Bug Whack", ready: true, arcade: true },
   // PART 12
-  { id: "rag-catcher", name: "RAG Catcher", ready: false, arcade: true },
-  { id: "pipeline", name: "Pipeline", ready: false, arcade: true },
-  { id: "gradient-descent", name: "Gradient Descent", ready: false, arcade: true },
+  { id: "rag-catcher", name: "RAG Catcher", ready: true, arcade: true },
+  { id: "pipeline", name: "Pipeline", ready: true, arcade: true },
+  { id: "gradient-descent", name: "Gradient Descent", ready: true, arcade: true },
   // the JD Scanner is a Skill Tree tool (PART 13), reached the same way
   { id: "jd-scanner", name: "JD Scanner", ready: false, arcade: false },
 ];

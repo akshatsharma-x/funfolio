@@ -380,14 +380,18 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
     locate("reentry");
   };
 
-  const onHtmlChange = () => {
-    // theme / world / global cursor variant changed: refresh colors and mode
+  const onHtmlChange = (records: MutationRecord[]) => {
+    // theme / world / global cursor variant changed: refresh colors and mode. A dialog opened or closed (the pause
+    // menu, an arcade game) without the pointer moving: what's under it changed — re-read it, or a stale label
+    // ("PLAY") would stay on the follower.
     glowFrom = undefined;
-    if (known) classify(lastTarget);
+    if (!known) return;
+    const covered = records.some((r) => r.attributeName === "data-paused" || r.attributeName === "data-game-open");
+    classify(covered ? document.elementFromPoint(tx, ty) : lastTarget);
   };
 
   const htmlObserver = new MutationObserver(onHtmlChange);
-  htmlObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-world", "data-cursor"] });
+  htmlObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-world", "data-cursor", "data-paused", "data-game-open"] });
   // Hotkey L lives in the PART 3 keyboard manager (src/components/hud/useGameRuntime.ts) → locateCursor() → here.
   const offLocate = bus.on("cursor:locate", () => locate("api"));
 

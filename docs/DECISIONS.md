@@ -632,3 +632,52 @@ change an entry only when the decision itself changes.
      (n/12)". BYTE now draws its equipped hat (original art in its own SVG coordinates) — the LV3 party hat finally shows.
 132. **Safari doesn't focus a clicked button**, so a dialog opened by a click had nothing to return focus to:
      ArcadeButton (any button with a command), the cabinets and the Vault's side-quest buttons focus themselves first.
+
+## PART 12 — World 5b: Action games
+
+133. **Their real-work lines** (arcade.ts, checked against the bullets they restate): RAG Catcher "Akshat's real build:
+     Cognivault AI — a multi-agent RAG system with FAISS + HyDE retrieval."; Pipeline "Real life: data aggregation
+     pipelines on an enterprise system with 10,000+ records and 2,500+ daily active users." (its target is the Records
+     stat: 10,000); Gradient Descent "Akshat's churn model: 97% accuracy · 0.98 ROC-AUC." (the brief's line, built from
+     the stats).
+134. **Canvas games in the shell.** `api.onFrame` (one render per display frame while playing) joins the fixed 60 Hz
+     `onTick`; games with their own loop (R3F) get a `paused` prop. Canvases size with `fitCanvas` (DPR ≤ 1.5) and a
+     ResizeObserver; canvas text uses the resolved next/font family. What must stay readable is DOM — RAG Catcher's
+     query and context window, Pipeline's legend and arrow pad, Gradient Descent's learning-rate slider — and the
+     playfield is a `role="application"` whose name lists its controls. Tests read live state through an opt-in
+     `window.__QA_ARCADE` (like #89).
+135. **RAG Catcher.** Six original query sets (six relevant chunks each, every one containing a keyword of its query
+     — the part that glows), a shared junk pool and six hallucinations; 45% relevant / 35% junk / 20% hallucination
+     (none in the first 2.5s); falling speed and spawn rate ramp over 60s. The RETRIEVER eases toward the mouse, moves
+     with ←/→ (or A/D) or follows a drag. Relevant chunks fill the 10-slot context window (+100, combos up to +100
+     more), junk pollutes it (−30), a hallucination costs a life (3). It ends when the window is full, the lives run
+     out or time's up. Precision = relevant ÷ everything caught (hallucinations count); recall = relevant caught ÷
+     relevant that fell; F1 ≥ 0.8 → Nearest-Neighbor Legend, ≥ 0.55 → Senior (the target), else Junior. Reduced motion:
+     no glitch jitter or colour split, 20% slower.
+136. **Pipeline.** A 22×14 board (14×18 on narrow screens) with wrap-around edges — the hazards are the NULL tiles and
+     the pipe itself, as the brief lists them. A step every 140ms, down to 70ms over 60s, with a 3-turn input queue
+     (no reversals). Packets: JSON 400 · CSV 600 · PDF 300 · SQL 700 records, +2 segments each; a NULL tile every 5s
+     (≤ 10, never near the head). The pipe is one path drawn as glow, body and core with a dashed line flowing through
+     it (the packets); the head looks where it's going. Arrows / WASD, 24px swipes, and an arrow pad on touch screens.
+     Score = records processed; target 10,000.
+137. **Gradient Descent.** The loss is a gentle bowl plus 8 Gaussians (a global pit, 3 local pits, 4 hills) with an
+     analytic gradient, and the motion is literal heavy-ball gradient descent — v ← μ·v − lr·∇h + tilt, p ← p + v,
+     μ = 0.85 — at 12 visible iterations a second (rendering interpolates; the last 14 iterates trail behind). Tilt =
+     the mouse position (a dead zone in the middle), a drag, or the arrow keys. The learning-rate slider is logarithmic
+     (0.005–1.58, default 0.05): on a slope a high rate overshoots and diverges (a "Diverged!" banner, back to the
+     start); in a gentle pit even 1.58 stays stable — as real gradient descent does. A local pit holds a ball that
+     settles in it for 2s (then 1.6s of grace to climb out). Within 0.45 of the global minimum: win + Global Minimum;
+     otherwise the score is the loss progress. 3D: R3F in its own lazy chunk (three + R3F shared with the island and
+     the globe), a flat-shaded vertex-coloured mesh (sRGB palette converted to linear — it washed out before), the
+     flag with a pulsing ring (still under reduced motion), rings on the local pits, DPR ≤ 1.5 (1 on LOW),
+     `frameloop="never"` while paused, mounted only while the game is open. No WebGL (NONE tier): a 2D top-down heatmap
+     with contour lines and the same physics.
+138. **No WebGL context leak** (the acceptance). A closed dialog no longer keeps its last game mounted: the shell
+     unmounts 0.4s after the dialog closes and R3F releases its context 0.5s later. Measured: 10 open/close cycles →
+     10 contexts made, 10 released (Chrome, WebKit, Firefox).
+139. **The page rests behind an open game.** `html[data-game-open]` (set by the game host) pauses the `--play` loops,
+     the living grid's attract twinkles (they ran behind the dialog's backdrop — measured as frames while a game was
+     paused) and the 3D island and globe. The cursor follower re-reads what's under the pointer when a dialog opens or
+     closes, so a stale "PLAY" label no longer hangs over a game.
+140. **Phones.** The stages are shorter on touch screens (room for the arrow pad) and the full-size game dialog scrolls
+     if a screen is still too short. Arcade Rat is reachable now: all six games played.

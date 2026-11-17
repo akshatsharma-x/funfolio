@@ -18,6 +18,8 @@ export type GameResult = {
 export type GameApi = {
   /** Fixed 60 Hz game-time steps (ms); returns an unsubscribe. */
   onTick(fn: (dtMs: number) => void): () => void;
+  /** One render per display frame while playing (alpha ∈ [0, 1) = progress into the next step); returns an unsubscribe. */
+  onFrame(fn: (alpha: number) => void): () => void;
   setScore(score: number): void;
   setLives(lives: number | null): void;
   /** Time left (ms) for the HUD; null hides the timer. */
@@ -41,4 +43,6 @@ export type GameProps = {
   data: ArcadeData;
   /** A fresh random seed per run (made in the Start click, so rendering stays pure). */
   seed: number;
+  /** The shell's pause (ticks and frames stop by themselves; games with their own loop — R3F — stop it too). */
+  paused: boolean;
 };

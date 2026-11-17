@@ -22,6 +22,9 @@ export const TOKEN_SQUEEZE_SECONDS = 30;
 export const CACHE_HIT_SECONDS = 60;
 export const BUG_WHACK_SECONDS = 45;
 export const BUG_WHACK_TARGET = 250;
+export const RAG_SECONDS = 60;
+export const PIPELINE_SECONDS = 60;
+export const DESCENT_SECONDS = 45;
 
 export const GAME_META: Readonly<Record<string, GameMeta>> = {
   "token-squeeze": {
@@ -50,5 +53,29 @@ export const GAME_META: Readonly<Record<string, GameMeta>> = {
     goal: () => `Score ${BUG_WHACK_TARGET} in ${BUG_WHACK_SECONDS}s. It speeds up. 3 lives.`,
     cursor: "crosshair",
     load: () => import("./bug-whack/BugWhack"),
+  },
+  "rag-catcher": {
+    how: [{ keys: ["←", "→"], text: "move the retriever" }],
+    touch: "Move the mouse or drag to catch the glowing chunks that match the query. Dodge the red hallucinations.",
+    goal: () => `Fill the context window with relevant chunks — rank Senior or better. 3 lives, ${RAG_SECONDS}s.`,
+    load: () => import("./rag-catcher/RagCatcher"),
+  },
+  pipeline: {
+    how: [
+      { keys: ["←", "↑", "→", "↓"], text: "steer the pipe" },
+      { keys: ["W", "A", "S", "D"], text: "work too" },
+    ],
+    touch: "Swipe (or use the arrow pad) to steer. Eat data packets; avoid NULL tiles and your own pipe.",
+    goal: (g) => `Process ${g.target ? g.target.toLocaleString("en-US") : "10,000"}+ records in ${PIPELINE_SECONDS}s. The pipe speeds up.`,
+    load: () => import("./pipeline/Pipeline"),
+  },
+  "gradient-descent": {
+    how: [
+      { keys: ["←", "↑", "→", "↓"], text: "tilt the landscape" },
+      { keys: ["Tab"], text: "reach the learning-rate slider" },
+    ],
+    touch: "Move the mouse (or drag) to tilt. Too high a learning rate overshoots — and diverges.",
+    goal: () => `Roll the ball into the glowing global minimum in ${DESCENT_SECONDS}s. Local minima hold you for 2s.`,
+    load: () => import("./gradient-descent/GradientDescent"),
   },
 };

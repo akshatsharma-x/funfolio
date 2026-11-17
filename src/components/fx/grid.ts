@@ -63,7 +63,8 @@ export function createGrid(canvas: HTMLCanvasElement): GridEngine & { destroy():
   let twinkleTimer = 0;
 
   const fxLevel = () => root.getAttribute("data-fx") ?? "normal";
-  const paused = () => root.hasAttribute("data-paused") || document.hidden;
+  // the pause menu, an open arcade game (its dialog covers the page) or a hidden tab
+  const paused = () => root.hasAttribute("data-paused") || root.hasAttribute("data-game-open") || document.hidden;
 
   const cellX = (c: number) => Math.round(c * CELL * dpr);
   /** Device-pixel rect inside the grid lines of cell index i. */

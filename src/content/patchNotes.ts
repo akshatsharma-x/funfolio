@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.12.0",
+    date: "2026-11-18",
+    title: "Action games",
+    notes: [
+      "Three more cabinets light up: RAG Catcher, Pipeline and Gradient Descent. The whole arcade is open.",
+      "RAG Catcher: catch the chunks that answer the query, dodge the hallucinations — graded on precision and recall.",
+      "Pipeline: grow the data pipeline, dodge the NULLs, process 10,000+ records.",
+      "Gradient Descent: roll a ball down a 3D loss landscape. Mind the learning rate — too high and it diverges.",
+      "Play all six for a new achievement. The page behind a game now rests while you play.",
+    ],
+  },
+  {
     version: "0.11.0",
     date: "2026-11-17",
     title: "The Arcade",

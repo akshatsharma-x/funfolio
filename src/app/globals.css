@@ -261,8 +261,10 @@
 html:not([data-js]) [data-needs-js] {
   display: none !important;
 }
-/* Pause menu open: idle loops freeze (games listen to the bus). */
-:root[data-paused] {
+/* Pause menu open: idle loops freeze (games listen to the bus). An arcade game open (PART 12): the page behind its
+   dialog rests the same way. */
+:root[data-paused],
+:root[data-game-open] {
   --play: paused;
 }
 /* Idle nap: 30s without input → decorative loops rest until the next move (docs/DECISIONS.md #67). */

@@ -27,6 +27,8 @@ type UiState = {
   gameEverOpened: boolean;
   openGame: (id: string) => void;
   closeGame: () => void;
+  /** After the dialog's close animation: forget the last game, so its shell (and any WebGL canvas) unmounts. */
+  clearLastGame: () => void;
 };
 
 export const useUi = create<UiState>()((set) => ({
@@ -49,6 +51,7 @@ export const useUi = create<UiState>()((set) => ({
       return { game, lastGame: game, gameEverOpened: true, pauseOpen: false };
     }),
   closeGame: () => set({ game: null }),
+  clearLastGame: () => set((s) => (s.game ? {} : { lastGame: null })),
 }));
 
 export function isPauseTab(v: unknown): v is PauseTab {

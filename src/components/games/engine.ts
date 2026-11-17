@@ -4,13 +4,15 @@
 
 export type Loop = { start(): void; stop(): void; readonly running: boolean };
 
-/** Fixed 60 Hz game steps driven by rAF. A long gap (a stalled frame) is dropped, never fast-forwarded. */
-export function createLoop(step: (dtMs: number) => void, stepMs = 1000 / 60, maxSteps = 6): Loop {
+/** Fixed 60 Hz game steps driven by rAF, then one render per frame (alpha = how far into the next step we are, for
+ * interpolation). A long gap (a stalled frame) is dropped, never fast-forwarded. */
+export function createLoop(step: (dtMs: number) => void, frame?: (alpha: number) => void, stepMs = 1000 / 60, maxSteps = 6): Loop {
   let raf = 0;
   let last = 0;
   let acc = 0;
   let on = false;
-  const frame = (t: number) => {
+  const render = frame;
+  const tick = (t: number) => {
     if (!on) return;
     acc += last ? Math.min(t - last, 100) : 0;
     last = t;
@@ -21,7 +23,9 @@ export function createLoop(step: (dtMs: number) => void, stepMs = 1000 / 60, max
       n++;
     }
     if (n === maxSteps) acc = 0;
-    raf = requestAnimationFrame(frame);
+    if (!on) return; // a step ended the run
+    render?.(acc / stepMs);
+    raf = requestAnimationFrame(tick);
   };
   return {
     start() {
@@ -29,7 +33,7 @@ export function createLoop(step: (dtMs: number) => void, stepMs = 1000 / 60, max
       on = true;
       last = 0;
       acc = 0;
-      raf = requestAnimationFrame(frame);
+      raf = requestAnimationFrame(tick);
     },
     stop() {
       on = false;
@@ -129,4 +133,22 @@ export function gridStep(buttons: readonly HTMLElement[], from: number, key: str
     }
   });
   return best;
+}
+
+/** The resolved font-family list behind a CSS font variable (canvas text can't take `var(--font-display)`). */
+export function cssFont(host: Element, variable: string): string {
+  const probe = document.createElement("span");
+  probe.style.fontFamily = `var(${variable})`;
+  probe.style.position = "absolute";
+  probe.style.visibility = "hidden";
+  host.append(probe);
+  const family = getComputedStyle(probe).fontFamily;
+  probe.remove();
+  return family || "sans-serif";
+}
+
+/** A rounded rectangle path (canvas). */
+export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
 }

@@ -79,7 +79,28 @@ function factFor(id: string): { fact: string | null; target: number | null; band
     const defects = stat(tc, "Post-integration defects");
     return { fact: says(tc, `${coverage} test coverage`, "post-integration defects") && defects ? `Real life: ${coverage} test coverage and ${defects} post-integration defects.` : null, target: null, band: null };
   }
-  return { fact: null, target: null, band: null }; // PART 12's games write theirs
+  if (id === "rag-catcher") {
+    const cv = entry("project", "cognivault");
+    return { fact: cv && says(cv, "multi-agent RAG system", "FAISS + HyDE retrieval") ? `Akshat's real build: ${cv.label} — a multi-agent RAG system with FAISS + HyDE retrieval.` : null, target: null, band: null };
+  }
+  if (id === "pipeline") {
+    const wt = entry("experience", "walkingtree");
+    const records = stat(wt, "Records");
+    const dau = stat(wt, "Daily active users");
+    const n = records?.replace(/[^\d]/g, "");
+    return {
+      fact: says(wt, "data aggregation pipelines", `${records} records`, "enterprise") && dau ? `Real life: data aggregation pipelines on an enterprise system with ${records} records and ${dau} daily active users.` : null,
+      target: n ? Number(n) : null,
+      band: null,
+    };
+  }
+  if (id === "gradient-descent") {
+    const ch = entry("project", "churn");
+    const acc = stat(ch, "Accuracy");
+    const auc = stat(ch, "ROC-AUC");
+    return { fact: says(ch, `${acc} accuracy and ${auc} ROC-AUC`) ? `Akshat's churn model: ${acc} accuracy · ${auc} ROC-AUC.` : null, target: null, band: null };
+  }
+  return { fact: null, target: null, band: null };
 }
 
 export function arcadeGames(): ArcadeGame[] {
@@ -112,6 +133,7 @@ export function arcadeIssues(): string[] {
     if (g.ready && !g.fact) issues.push(`arcade: "${g.id}" — its "That's real" line lost its evidence in content.ts`);
   }
   if (arcadeGames().find((g) => g.id === "token-squeeze")?.target == null) issues.push('arcade: Token Squeeze needs the "Token compression" stat (its target)');
+  if (arcadeGames().find((g) => g.id === "pipeline")?.target == null) issues.push('arcade: Pipeline needs WalkingTree\'s "Records" stat (its target)');
   if (cacheCards().length < 8) issues.push(`arcade: Cache Hit! needs 8 stack items with logos (has ${cacheCards().length})`);
   return issues;
 }
