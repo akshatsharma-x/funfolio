@@ -8,6 +8,7 @@ import { GAME_BY_ID } from "./games";
 import { PERK_DEFS, radarItems } from "./profile";
 import { activeWidgetIssues, skillAnchor } from "./quests";
 import { TECH_ICONS } from "./techIcons";
+import { vaultIssues } from "./vault";
 
 const todo = z.literal("TODO");
 const text = z.string().trim().min(1);
@@ -179,6 +180,8 @@ const schema = z
     for (const e of c.experience) {
       if (e.sideQuest && !GAME_BY_ID[e.sideQuest]) ctx.addIssue({ code: "custom", message: `side quest "${e.sideQuest}" (${e.id}) is not in src/content/games.ts`, path: ["experience"] });
     }
+    // PART 10 · Cartridge Vault: every project's game side quest exists
+    for (const issue of vaultIssues()) ctx.addIssue({ code: "custom", message: issue, path: ["projects"] });
   });
 
 let checked = false;

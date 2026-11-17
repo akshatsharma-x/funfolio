@@ -38,7 +38,7 @@ function SideQuestButton({ q }: { q: Quest }) {
   const sq = sideQuest(q);
   if (!sq) return null;
   return (
-    <ArcadeButton size="sm" icon="cartridge" command={{ type: "openGame", id: sq.id }} data-fx-skip="">
+    <ArcadeButton size="sm" icon="cartridge" command={{ type: "openGame", id: sq.id }} data-fx-skip="" data-needs-js="">
       Side quest: {sq.name}
     </ArcadeButton>
   );
@@ -70,11 +70,11 @@ export function ActiveQuestCard({ q }: { q: Quest }) {
         </p>
       </QuestHead>
       <div className="active-quest__body">
-        <section className="active-quest__objectives" aria-labelledby={`${id}-objectives`}>
+        <div className="quest-part active-quest__objectives">
           <SubHead id={`${id}-objectives`} game="Objectives" plain="What I'm doing" />
           <Objectives items={q.bullets} labelledBy={`${id}-objectives`} />
-        </section>
-        <section className="active-quest__xp" aria-labelledby={`${id}-xp`}>
+        </div>
+        <div className="quest-part active-quest__xp">
           <SubHead id={`${id}-xp`} game="XP earned" plain="Results" />
           {w ? (
             <>
@@ -84,11 +84,11 @@ export function ActiveQuestCard({ q }: { q: Quest }) {
           ) : (
             <StatList stats={q.stats} label={`${q.company} results`} />
           )}
-        </section>
-        <section className="quest-loot active-quest__loot" aria-labelledby={`${id}-loot`}>
+        </div>
+        <div className="quest-part quest-loot active-quest__loot">
           <SubHead id={`${id}-loot`} game="Loot" plain="Stack" />
           <LootList items={loot(q)} labelledBy={`${id}-loot`} />
-        </section>
+        </div>
         <footer className="quest-foot active-quest__foot">
           <SideQuestButton q={q} />
         </footer>
@@ -121,19 +121,19 @@ export function CompletedQuestCard({ q, index }: { q: Quest; index: number }) {
           Complete
         </Stamp>
       </QuestHead>
-      <section aria-labelledby={`${id}-objectives`}>
+      <div className="quest-part">
         <SubHead id={`${id}-objectives`} game="Objectives" plain="What I did" />
         <Checklist items={q.bullets} labelledBy={`${id}-objectives`} />
-      </section>
-      <section className="quest-loot" aria-labelledby={`${id}-loot`}>
+      </div>
+      <div className="quest-part quest-loot">
         <SubHead id={`${id}-loot`} game="Loot" plain="Stack" />
         <LootList items={loot(q)} labelledBy={`${id}-loot`} />
-      </section>
+      </div>
       {q.stats.length ? (
-        <section aria-labelledby={`${id}-xp`}>
+        <div className="quest-part">
           <SubHead id={`${id}-xp`} game="XP earned" plain="Results" />
           <StatList stats={q.stats} label={`${q.company} results`} />
-        </section>
+        </div>
       ) : null}
       {sq || regulated(q) ? (
         <footer className="quest-foot">

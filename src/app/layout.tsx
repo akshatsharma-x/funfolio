@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, JetBrains_Mono, Pixelify_Sans, Unbounded } from "next/font/google";
+import { DM_Sans, JetBrains_Mono, Tiny5, Unbounded } from "next/font/google";
 import "lenis/dist/lenis.css";
 import "./globals.css";
 import "./cursors.generated.css";
@@ -11,6 +11,7 @@ import "./profile.css";
 import "./launchpad.css";
 import "./quests.css";
 import "./lab.css";
+import "./vault.css";
 import "./boot.css";
 import { CursorLayer } from "@/components/cursor/CursorLayer";
 import { GameRuntimeLoader } from "@/components/hud/GameRuntimeLoader";
@@ -25,7 +26,8 @@ import { PREPAINT_SCRIPT } from "@/lib/prefs";
 
 // next/font downloads these at build time and self-hosts them under /_next/static/media — no runtime font requests (R10).
 const display = Unbounded({ subsets: ["latin"], variable: "--font-unbounded", display: "swap" });
-const pixel = Pixelify_Sans({ subsets: ["latin"], variable: "--font-pixelify", display: "swap" });
+// Pixel face: Tiny5 since PART 10 (DECISIONS #110) — the Bible's Pixelify Sans misread at HUD sizes (B/G, C/O, 5/S).
+const pixel = Tiny5({ weight: "400", subsets: ["latin"], variable: "--font-pixelface", display: "swap" });
 const body = DM_Sans({ subsets: ["latin"], variable: "--font-dmsans", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap", preload: false });
 

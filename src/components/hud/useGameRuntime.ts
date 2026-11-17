@@ -240,6 +240,12 @@ export function useCommandHandler(resumeHref: string | null) {
           if (c.all.length > 0 && c.all.every((id) => claims.includes(`open:scroll-${id}`))) store.unlock("bookworm");
           break;
         }
+        case "cartridge": {
+          store.addXp(XP_RULES.openDetails, `open:cartridge-${c.id}`);
+          const claims = useSave.getState().player.xpClaims;
+          if (c.all.length > 0 && c.all.every((id) => claims.includes(`open:cartridge-${id}`))) store.unlock("cartridge-collector");
+          break;
+        }
         case "gate":
           if (c.how === "skipped") store.unlock("skipper");
           // the gate's own island (QuestGate) stages the reveal: chains shatter, then the cards deal in

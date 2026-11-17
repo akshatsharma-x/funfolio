@@ -485,3 +485,78 @@ change an entry only when the decision itself changes.
 109. **Pixel-face candidates** (#97 follow-up): a comparison sheet of the misread strings. Tiny5 keeps Pixelify's width
      and look and separates B/G, C/O and 5/S; Silkscreen is clearest but ~40% wider; Jersey 10 / Handjet are
      condensed. Recommendation: Tiny5 — Akshat's call (the Bible names Pixelify Sans).
+
+## PART 10 — World 4: Cartridge Vault
+
+110. **Pixel face: Tiny5** (deviation from the Bible's Pixelify Sans, following #97 / #109 — the recommendation was
+     forwarded twice and applied). Same width and look; B/G, C/O and 5/S are distinct at 12px. It has one weight
+     (400), so the #97 weight ladder is gone and `font-synthesis-weight: none` keeps browsers from smearing a fake
+     bold; numbers stay in the display face. next/font exposes it as `--font-pixelface` (read by `--font-pixel` and
+     the FX layer). Credits and the style tile name it.
+111. **Cartridges are computed** in `src/content/vault.ts` (server-only) from `projects`: tabs for the categories that
+     have projects (+ All); a two-letter monogram; the label's gradient starts at the Vault's pink (R8) and leans
+     toward a category tint (AI violet, full-stack orange, tools cyan); one of five pixel patterns; item-type dots
+     from the stack (Skill Tree categories, as in the Quest Log's loot). STORY = the first bullet, ABILITIES = the
+     rest, STATS = `project.stats` exactly as written, with a bar only for a percentage or a 0–1 score (97% → 97,
+     0.98 → 98); STACK = loot chips → Skill Tree. Side quests come from games.ts (RAG Catcher, JD Scanner, Gradient
+     Descent — schema.ts fails the build if one is missing); QuizMUJ's egg is a hint for now ("Try switching tabs 😉",
+     PART 16); the analyzer's is the page scan (#118). Links stay "Coming soon" (not links) while content says TODO.
+112. **One delegated island** (`VaultFx`) on server-rendered DOM: the shelf (real buttons, roving tabindex; arrows
+     move in 2D by the measured column count, Home/End), the filter tabs (`aria-pressed`, GSAP Flip reshuffle),
+     insert/eject, the locked cartridge, fullscreen and the scan. GSAP + Flip load on the first insert or filter.
+     Insert: a dust puff (the first time per cartridge) → a Flip flight into the slot → clack → static (380ms) →
+     title card with the powerUp sting (1.25s) → details. The slot cartridge has the shelf cartridge's shape, so the
+     flight scales evenly (a wide one stretched the label 2.4× mid-air); seated, its lower part is clipped at a line
+     the slot's lip covers. The details screen is in place and takes focus the moment the cartridge leaves the shelf
+     (kept dark until the title card ends), so keyboard and screen-reader users never lose focus and can read at once;
+     the announcement comes with the details. Eject (button or Esc) flies it home and returns focus to it — or to the
+     visible shelf when a filter hides it — and cancels an insert at any step (the shelf answers again at once); Esc
+     during the dust puff cancels the insert. Reduced motion: no puff, flight, static or title card. The first insert
+     of each cartridge pays +10 XP (`open:cartridge-<id>`); all five → Cartridge Collector (`cartridge` command).
+     The locked cartridge ("Locked — next project loading…", chains + padlock) is a button too: 5 blows → coin #8.
+113. **Cartridge buttons are named by their own label** (WCAG 2.5.3; axe label-content-name-mismatch): no
+     aria-label — the visible title first, an sr-only " — insert cartridge.", then the visible genre ("Cognivault AI —
+     insert cartridge. Genre: Multi-Agent RAG"); the monogram, foil and dots are aria-hidden. Hover lifts 12px and
+     tilts up to 10° (toys, not text cards — #44's ≤ 4° was for the old project cards); the holo-foil follows the
+     pointer. The sticker peels (#44) sit on the labels; the spare coin is still under Churn's. An inserted
+     cartridge leaves a dashed outline on the shelf.
+114. **Esc in the Vault, in order:** a keyboard-opened tooltip (#28) → the expanded screen → eject → cancel a dust
+     puff → (nothing inserted) the pause menu as everywhere else. The Vault's handler runs in the bubble phase, skips
+     events already handled and marks its own, which the global manager then skips.
+115. **Fullscreen** = the Fullscreen API on the CRT, else (iPhone Safari has no element fullscreen) an expanded fixed
+     view. Focus moves onto the screen and comes back to the button on exit (after the browser has left
+     fullscreen); an "Exit fullscreen" button inside gives touch a way out; Esc collapses the expanded view, and so
+     does focus leaving it (WCAG 2.4.11 — nothing under it may take focus unseen). The open bottom sheet uses
+     `translate: none`: any translate would make it the containing block of the fixed view.
+116. **Phones and tablets (< 64rem):** the shelf is a horizontal scroll-snap carousel and the console a bottom sheet —
+     fixed, it slides up on insert (page scroll locked while open) and away on eject. No flights there; the sheet moves.
+     Desktop: shelf | sticky console (sticky top leaves room for the seated cartridge under the HUD).
+117. **Manual mode.** Without JS and in Speedrun Mode the shelf and the console's toys hide and every project's screen
+     shows as a plain list (R3) — all of it server-rendered. Controls that only work with the runtime carry
+     `data-needs-js` and are hidden without JS (no dead buttons): the side quests, the scan, the tab hint — and the
+     Quest Log's side-quest buttons too.
+118. **SCAN THIS PAGE.** axe-core 4.14 (MPL-2.0; pre-approved by the Bible as a lazy dependency) is imported on click
+     from the site's own chunks (R10 — measured: zero third-party requests) and runs on the live document with its
+     default rules. A laser line sweeps while it runs (WAAPI, ≥ 1.5s; static under reduced motion). The results card
+     is built with DOM APIs (no HTML from the results is ever injected): "Scan complete · N rules passed · M issue
+     types found", counts by impact, then "impact · help (n elements) — rule id" per issue; with none it says so and
+     adds that automated checks catch only part of what matters. The button keeps focus (`aria-disabled` while it
+     runs) and the summary is announced. Honesty is tested: the card must match an independent run of the same axe
+     version on the same document (part10-qa F2, engines-p10).
+119. **Fixed what the scan found** (the brief: fix anything it finds). label-content-name-mismatch on the cartridge
+     buttons (#113), and landmark-unique: the Quest Log cards' Objectives / Loot / XP parts were named `<section>`
+     regions repeated on every card — plain groups under their headings now, like the console screens' parts.
+     Measured: 0 issues, 47 rules passed, in Chrome, WebKit and Firefox; independent runs in Play Mode with a
+     cartridge in and in Speedrun Mode find 0 violations.
+120. **@keyframes names are global (finding).** The boot's `crt-on` (it ends at opacity 0) silently replaced the
+     Vault's, so every console screen stayed invisible; the same check found two older clashes — `byte-bob` (BYTE vs
+     the HUD's mini BYTE, 4px vs 2px) and `pop-in` (globals vs the Quest Log, scale 0.9 vs 0.4), where one file's
+     animation ran with the other's keyframes. Renamed (`funsole-on`, `hud-byte-bob`, `quest-pop`); the build now
+     fails when a keyframe name is defined twice with different bodies (`scripts/check-export.mjs`).
+121. **The FUNSOLE** (original, R4): a chunky ink-violet body, a d-pad, two candy buttons, a power LED (lit while a
+     cartridge is in), speaker dots, a top slot with a lip and a CRT — scanlines, glow and a vignette under rounded
+     glass for the curve (no distortion filter, so text stays crisp, R6). Attract mode ("Insert cartridge" bouncing
+     over a starfield) is compositor-only on `--play` (rests off screen and at the idle nap; measured: zero frames
+     at rest). The title card's "Loading…" blinks twice (R5). The CRT is dark in every theme (a screen, like the
+     Launchpad). BYTE's Vault line ("Pick a cartridge. Blow on it first. Trust me.") plays now that `[data-cartridge]`
+     exists (#45).

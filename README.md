@@ -61,6 +61,15 @@ Jaipur to SCI-2026 (a flat map on phones and without 3D). Each paper is a boss: 
 battle, sweep the smog off the Smog Golem with your pointer (or press "Run the air purifier"), and open "Read the
 scroll" for the details. Abstracts, links and BibTeX show "Coming soon" until they are in content.ts.
 
+World 4 (the Cartridge Vault) is a shelf of 3D cartridges, one per project, next to the FUNSOLE console. Click (or tap)
+a cartridge to blow the dust off and slot it in: the screen crackles, shows a title card, then the project — story,
+abilities, stats, stack (each chip opens its Skill Tree entry) and links. Keyboard: `←`/`→`/`↑`/`↓` move along the
+shelf, `Enter` inserts, `Esc` ejects. The tabs filter by AI/ML · Full-Stack · Tools; "Fullscreen" enlarges the screen.
+On phones the shelf scrolls sideways and the console slides up from the bottom. The locked cartridge isn't a project,
+but blowing on it pays off. The Web Accessibility Analyzer's cartridge has "Scan this page": it runs axe-core (bundled,
+nothing leaves the browser) on the live page and lists what it finds. Without JavaScript and in Speedrun Mode every
+project is a plain list.
+
 BYTE, the robot mascot, lives in the bottom-right corner: click for a quip, drag or throw it, rub it for hearts,
 minimize it with the `–` button (or turn it off in Pause → Settings). `/playground` has a Juice kit & BYTE panel.
 

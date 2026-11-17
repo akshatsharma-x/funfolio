@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.10.0",
+    date: "2026-11-17",
+    title: "Cartridge Vault",
+    notes: [
+      "The Projects world is a vault of cartridges: blow off the dust, slot one into the FUNSOLE and read it on the CRT.",
+      "Arrow keys walk the shelf, Enter inserts, Esc ejects. Filter by AI/ML, Full-Stack or Tools.",
+      "One cartridge scans this very page for accessibility issues — live, in your browser.",
+      "There is a locked cartridge. It isn't a project. Blow harder.",
+      "The pixel font is crisper at small sizes: B, G, C, O, 5 and S no longer look alike.",
+    ],
+  },
+  {
     version: "0.9.0",
     date: "2026-11-17",
     title: "The Lab",

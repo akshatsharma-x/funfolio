@@ -75,7 +75,7 @@ export function createFxEngine(canvas: HTMLCanvasElement, opts: { shakeTargets?:
   const fonts = { pixel: "", display: "" };
   const fontFor = (kind: "pixel" | "display") => {
     if (!fonts[kind]) {
-      const v = getComputedStyle(document.documentElement).getPropertyValue(kind === "pixel" ? "--font-pixelify" : "--font-unbounded").trim();
+      const v = getComputedStyle(document.documentElement).getPropertyValue(kind === "pixel" ? "--font-pixelface" : "--font-unbounded").trim();
       const fallback = kind === "pixel" ? "monospace" : "sans-serif";
       fonts[kind] = v ? `${v}, ${fallback}` : fallback;
     }

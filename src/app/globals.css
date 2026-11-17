@@ -111,7 +111,7 @@
   --color-gold-fg: var(--fg-gold);
 
   --font-display: var(--font-unbounded), "Arial Black", ui-sans-serif, system-ui, sans-serif;
-  --font-pixel: var(--font-pixelify), ui-monospace, monospace;
+  --font-pixel: var(--font-pixelface), ui-monospace, monospace;
   --font-body: var(--font-dmsans), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-dmsans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -257,6 +257,10 @@
   --motion: 1;
   --play: running;
 }
+/* Controls that only work with the game runtime (side quests, the page scan) aren't shown without JavaScript. */
+html:not([data-js]) [data-needs-js] {
+  display: none !important;
+}
 /* Pause menu open: idle loops freeze (games listen to the bus). */
 :root[data-paused] {
   --play: paused;
@@ -290,6 +294,8 @@
     background-color: var(--bg);
     color: var(--text);
     font-family: var(--font-body);
+    /* the pixel face (Tiny5) has a single weight: never smear it into a fake bold; the other faces are variable */
+    font-synthesis-weight: none;
     scrollbar-gutter: stable;
     scroll-padding-top: 64px; /* the fixed HUD never covers an anchor target */
     -webkit-tap-highlight-color: transparent;

@@ -43,7 +43,7 @@
     background-color: var(--surface);
   }
 }
-@keyframes pop-in {
+@keyframes quest-pop {
   from {
     scale: 0.4;
     opacity: 0;
@@ -174,9 +174,8 @@
     display: grid;
     gap: 1.5rem;
   }
-  .active-quest__objectives,
-  .active-quest__xp,
-  .quest-card section {
+  /* a card's parts (objectives, loot, XP): plain groups under their headings — not landmarks (axe landmark-unique) */
+  .quest-part {
     display: grid;
     align-content: start;
     gap: 0.7rem;
@@ -516,7 +515,7 @@
     opacity: 0;
   }
   [data-play="run"] .cache__hit {
-    animation: pop-in calc(var(--motion) * 300ms + 1ms) var(--ease-pop) both;
+    animation: quest-pop calc(var(--motion) * 300ms + 1ms) var(--ease-pop) both;
     animation-delay: 1100ms;
   }
 
@@ -586,15 +585,15 @@
     transition-delay: calc(380ms + var(--o) * 260ms);
   }
   [data-play="run"] .kg__node {
-    animation: pop-in calc(var(--motion) * 300ms + 1ms) var(--ease-pop) both;
+    animation: quest-pop calc(var(--motion) * 300ms + 1ms) var(--ease-pop) both;
     animation-delay: calc(260ms + var(--o) * 260ms);
   }
   [data-play="run"] .kg__call {
-    animation: pop-in calc(var(--motion) * 260ms + 1ms) var(--ease-pop) both;
+    animation: quest-pop calc(var(--motion) * 260ms + 1ms) var(--ease-pop) both;
     animation-delay: calc(1250ms + var(--i) * 160ms);
   }
   [data-play="run"] .kg__doc {
-    animation: pop-in calc(var(--motion) * 260ms + 1ms) var(--ease-pop) both;
+    animation: quest-pop calc(var(--motion) * 260ms + 1ms) var(--ease-pop) both;
     animation-delay: calc(1600ms + var(--i) * 90ms);
   }
 

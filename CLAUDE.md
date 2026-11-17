@@ -54,9 +54,9 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   runtime, and `QuestGate` plays the reveal. Gated content stays in the DOM and is never trapped (R3).
 - Game screens carry `data-game-screen` (BYTE holds unasked lines behind its "!" instead of talking over them) and
   `data-keyboard="exclusive"` while focused.
-- Pixel face (Pixelify Sans) legibility (#87, #97): 400 for 12–14px, 500 for 16–22px, 700 only from 24px up; numbers
-  always in the display face (`font-family: var(--font-display)`, `fx.text(…, { font: "display" })`) — its 5/S, 0/O
-  and C/O look alike. Tiny world labels (canvas, SVG) use DM Sans.
+- Pixel face = Tiny5 since PART 10 (#110; next/font `--font-pixelface` → `--font-pixel`): one weight (400) — never set
+  a bold on it (`font-synthesis-weight: none` blocks fake bolds). Numbers always in the display face
+  (`font-family: var(--font-display)`, `fx.text(…, { font: "display" })`, #97). Tiny world labels (canvas, SVG) use DM Sans.
 - Quest Log (PART 8): cards, loot, widgets and "used in" evidence are computed in `src/content/quests.ts`
   (server-only; schema.ts checks the widget bindings); side quests/cartridges in `src/content/games.ts`
   (`command({ type: "openGame", id })`); tech logos in `src/content/techIcons.ts` (simple-icons, server-rendered).
@@ -68,4 +68,13 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   math in `src/lib/geo.ts`. The globe is `src/components/three/GlobeCanvas.tsx` (lazy, HIGH tier + fine pointer,
   `GlobeStage` decides); after replacing the land file run `npm run globe` (→ `public/data/land-dots.json`). The
   battle and the smog purifier are `LabFx` (one delegated island); `Stamp` lives in the UI kit.
+- Cartridge Vault (PART 10): cartridges (tabs, codes, label art, stat bars, side quests) are computed in
+  `src/content/vault.ts` (server-only); the shelf and the FUNSOLE are server components in
+  `src/components/sections/vault/` and `VaultFx` (one delegated island) plays them — insert/eject, filter (GSAP Flip),
+  the locked cartridge, fullscreen and "Scan this page" (axe-core, lazy `import()`, bundled — R10). Every project's
+  screen is server-rendered; Play Mode shows one at a time, no-JS and Speedrun Mode list them all. The Vault's Esc
+  (eject) runs before the pause menu (#114).
+- Controls that only work with the runtime (side quests, the scan…) get `data-needs-js` — hidden without JavaScript.
+- `@keyframes` names are global across every stylesheet: prefix new ones by feature (`funsole-on`, `quest-pop`); the
+  build fails on a name defined twice with different bodies (#120).
 - Keep the page idle (docs/DECISIONS.md #40–41): no always-on rAF loops, continuous CSS animations only on HTML elements' transform/opacity (never on SVG elements), no style writes inside scroll events (use `onScrollMotion`), and get GSAP/ScrollTrigger via `loadScrollTrigger()` only where needed.

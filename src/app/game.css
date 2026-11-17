@@ -52,7 +52,7 @@
     translate: 0 45%;
   }
 }
-@keyframes byte-bob {
+@keyframes hud-byte-bob {
   50% {
     translate: 0 -2px;
   }
@@ -183,7 +183,7 @@
     width: 28px;
     height: 28px;
     flex: none;
-    animation: byte-bob 2.4s ease-in-out infinite;
+    animation: hud-byte-bob 2.4s ease-in-out infinite;
     animation-play-state: var(--play);
   }
   .hud__brand {

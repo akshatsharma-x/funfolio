@@ -12,7 +12,7 @@ export function CreditsSection() {
         </h2>
         <p className="font-pixel uppercase tracking-wider">{site.name}</p>
         <p className="read text-muted">
-          © {year} {player.name}. Fonts: Unbounded, Pixelify Sans, DM Sans and JetBrains Mono (SIL Open Font License),
+          © {year} {player.name}. Fonts: Unbounded, Tiny5, DM Sans and JetBrains Mono (SIL Open Font License),
           self-hosted. No trackers, no cookies, no third-party requests.
         </p>
         <p>

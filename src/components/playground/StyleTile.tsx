@@ -90,7 +90,7 @@ export function StyleTile() {
 
       <StickerCard as="section" aria-labelledby="tile-type" bodyClassName="grid gap-5">
         <h3 id="tile-type" className="text-lg">
-          Type scale · Unbounded · Pixelify Sans · DM Sans · JetBrains Mono
+          Type scale · Unbounded · Tiny5 · DM Sans · JetBrains Mono
         </h3>
         <dl className="grid gap-4">
           <TypeRow label="hero 72–152 · display 900">

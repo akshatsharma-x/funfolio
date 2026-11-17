@@ -46,8 +46,9 @@ export type Loot = {
 
 const singular = (name: string) => name.replace(/s$/, "");
 
-export const loot = (q: Quest): Loot[] =>
-  q.stack.map((name) => {
+/** Any stack as loot (the Quest Log's roles, the Vault's cartridges). */
+export const lootFor = (stack: readonly string[]): Loot[] =>
+  stack.map((name) => {
     const type = SKILL_TYPE.get(name) ?? null;
     return {
       name,
@@ -58,6 +59,8 @@ export const loot = (q: Quest): Loot[] =>
       usedIn: usedIn(name),
     };
   });
+
+export const loot = (q: Quest): Loot[] => lootFor(q.stack);
 
 /** Side quest button (a cartridge in the Arcade, PART 11), when the role has one. */
 export const sideQuest = (q: Quest): { id: string; name: string } | null => {

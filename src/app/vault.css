@@ -1,0 +1,1041 @@
+/* World 4 · CARTRIDGE VAULT (PART 10): the shelf of CSS-3D cartridges and the FUNSOLE. Pink leads (R8; the labels
+   are pink-led gradients tinted by category). Continuous loops (attract mode) are compositor-only on --play. Without
+   JS and in Speedrun Mode the console becomes a plain list of every project ("manual mode"). */
+
+@layer theme, base, components, utilities;
+
+@keyframes crt-bounce {
+  50% {
+    translate: 0 -8px;
+  }
+}
+@keyframes crt-stars {
+  to {
+    translate: -50% 0;
+  }
+}
+@keyframes crt-static {
+  33% {
+    translate: -11% 7%;
+  }
+  66% {
+    translate: 9% -13%;
+  }
+}
+@keyframes crt-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+/* not "crt-on": keyframe names are global and the boot owns that one (it ends at opacity 0) */
+@keyframes funsole-on {
+  from {
+    opacity: 0;
+    scale: 1 0.04;
+    filter: brightness(3);
+  }
+}
+
+@layer components {
+  .vault {
+    display: grid;
+    gap: 2rem;
+  }
+
+  /* ── tabs ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+  .vault-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.2rem;
+    margin-bottom: 1.25rem;
+  }
+  .vault-tab {
+    position: relative;
+    padding: 0.35rem 0.15rem 0.55rem;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .vault-tab::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 4px;
+    background: var(--world);
+    clip-path: polygon(0 50%, 4px 50%, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 50%, 100% 50%, 100% 100%, 0 100%);
+    scale: 0 1;
+    transition: scale calc(var(--motion) * 200ms) var(--ease-pop);
+  }
+  .vault-tab:hover {
+    color: var(--text);
+  }
+  .vault-tab[aria-pressed="true"] {
+    color: var(--world-fg);
+  }
+  .vault-tab[aria-pressed="true"]::after {
+    scale: 1 1;
+  }
+  .vault-tab:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 3px;
+  }
+
+  /* ── the shelf ────────────────────────────────────────────────────────────────────────────────────────────── */
+  .vault-shelf {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2.2rem 1.6rem;
+    padding: 1.2rem 0.6rem 1.6rem;
+    border-radius: 22px;
+    background:
+      linear-gradient(transparent calc(100% - 10px), rgb(7 6 15 / 0.35) calc(100% - 10px)) 0 0 / 100% 50%,
+      color-mix(in srgb, var(--world) 7%, transparent);
+  }
+  .vault-hint {
+    margin-top: 0.8rem;
+    color: var(--muted);
+    font-size: var(--text-sm);
+  }
+  .vault-hint kbd {
+    padding: 0 0.35em;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: var(--font-pixel);
+  }
+  .cart-slot {
+    position: relative;
+    perspective: 700px;
+  }
+  .cart-slot[data-hidden] {
+    display: none;
+  }
+  .cart-slot:has(.peel[data-open]) {
+    z-index: 5;
+  }
+  .cart {
+    position: relative;
+    transform-style: preserve-3d;
+    transform: translateY(var(--lift, 0px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform calc(var(--motion) * 220ms) var(--ease-pop);
+  }
+  .cart-slot:hover .cart,
+  .cart-slot:focus-within .cart {
+    --lift: -12px;
+  }
+  .cart-slot[data-out] .cart {
+    visibility: hidden;
+  }
+  /* the empty place on the shelf while its cartridge is in the console */
+  .cart-slot[data-out]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 3px dashed color-mix(in srgb, var(--world) 45%, transparent);
+    border-radius: 14px 14px 8px 8px;
+  }
+  .cart__btn {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 0.82;
+    padding: 0;
+    border: 0;
+    background: none;
+    transform-style: preserve-3d;
+  }
+  .cart__btn:focus-visible {
+    outline: none;
+  }
+  .cart__btn:focus-visible .cart__shell {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 5px;
+  }
+  .cart__shell {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: 13% minmax(0, 1fr) 11%;
+    padding: 6% 7% 4%;
+    border: 3px solid var(--ink);
+    border-radius: 14px 14px 8px 8px;
+    background: linear-gradient(#3b2e66, #281d4b);
+    box-shadow:
+      inset 0 2px 0 rgb(255 255 255 / 0.14),
+      0 6px 0 var(--ink),
+      0 0 0 1px var(--rim);
+    transform: translateZ(10px);
+  }
+  .cart__ridge {
+    margin: 0 8% 8%;
+    border-radius: 6px 6px 2px 2px;
+    background: repeating-linear-gradient(90deg, rgb(255 255 255 / 0.14) 0 4px, transparent 4px 9px);
+  }
+  .cart__label {
+    position: relative;
+    display: grid;
+    align-content: space-between;
+    gap: 0.25rem;
+    min-height: 0;
+    padding: 8px 9px;
+    overflow: hidden;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--from), var(--to));
+    color: var(--ink);
+    text-align: left;
+  }
+  .cart__label::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.22;
+    pointer-events: none;
+  }
+  .cart__label[data-pattern="dots"]::before {
+    background: radial-gradient(var(--ink) 1.3px, transparent 1.6px) 0 0 / 9px 9px;
+  }
+  .cart__label[data-pattern="grid"]::before {
+    background:
+      linear-gradient(var(--ink) 1px, transparent 1px) 0 0 / 10px 10px,
+      linear-gradient(90deg, var(--ink) 1px, transparent 1px) 0 0 / 10px 10px;
+  }
+  .cart__label[data-pattern="zigzag"]::before {
+    background:
+      linear-gradient(135deg, var(--ink) 25%, transparent 25%) -6px 0 / 12px 12px,
+      linear-gradient(225deg, var(--ink) 25%, transparent 25%) -6px 0 / 12px 12px;
+  }
+  .cart__label[data-pattern="stripes"]::before {
+    background: repeating-linear-gradient(45deg, var(--ink) 0 3px, transparent 3px 11px);
+  }
+  .cart__label[data-pattern="checker"]::before {
+    background: conic-gradient(var(--ink) 25%, transparent 0 50%, var(--ink) 0 75%, transparent 0) 0 0 / 12px 12px;
+  }
+  /* holo foil: a glint that follows the pointer across the label (TiltSurface's --gx) */
+  .cart__holo {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(115deg, transparent calc(var(--gx, 35%) - 28%), rgb(255 255 255 / 0.6) var(--gx, 35%), transparent calc(var(--gx, 35%) + 28%)),
+      conic-gradient(from 90deg, rgb(255 255 255 / 0), rgb(182 255 59 / 0.18), rgb(34 211 238 / 0.18), rgb(255 61 139 / 0.18), rgb(255 255 255 / 0));
+    mix-blend-mode: soft-light;
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity calc(var(--motion) * 200ms);
+  }
+  .cart-slot:hover .cart__holo {
+    opacity: 1;
+  }
+  .cart__code {
+    position: relative;
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 2.2vw, 1.7rem);
+    font-weight: 900;
+    line-height: 1;
+  }
+  .cart__title {
+    position: relative;
+    font-family: var(--font-display);
+    font-size: clamp(0.78rem, 1.15vw, 0.95rem);
+    font-weight: 800;
+    line-height: 1.15;
+    overflow-wrap: break-word;
+  }
+  .cart__genre {
+    position: relative;
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+  .cart__dots {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .cart__dot {
+    width: 7px;
+    height: 7px;
+    border: 1.5px solid var(--ink);
+    background: var(--tone, #9590aa);
+  }
+  .cart__grip {
+    margin: 10% 4% 0;
+    border-radius: 2px 2px 6px 6px;
+    background: repeating-linear-gradient(90deg, transparent 0 5px, rgb(255 255 255 / 0.13) 5px 8px);
+  }
+  .cart__side {
+    position: absolute;
+    top: 3px;
+    left: calc(100% - 3px);
+    width: 20px;
+    height: calc(100% - 6px);
+    border: 3px solid var(--ink);
+    background: #1b1336;
+    transform-origin: left center;
+    transform: translateZ(10px) rotateY(90deg);
+  }
+  .cart__top {
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    bottom: calc(100% - 3px);
+    height: 20px;
+    border: 3px solid var(--ink);
+    background: #463875;
+    transform-origin: center bottom;
+    transform: translateZ(10px) rotateX(90deg);
+  }
+  .cart .peel {
+    position: absolute;
+    top: 19%;
+    right: 7%;
+    bottom: 15%;
+    left: 7%;
+    transform: translateZ(12px);
+    pointer-events: none;
+  }
+  .cart .peel__corner,
+  .cart .peel__secret {
+    pointer-events: auto;
+  }
+  /* hovering lifts the cartridge (and its corner) 12px: a hit strip under the corner keeps a pointer that landed on it
+     inside, so the peel doesn't flicker shut (the tilt freezes on the peel, #44 — the lift is what still moved) */
+  .cart .peel__corner::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 -18px;
+  }
+  .cart .peel__secret {
+    right: -24%;
+    width: max(220px, 150%);
+    max-width: none;
+  }
+  /* the locked cartridge */
+  .cart__label--locked {
+    place-content: center;
+    justify-items: center;
+    gap: 0.35rem;
+    background: linear-gradient(135deg, #5b5375, #2f2950);
+    color: #fff4e0;
+    text-align: center;
+  }
+  .cart__chains {
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(35deg, transparent 0 18px, rgb(185 178 217 / 0.55) 18px 21px, transparent 21px 30px),
+      repeating-linear-gradient(-35deg, transparent 0 18px, rgb(185 178 217 / 0.55) 18px 21px, transparent 21px 30px);
+  }
+  .cart__lock {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border: 3px solid var(--ink);
+    border-radius: 10px;
+    background: var(--world);
+    color: var(--ink);
+  }
+  .cart-slot--locked[data-dusted] .cart__lock {
+    box-shadow: 0 0 16px 4px rgb(255 200 61 / 0.7);
+  }
+
+  /* ── the FUNSOLE ──────────────────────────────────────────────────────────────────────────────────────────── */
+  .funsole {
+    position: relative;
+    display: grid;
+    gap: 0.9rem;
+    padding: 3.4rem 1.1rem 1.1rem;
+    border: 3px solid var(--ink);
+    border-radius: 30px 30px 42px 42px;
+    background: radial-gradient(120% 80% at 30% 0%, #4a3a80, #2a1d4f 60%, #1c1238);
+    box-shadow:
+      inset 0 3px 0 rgb(255 255 255 / 0.16),
+      inset 0 -6px 0 rgb(0 0 0 / 0.28),
+      0 8px 0 var(--ink),
+      0 0 0 1px var(--rim);
+    color: #fff4e0;
+  }
+  .funsole__top {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3.2rem;
+  }
+  .funsole__lip {
+    position: absolute;
+    top: 0.95rem;
+    left: 26%;
+    right: 26%;
+    z-index: 2;
+    height: 1.15rem;
+    border: 3px solid var(--ink);
+    border-radius: 8px;
+    background: #110a25;
+    box-shadow: inset 0 4px 0 rgb(0 0 0 / 0.55);
+  }
+  .funsole__brand {
+    position: absolute;
+    top: 1.05rem;
+    left: 1.2rem;
+    color: #c4b5fd;
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .funsole__led {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.3rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    background: #57263a;
+  }
+  .funsole[data-power] .funsole__led {
+    background: #2ee59d;
+    box-shadow: 0 0 10px 2px rgb(46 229 157 / 0.8);
+  }
+  /* the cartridge in the slot: the shelf cartridge's shape (so the flight scales it evenly — a wide slot cartridge
+     stretched the label 2.4× mid-air), sticking up out of the console; once seated, everything below the lip is
+     inside (clipped at a line the lip covers). Fixed rem padding: percentages resolve against the console's width. */
+  .slot-cart {
+    position: absolute;
+    left: 50%;
+    top: -3.6rem;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: 0.8rem auto;
+    align-content: start;
+    gap: 0.3rem;
+    width: 6.4rem;
+    aspect-ratio: 0.82;
+    padding: 0.4rem 0.45rem;
+    border: 3px solid var(--ink);
+    border-radius: 14px 14px 8px 8px;
+    background: linear-gradient(#3b2e66, #281d4b);
+    box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.14);
+    translate: -50% 0;
+    visibility: hidden;
+  }
+  .slot-cart[data-in] {
+    visibility: visible;
+  }
+  .slot-cart[data-in]:not([data-flying]) {
+    clip-path: inset(0 0 calc(100% - 4.8rem) 0);
+  }
+  .slot-cart__ridge {
+    margin: 0 8%;
+    border-radius: 4px 4px 2px 2px;
+    background: repeating-linear-gradient(90deg, rgb(255 255 255 / 0.14) 0 3px, transparent 3px 7px);
+  }
+  .slot-cart__label {
+    display: grid;
+    align-content: start;
+    gap: 0.15rem;
+    min-width: 0;
+    padding: 6px 7px 10px;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--from, #ff3d8b), var(--to, #a78bfa));
+    color: var(--ink);
+  }
+  .slot-cart__code {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .slot-cart__title {
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1.1;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* the CRT: a non-scrolling frame (scanlines, vignette, glow) around a scrolling view */
+  .funsole__crt {
+    position: relative;
+    aspect-ratio: 4 / 3.4;
+    overflow: hidden;
+    border: 4px solid #07060f;
+    border-radius: 24px / 20px;
+    background: radial-gradient(110% 100% at 50% 45%, #15233e, #070b16 82%);
+    box-shadow:
+      inset 0 0 44px rgb(34 211 238 / 0.14),
+      0 0 26px rgb(255 61 139 / 0.2);
+    color: #e9fdf9;
+  }
+  .funsole__crt::before,
+  .funsole__crt::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+  .funsole__crt::before {
+    background: repeating-linear-gradient(rgb(0 0 0 / 0.16) 0 1px, transparent 1px 3px);
+  }
+  .funsole__crt::after {
+    background: radial-gradient(120% 110% at 50% 50%, transparent 58%, rgb(0 0 0 / 0.55) 100%);
+  }
+  .crt-view {
+    position: absolute;
+    inset: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .crt-attract {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.6rem;
+    overflow: hidden;
+    text-align: center;
+  }
+  .crt-attract__stars {
+    position: absolute;
+    inset: 0 -100% 0 0;
+    background:
+      radial-gradient(#fff 1px, transparent 1.4px) 0 0 / 46px 38px,
+      radial-gradient(#c4b5fd 1px, transparent 1.4px) 23px 19px / 46px 38px;
+    opacity: 0.55;
+    animation: crt-stars 26s linear infinite;
+    animation-play-state: var(--play);
+  }
+  .crt-attract__text {
+    position: relative;
+    color: #ff3d8b;
+    font-family: var(--font-pixel);
+    font-size: var(--text-lg);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgb(255 61 139 / 0.7);
+    animation: crt-bounce 1.6s steps(2, jump-none) infinite;
+    animation-play-state: var(--play);
+  }
+  .crt-attract__hint {
+    position: relative;
+    color: #b9b2d9;
+    font-size: var(--text-sm);
+  }
+  .crt-static {
+    position: absolute;
+    inset: -40%;
+    display: none;
+    background: var(--noise, repeating-radial-gradient(circle at 30% 40%, #fff 0 1px, #222 1px 3px));
+    opacity: 0.8;
+    animation: crt-static 160ms steps(3, end) infinite;
+  }
+  .funsole[data-phase="static"] .crt-static {
+    display: block;
+  }
+  .funsole[data-phase]:not([data-phase="idle"]) .crt-attract {
+    display: none;
+  }
+  .crt-title {
+    position: absolute;
+    inset: 0;
+    display: none;
+    place-content: center;
+    justify-items: center;
+    gap: 0.7rem;
+    padding: 1rem;
+    text-align: center;
+  }
+  .crt-title[data-on] {
+    display: grid;
+    animation: funsole-on calc(var(--motion) * 260ms + 1ms) ease-out both;
+  }
+  .crt-title__logo {
+    display: grid;
+    place-items: center;
+    width: 5.5rem;
+    height: 5.5rem;
+    border: 4px solid #07060f;
+    background: linear-gradient(135deg, var(--from), var(--to));
+    color: #07060f;
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    font-weight: 900;
+    clip-path: polygon(0 8px, 8px 8px, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px));
+  }
+  .crt-title__name {
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 900;
+  }
+  .crt-title__press {
+    color: #22d3ee;
+    font-family: var(--font-pixel);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    animation: crt-blink 0.8s steps(2, jump-none) 2;
+  }
+
+  /* details screens: one at a time in Play Mode */
+  html[data-js] .funsole[data-live] .crt-screen {
+    display: none;
+  }
+  html[data-js] .funsole[data-live] .crt-screen[data-on] {
+    display: grid;
+    animation: funsole-on calc(var(--motion) * 220ms + 1ms) ease-out both;
+  }
+  /* while the cartridge flies in and the static + title card play, its screen is already in place (it holds focus,
+     and screen readers can read it at once) but stays dark */
+  html[data-js] .funsole[data-live]:not([data-phase="details"]) .crt-screen[data-on] {
+    opacity: 0;
+    animation: none;
+  }
+  html[data-js] .funsole[data-live]:not([data-phase="details"]) .crt-view {
+    overflow: hidden;
+  }
+  .crt-screen {
+    display: grid;
+    align-content: start;
+    gap: 0.95rem;
+    padding: 1.1rem 1.2rem 1.4rem;
+    outline: none;
+  }
+  .crt-screen__head {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .crt-screen__code {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border: 3px solid #07060f;
+    border-radius: 6px;
+    background: var(--world);
+    color: #07060f;
+    font-family: var(--font-display);
+    font-weight: 900;
+  }
+  .crt-screen__title {
+    color: #fff4e0;
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    line-height: 1.2;
+  }
+  .crt-screen__sub {
+    color: #b9b2d9;
+    font-size: var(--text-sm);
+  }
+  .crt-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1.2rem;
+  }
+  .crt-meta dt,
+  .crt-h,
+  .crt-stat dt {
+    color: #22d3ee;
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .crt-meta dd {
+    color: #fff4e0;
+    font-size: var(--text-sm);
+  }
+  .crt-h {
+    margin-bottom: 0.35rem;
+    color: #ff6aa6;
+  }
+  .crt-h__plain {
+    color: #b9b2d9;
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+  .crt-screen .read,
+  .crt-list {
+    color: #e9fdf9;
+    font-size: var(--text-sm);
+    line-height: 1.55;
+  }
+  .crt-list {
+    display: grid;
+    gap: 0.4rem;
+    padding-left: 1.1rem;
+    list-style: square;
+  }
+  .crt-list li::marker {
+    color: #ff6aa6;
+  }
+  .crt-stats {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .crt-stat dd {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .crt-stat__bar {
+    flex: 1;
+    height: 12px;
+    padding: 2px;
+    border: 2px solid #ff6aa6;
+    border-radius: 3px;
+  }
+  .crt-stat__bar > span {
+    display: block;
+    width: var(--v);
+    height: 100%;
+    background: repeating-linear-gradient(90deg, #ff3d8b 0 6px, #ff6aa6 6px 8px);
+  }
+  .crt-stat__value {
+    min-width: 3.5rem;
+    color: #fff4e0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  .crt-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .crt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 34px;
+    padding: 0.3rem 0.8rem;
+    border: 2px solid #ff6aa6;
+    border-radius: 999px;
+    background: rgb(255 61 139 / 0.12);
+    color: #fff4e0;
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+  .crt-btn:hover {
+    background: rgb(255 61 139 / 0.25);
+  }
+  .crt-btn:focus-visible {
+    outline: 3px dashed #22d3ee;
+    outline-offset: 2px;
+  }
+  .crt-btn--soon {
+    border-style: dashed;
+    border-color: #5b5375;
+    background: none;
+    color: #b9b2d9;
+  }
+  .crt-btn--quest {
+    border-color: #22d3ee;
+    background: rgb(34 211 238 / 0.12);
+  }
+  .crt-btn:disabled,
+  .crt-btn[aria-disabled="true"] {
+    opacity: 0.6;
+  }
+  .crt-hint {
+    color: #ffd23f;
+    font-family: var(--font-pixel);
+    letter-spacing: 0.06em;
+  }
+  .crt-scan {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .crt-scan__note {
+    color: #b9b2d9;
+    font-size: var(--text-xs);
+  }
+  .scan-card {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.7rem 0.8rem;
+    border: 2px solid #22d3ee;
+    border-radius: 10px;
+    background: rgb(34 211 238 / 0.08);
+    font-size: var(--text-sm);
+  }
+  .scan-card__head {
+    color: #22d3ee;
+    font-family: var(--font-pixel);
+    letter-spacing: 0.06em;
+  }
+  .scan-card__counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .scan-card__counts li {
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.08);
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    font-weight: 700;
+  }
+  .scan-card__counts [data-impact="critical"],
+  .scan-card__list [data-impact="critical"] {
+    color: #ff6b6b;
+  }
+  .scan-card__counts [data-impact="serious"],
+  .scan-card__list [data-impact="serious"] {
+    color: #ffa45c;
+  }
+  .scan-card__list {
+    display: grid;
+    gap: 0.3rem;
+    padding-left: 1rem;
+    list-style: square;
+  }
+  .scan-card__ok {
+    color: #b6ff3b;
+  }
+  .scan-laser {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 96;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #ff3d8b 20%, #fff 50%, #ff3d8b 80%, transparent);
+    box-shadow: 0 0 18px 6px rgb(255 61 139 / 0.55);
+    pointer-events: none;
+  }
+
+  /* fullscreen (Fullscreen API) or the expanded fallback */
+  .funsole__crt:fullscreen,
+  .funsole__crt[data-expanded] {
+    aspect-ratio: auto;
+    border-radius: 0;
+  }
+  .funsole__crt[data-expanded] {
+    position: fixed;
+    inset: 3vh 3vw;
+    z-index: 95;
+    border-radius: 24px;
+  }
+  .crt-exit {
+    position: absolute;
+    top: 0.8rem;
+    right: 0.8rem;
+    z-index: 4;
+    display: none;
+    min-height: 36px;
+    padding: 0.25rem 0.9rem;
+    border: 2px solid #07060f;
+    border-radius: 999px;
+    background: #22d3ee;
+    color: #07060f;
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: 0 3px 0 #07060f;
+  }
+  .crt-exit:focus-visible {
+    outline: 3px dashed #fff4e0;
+    outline-offset: 2px;
+  }
+  .funsole__crt:fullscreen .crt-exit,
+  .funsole__crt[data-expanded] .crt-exit {
+    display: inline-flex;
+    align-items: center;
+  }
+  .funsole__crt:fullscreen .crt-screen,
+  .funsole__crt[data-expanded] .crt-screen {
+    max-width: 62rem;
+    margin-inline: auto;
+    padding: 4vh 4vw;
+    font-size: 1.1em;
+  }
+
+  /* controls */
+  .funsole__controls {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .funsole__dpad {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    background:
+      linear-gradient(#141026, #141026) center / 15px 100% no-repeat,
+      linear-gradient(#141026, #141026) center / 100% 15px no-repeat;
+    filter: drop-shadow(0 3px 0 #07060f);
+  }
+  .funsole__candy {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .funsole__candy span {
+    width: 1.35rem;
+    height: 1.35rem;
+    border: 3px solid #07060f;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff 0 12%, #ff3d8b 14%);
+    box-shadow: 0 3px 0 #07060f;
+  }
+  .funsole__candy span + span {
+    background: radial-gradient(circle at 35% 30%, #fff 0 12%, #22d3ee 14%);
+  }
+  .funsole__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .funsole__btn {
+    min-height: 32px;
+    padding: 0.2rem 0.75rem;
+    border: 2px solid #07060f;
+    border-radius: 999px;
+    background: #ff3d8b;
+    color: #07060f;
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: 0 3px 0 #07060f;
+  }
+  .funsole__btn + .funsole__btn {
+    background: #22d3ee;
+  }
+  .funsole__btn:disabled {
+    background: #5b5375;
+    color: #1b1530;
+    box-shadow: 0 1px 0 #07060f;
+  }
+  .funsole__btn:focus-visible {
+    outline: 3px dashed #fff4e0;
+    outline-offset: 2px;
+  }
+  .funsole__speaker {
+    width: 46px;
+    height: 34px;
+    background: radial-gradient(circle, #0d0820 2px, transparent 2.5px) 0 0 / 9px 9px;
+  }
+}
+
+/* desktop: shelf | sticky console */
+@media (min-width: 64rem) {
+  .vault {
+    grid-template-columns: minmax(0, 1fr) minmax(330px, 420px);
+    align-items: start;
+    gap: 2.5rem;
+  }
+  .funsole {
+    position: sticky;
+    top: calc(64px + 4.25rem); /* room for the seated cartridge under the HUD */
+  }
+}
+/* phones + tablets: a horizontal snap carousel, the console as a bottom sheet on insert (JS only) */
+@media (max-width: 63.99rem) {
+  .vault-shelf {
+    display: flex;
+    gap: 1.2rem;
+    padding: 1.6rem 1rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 1rem;
+  }
+  .vault-shelf > .cart-slot {
+    flex: 0 0 min(44%, 210px);
+    scroll-snap-align: start;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .funsole {
+    position: fixed;
+    left: 0.6rem;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    z-index: 85;
+    max-width: 34rem;
+    margin-inline: auto;
+    translate: 0 calc(100% + 2rem);
+    visibility: hidden;
+    transition:
+      translate calc(var(--motion) * 320ms) var(--ease-pop),
+      visibility 0s linear calc(var(--motion) * 320ms);
+  }
+  html[data-js]:not([data-mode="speedrun"]) .vault[data-sheet] .funsole {
+    translate: none; /* not "0 0": any translate makes the sheet the containing block of the expanded (fixed) CRT */
+    visibility: visible;
+    transition: translate calc(var(--motion) * 320ms) var(--ease-pop);
+  }
+  .funsole__crt {
+    aspect-ratio: auto;
+    height: min(58dvh, 520px);
+  }
+}
+
+/* ── manual mode: no JS, Speedrun Mode — every project as a plain list, no shelf, no console toys ──────────── */
+html:not([data-js]) .vault__shelf-col {
+  display: none;
+}
+html:not([data-js]) .funsole,
+html[data-mode="speedrun"] .funsole {
+  position: static;
+  padding: 1rem;
+  translate: none;
+  visibility: visible;
+}
+html:not([data-js]) .funsole__top,
+html:not([data-js]) .funsole__controls,
+html:not([data-js]) .crt-attract,
+html:not([data-js]) .crt-static,
+html:not([data-js]) .crt-title,
+html[data-mode="speedrun"] .funsole__top,
+html[data-mode="speedrun"] .funsole__controls,
+html[data-mode="speedrun"] .crt-attract,
+html[data-mode="speedrun"] .crt-static,
+html[data-mode="speedrun"] .crt-title {
+  display: none !important;
+}
+html:not([data-js]) .funsole__crt,
+html[data-mode="speedrun"] .funsole__crt {
+  aspect-ratio: auto;
+  height: auto;
+  overflow: visible;
+}
+html:not([data-js]) .crt-view,
+html[data-mode="speedrun"] .crt-view {
+  position: static;
+  overflow: visible;
+}
+html:not([data-js]) .crt-screen,
+html[data-mode="speedrun"] .funsole .crt-screen {
+  display: grid !important;
+  border-bottom: 2px dashed rgb(255 255 255 / 0.12);
+}
+@media (min-width: 64rem) {
+  html:not([data-js]) .vault,
+  html[data-mode="speedrun"] .vault {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
