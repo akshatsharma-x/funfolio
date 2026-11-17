@@ -560,3 +560,75 @@ change an entry only when the decision itself changes.
      at rest). The title card's "Loading…" blinks twice (R5). The CRT is dark in every theme (a screen, like the
      Launchpad). BYTE's Vault line ("Pick a cartridge. Blow on it first. Trust me.") plays now that `[data-cartridge]`
      exists (#45).
+
+## PART 11 — World 5a: The Arcade
+
+122. **The real-work map** (`src/content/arcade.ts`, server-only). A cabinet's "Based on" line is a phrase found
+     verbatim in a résumé entry's bullets plus that entry's name ("Token compression · United Airlines"). The results
+     screens' "That's real:" lines are assembled from stats and checked against the bullet they restate (schema.ts
+     fails the build when the evidence goes): "Akshat's real result: 22–25% token compression + SHA256 caching →
+     $0.08–0.11/run." (the stat as written — "/run", not the brief's "per run"), "…SHA256 caching across 35 eval
+     scenarios (plus token compression) → $0.08–0.11/run.", "Real life: 90%+ test coverage and ~30% fewer
+     post-integration defects." Token Squeeze's target (22%) and its meter's band (22–25%) come from the "Token
+     compression" stat. The runtime gets all of it as a prop (layout → GameRuntimeLoader, like BYTE's script), so
+     content.ts stays out of client chunks. PART 12's three cabinets stand "Out of order", their lines already shown.
+123. **One game host, on any page.** `command({ type: "openGame", id })` opens a ready game in the lazy GameHost — the
+     Modal at a new full size (top layer, so the cursor stays above, R2); not-ready games still answer "coming soon".
+     The Quest Log's side quests (Token Squeeze, Bug Whack) open their games now; PART 15's 404 and PART 16's idle chip
+     will send the same command. The dialog's title carries the plain name ("Token Squeeze · Token compression · United
+     Airlines", R9).
+124. **The GameShell** (`src/components/games/GameShell.tsx`). Title card: pixel logo, "Based on real work", the how-to
+     as key icons plus a touch line, the goal, best, PRESS START (focused). HUD: score, best, time, lives, one game stat
+     (numbers in the display face). Pause: P, Esc or the HUD button, and automatically on window blur or a hidden tab —
+     Resume, Restart (R), Exit. Results: headline, score + NEW BEST, notes, rewards, "That's real:", Play again (R),
+     Exit. Esc pauses a running game first and leaves on the next press (browsers force-close a dialog on a second Esc
+     without user activation anyway). Focus: PRESS START on open; into the game on every start and resume (each game
+     marks its current control `data-game-focus`); Resume when paused; Play again on the results; the opener on exit.
+     One fixed-timestep loop (60 Hz steps from rAF) runs only while a game is being played in an open dialog; paused,
+     it stops and the playfield's CSS / Web Animations freeze (measured: zero frames paused and after closing). Games
+     are lazy modules with one contract (`GameApi`: onTick, setScore/Lives/Time/Stat, end, float, say, sfx) and a seed
+     per run, made in the Start click so their shuffles stay pure. `fitCanvas` (DPR ≤ 1.5) waits for PART 12's canvas
+     games; PART 11's three are DOM games — real buttons for mouse, keyboard, touch and screen readers.
+125. **Effects inside a game are DOM floaters** ("+10", "MEANING −5", "CACHE HIT!"): the FX canvas sits under the top
+     layer, where a dialog hides it. Toasts and the level-up banner (top-layer popovers) wait while a game is open —
+     its results screen lists the coins, the hidden coin, XP, a level-up and achievements — and play once it closes.
+126. **Rewards.** Every finished run records the score (best + plays) and pays XP (`game:<id>`: 10 a run, 25 on target;
+     capped at 200 a session, #27). Wallet coins (`earnCoins`, new): +2 on target, +1 for a run that scored, at most 15
+     a session (page load) — replaying pays, farming doesn't empty the shop. The first target beaten in any game →
+     coin #9 (High-Score Coin). Token Squeeze ≥ 22% → Compressor. All six games played → Arcade Rat (PART 12).
+127. **Token Squeeze.** One of five original bloated prompts per run (`[brackets]` mark the filler; "only", "not",
+     "must", "under" are meaningful decoys). Tiles are buttons in reading order — arrows move by measured rows, Enter,
+     Space or a tap squeezes. Filler crunches and collapses (focus moves on first); a word that matters shakes, stays
+     and costs MEANING −5. Compression = tokens removed ÷ tokens (words); the meter runs 0–45% with the real band
+     marked. 30s; squeezing all the filler ends the round early with a time bonus. The prompts top out at 27–40%, so
+     22% takes most of the filler.
+128. **Cache Hit!** Eight stack items with bundled logos (LangGraph, Next.js, TypeScript, React, Tailwind CSS,
+     PostgreSQL, MongoDB, Git) × 2; each card shows the first 8 hex digits of the real SHA-256 of its name — real
+     hashes, computed at build time, instead of the brief's fake ones. Hit rate = hits ÷ lookups (a lookup is two
+     cards: the brief's "matches ÷ flips" read per card would cap at 50%). 60s; all pairs wins; no miss at all = CACHE
+     HIT 100% (+500). CSS-3D flips (a cross-fade under reduced motion); a miss turns back after 750ms of game time.
+     Cards are named by the face that shows ("Card 3: Cache — face down", "Card 3: React sha256 …").
+129. **Bug Whack.** Nine original mini editors; bugs pop out of a line (it glitches), friendly "feature" sprites (20%,
+     after 3s) cost a life. 3 lives, 45s; spawns speed up from every 900ms to 430ms, a bug's life shrinks from 1250ms
+     to 650ms, pairs after 55%; combos add 5 a level (up to +20). Keys: the number row reads across (1 = top-left), the
+     numpad works by position (7 = top-left). The crosshair cursor while playing (useGameCursor). Reduced motion: no
+     pop or glitch motion, 20–25% slower. Target 250.
+130. **The hall.** The neon sign flickers on once in view (two flickers in 0.9s, R5); until then it is fully off — a
+     dimmed sign below the fold was low-contrast text to axe (and to the Vault's own page scan, which caught it). Six original CSS-3D cabinets —
+     top, side and front faces, a marquee with a 16×12 pixel logo (`src/components/games/art.ts`), an attract screen,
+     joystick + two buttons, a coin door, FREE PLAY — stand on an arcade-carpet SVG tile (inline, R10); the plaques sit
+     on a solid plate (R6). Hover or focus: the cabinet leans in, the marquee flickers on, the joystick wiggles. The
+     whole cabinet is one Play button ("Play Token Squeeze"); it zooms a CRT-dark panel from the screen to the viewport
+     (380ms, under the top layer), then opens the game; no zoom under reduced motion. Attract screens are CSS loops on
+     `--play` (measured: zero frames at rest). Phones: a swipeable snap row. No JS: cabinets and plaques read as art +
+     text; the Play buttons are `data-needs-js`.
+131. **The Prize Counter.** One store-connected component (its own lazy chunk) in two places: the booth beside the
+     cabinets (portaled by the runtime into the server-rendered booth, whose static price list then steps aside via
+     `:has()`) and a new pause-menu tab. Cursors · BYTE's hats · Confetti · Themes; every card has a preview (the
+     cursor's own 32px SVG, BYTE's head wearing the hat, a confetti swatch, a CRT swatch), the price ("free at LV n"
+     for level rewards) and one button whose words start its name: Buy → KA-CHING (a DOM stamp with coins, so it also
+     shows inside the pause dialog; plus a coin burst on the page) → Equip → Equipped / Take off (hats) / Switch back
+     (theme). Short of coins: aria-disabled + "N more". The Golden cursor isn't for sale: "Find all 12 hidden coins
+     (n/12)". BYTE now draws its equipped hat (original art in its own SVG coordinates) — the LV3 party hat finally shows.
+132. **Safari doesn't focus a clicked button**, so a dialog opened by a click had nothing to return focus to:
+     ArcadeButton (any button with a command), the cabinets and the Vault's side-quest buttons focus themselves first.

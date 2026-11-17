@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.11.0",
+    date: "2026-11-17",
+    title: "The Arcade",
+    notes: [
+      "The Bonus Stage is open: a hall of arcade cabinets, and every game is based on real work.",
+      "Token Squeeze, Cache Hit! and Bug Whack — mouse, keyboard or touch. P or Esc pauses; leaving the window pauses too.",
+      "Beat any game's target and a hidden coin drops. Runs pay coins into your wallet as well.",
+      "The Prize Counter is open: cursor skins, confetti styles, the Retro CRT theme — and hats for BYTE.",
+      "The side quests in the Quest Log now launch their games.",
+    ],
+  },
+  {
     version: "0.10.0",
     date: "2026-11-17",
     title: "Cartridge Vault",

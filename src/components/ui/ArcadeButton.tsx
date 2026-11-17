@@ -79,6 +79,9 @@ export function ArcadeButton(props: ArcadeButtonProps) {
   const play = (target: HTMLElement) => {
     if (sound) sfx.play(sound);
     if (!command) return;
+    // Safari doesn't focus a clicked button: a command that opens a dialog (a game, the pause menu) would have nothing
+    // to return focus to when it closes
+    if (document.activeElement !== target) target.focus({ preventScroll: true });
     const r = target.getBoundingClientRect();
     const origin = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     // attach the click origin so "+XP" ghosts fly from the button

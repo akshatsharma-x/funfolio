@@ -75,6 +75,14 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   screen is server-rendered; Play Mode shows one at a time, no-JS and Speedrun Mode list them all. The Vault's Esc
   (eject) runs before the pause menu (#114).
 - Controls that only work with the runtime (side quests, the scan…) get `data-needs-js` — hidden without JavaScript.
+- The Arcade (PART 11): what each game is based on and its "That's real:" line are computed in `src/content/arcade.ts`
+  (server-only, checked by schema.ts) and reach the runtime as a prop. Games: `src/components/games/` — `registry.ts`
+  (how-to, goal, cursor, lazy loader per id), `GameShell.tsx` (title / HUD / pause / results, rewards, coin #9),
+  `GameHost.tsx` (the full-size Modal; `command({ type: "openGame", id })` from anywhere), `engine.ts` (fixed-timestep
+  loop, `fitCanvas`, DOM floaters, seeded RNG). A new game = a module implementing `GameProps` + a registry entry + its
+  `BASED_ON`/fact in arcade.ts + `ready: true` in games.ts. Inside a game, draw effects with `api.float` (the FX canvas
+  is under the dialog); toasts and the level-up banner wait until the game closes. The Prize Counter is
+  `src/components/prizes/PrizeCounter.tsx` (booth portal + pause-menu tab); BYTE's hats are `src/components/byte/hats.tsx`.
 - `@keyframes` names are global across every stylesheet: prefix new ones by feature (`funsole-on`, `quest-pop`); the
   build fails on a name defined twice with different bodies (#120).
 - Keep the page idle (docs/DECISIONS.md #40–41): no always-on rAF loops, continuous CSS animations only on HTML elements' transform/opacity (never on SVG elements), no style writes inside scroll events (use `onScrollMotion`), and get GSAP/ScrollTrigger via `loadScrollTrigger()` only where needed.

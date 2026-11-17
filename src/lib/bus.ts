@@ -24,6 +24,8 @@ export type BusEvents = {
   "game:pause": Record<string, never>;
   "game:resume": Record<string, never>;
   "shop:bought": { itemId: string };
+  /** PART 11 · arcade rewards paid into the wallet (after the session cap). */
+  "coins:earned": { amount: number; reason: string; total: number };
   "shop:denied": { itemId: string; reason: "owned" | "locked" | "funds" };
   "save:reset": Record<string, never>;
   /** Backtick (PART 16). */

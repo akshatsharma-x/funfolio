@@ -226,12 +226,14 @@ export function useCommandHandler(resumeHref: string | null) {
           bus.emit("item:acquired", { title: c.title, detail: c.detail });
           break;
         case "openGame": {
-          // PART 11 plugs the Arcade in here; until then every cartridge is "coming soon"
+          // PART 11: ready games open in the game host (full-screen modal); the rest are still "coming soon"
           const game = GAME_BY_ID[c.id];
-          if (!game?.ready) {
-            sfx.play("error");
-            bus.emit("item:acquired", { kicker: "Side quest", title: "Cartridge not found", detail: `${game?.name ?? "This game"} — coming soon`, icon: "cartridge" });
+          if (game?.ready) {
+            useUi.getState().openGame(c.id);
+            break;
           }
+          sfx.play("error");
+          bus.emit("item:acquired", { kicker: "Side quest", title: "Cartridge not found", detail: `${game?.name ?? "This game"} — coming soon`, icon: "cartridge" });
           break;
         }
         case "scroll": {

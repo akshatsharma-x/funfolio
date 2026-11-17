@@ -70,6 +70,14 @@ but blowing on it pays off. The Web Accessibility Analyzer's cartridge has "Scan
 nothing leaves the browser) on the live page and lists what it finds. Without JavaScript and in Speedrun Mode every
 project is a plain list.
 
+World 5 (the Bonus Stage: the Arcade) is a hall of arcade cabinets, each game based on a real résumé line: Token
+Squeeze (squeeze the filler out of a bloated prompt — token compression at United Airlines), Cache Hit! (a memory match
+of SHA-256-hashed stack logos — SHA256 caching) and Bug Whack (whack the bugs in nine code editors, spare the features —
+debugging at Truechip). Click, tap or press Enter on a cabinet; inside a game `P` or `Esc` pauses (so does leaving the
+window), `R` restarts, `Esc` on a paused game leaves. Runs pay coins; beat any game's target for a hidden coin. Spend
+coins at the Prize Counter (next to the cabinets, and in Pause → Prize Counter) on cursor skins, confetti, the Retro CRT
+theme and hats for BYTE. Three more cabinets arrive in PART 12.
+
 BYTE, the robot mascot, lives in the bottom-right corner: click for a quip, drag or throw it, rub it for hearts,
 minimize it with the `–` button (or turn it off in Pause → Settings). `/playground` has a Juice kit & BYTE panel.
 

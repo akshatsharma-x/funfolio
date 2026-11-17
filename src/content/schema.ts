@@ -9,6 +9,7 @@ import { PERK_DEFS, radarItems } from "./profile";
 import { activeWidgetIssues, skillAnchor } from "./quests";
 import { TECH_ICONS } from "./techIcons";
 import { vaultIssues } from "./vault";
+import { arcadeIssues } from "./arcade";
 
 const todo = z.literal("TODO");
 const text = z.string().trim().min(1);
@@ -182,6 +183,7 @@ const schema = z
     }
     // PART 10 · Cartridge Vault: every project's game side quest exists
     for (const issue of vaultIssues()) ctx.addIssue({ code: "custom", message: issue, path: ["projects"] });
+    for (const issue of arcadeIssues()) ctx.addIssue({ code: "custom", message: issue, path: ["experience"] });
   });
 
 let checked = false;

@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import type { WorldId } from "@/content/worlds";
 
-export const PAUSE_TABS = ["resume", "map", "achievements", "settings", "controls", "patch", "save", "reset"] as const;
+export const PAUSE_TABS = ["resume", "map", "achievements", "prizes", "settings", "controls", "patch", "save", "reset"] as const;
 export type PauseTab = (typeof PAUSE_TABS)[number];
 
 type UiState = {
@@ -19,6 +19,14 @@ type UiState = {
   closePause: () => void;
   setPauseTab: (tab: PauseTab) => void;
   setPreviousVisit: (ts: number | null) => void;
+  /** PART 11 — the open arcade game (any page; `nonce` remounts the shell for every opening). */
+  game: { id: string; nonce: number } | null;
+  /** The game the host keeps rendering while its dialog animates closed. */
+  lastGame: { id: string; nonce: number } | null;
+  /** Mount the (lazy) game host only once a game has been opened. */
+  gameEverOpened: boolean;
+  openGame: (id: string) => void;
+  closeGame: () => void;
 };
 
 export const useUi = create<UiState>()((set) => ({
@@ -32,6 +40,15 @@ export const useUi = create<UiState>()((set) => ({
   closePause: () => set({ pauseOpen: false }),
   setPauseTab: (tab) => set({ pauseTab: tab }),
   setPreviousVisit: (ts) => set({ previousVisit: ts }),
+  game: null,
+  lastGame: null,
+  gameEverOpened: false,
+  openGame: (id) =>
+    set((s) => {
+      const game = { id, nonce: (s.lastGame?.nonce ?? 0) + 1 };
+      return { game, lastGame: game, gameEverOpened: true, pauseOpen: false };
+    }),
+  closeGame: () => set({ game: null }),
 }));
 
 export function isPauseTab(v: unknown): v is PauseTab {

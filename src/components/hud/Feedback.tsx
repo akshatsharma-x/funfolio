@@ -12,6 +12,7 @@ import { useHtmlAttribute } from "@/lib/hooks/useHtmlAttribute";
 import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
 import { fx } from "@/lib/juice";
 import { useSave } from "@/lib/store";
+import { useUi } from "@/lib/ui";
 import { setSpeedrun } from "./useGameRuntime";
 
 const TOAST_MS = 2600;
@@ -33,6 +34,9 @@ const hide = (el: HTMLElement | null) => {
  */
 export function ToastHost() {
   const [toast, setToast] = useState<Toast | null>(null);
+  // PART 11: while an arcade game is open its results screen lists the rewards — toasts wait and play afterwards
+  const gameOpen = useUi((s) => !!s.game);
+  const gameOpenRef = useRef(gameOpen);
   const hostRef = useRef<HTMLDivElement>(null);
   const queue = useRef<Toast[]>([]);
   const busy = useRef(false);
@@ -51,10 +55,15 @@ export function ToastHost() {
     (t: Omit<Toast, "key">) => {
       seq.current += 1;
       queue.current.push({ ...t, key: seq.current });
-      if (!busy.current) advance();
+      if (!busy.current && !gameOpenRef.current) advance();
     },
     [advance],
   );
+
+  useEffect(() => {
+    gameOpenRef.current = gameOpen;
+    if (!gameOpen && !busy.current && queue.current.length) advance();
+  }, [gameOpen, advance]);
 
   const leave = useCallback(() => {
     const host = hostRef.current;
@@ -63,7 +72,10 @@ export function ToastHost() {
     window.setTimeout(
       () => {
         host.removeAttribute("data-leaving");
-        advance();
+        if (gameOpenRef.current) {
+          busy.current = false;
+          setToast(null);
+        } else advance();
       },
       prefersReducedMotion() ? 0 : 220,
     );
@@ -149,15 +161,30 @@ export function LevelUpBanner() {
   const [data, setData] = useState<LevelUp | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const seq = useRef(0);
+  // PART 11: a level-up earned inside an arcade game shows on its results screen; the banner waits for the exit
+  const gameOpen = useUi((s) => !!s.game);
+  const gameOpenRef = useRef(gameOpen);
+  const held = useRef<LevelUp | null>(null);
 
   useEffect(
     () =>
       bus.on("level:up", ({ level, title, rewards }) => {
         seq.current += 1;
-        setData({ key: seq.current, level, title, rewards });
+        const next = { key: seq.current, level, title, rewards };
+        if (gameOpenRef.current) held.current = next;
+        else setData(next);
       }),
     [],
   );
+  useEffect(() => {
+    gameOpenRef.current = gameOpen;
+    if (!gameOpen && held.current) {
+      const next = held.current;
+      held.current = null;
+      const t = window.setTimeout(() => setData(next), 400);
+      return () => window.clearTimeout(t);
+    }
+  }, [gameOpen]);
 
   useEffect(() => {
     const el = ref.current;

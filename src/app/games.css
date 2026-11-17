@@ -1,0 +1,690 @@
+/* The arcade's game screen (PART 11): the full-screen Modal, the shared GameShell (title card, HUD, pause, results)
+   and the three DOM games — Token Squeeze, Cache Hit!, Bug Whack. The stage is a dark screen in every theme (like the
+   Launchpad and the CRT). Motion is transforms + opacity; under reduced motion (--motion 0, [data-reduced]) moves
+   become fades. Keyframes are prefixed (gs-, ts-, ch-, bw-): names are global (DECISIONS #120). */
+
+@layer theme, base, components, utilities;
+
+@keyframes gs-card-in {
+  from {
+    transform: translateY(10px) scale(0.97);
+    opacity: 0;
+  }
+}
+@keyframes ts-crunch {
+  40% {
+    transform: scale(1.12, 0.6);
+    background: #ff3d8b;
+  }
+  100% {
+    transform: scale(0, 0.2);
+    opacity: 0;
+  }
+}
+@keyframes ts-shake {
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+@keyframes ch-hit {
+  40% {
+    transform: scale(1.08);
+  }
+}
+@keyframes bw-pop {
+  from {
+    transform: translateY(14px) scale(0.4);
+    opacity: 0;
+  }
+}
+@keyframes bw-splat {
+  from {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@layer components {
+  /* ── the full-screen game dialog ─────────────────────────────────────────────────────────────────────────── */
+  .modal[data-size="full"] {
+    width: min(1180px, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px);
+  }
+  .game-modal .modal__body {
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+  }
+  .gshell__plain {
+    color: var(--muted);
+    font-size: 0.62em;
+    font-weight: 600;
+  }
+
+  /* ── the shell ──────────────────────────────────────────────────────────────────────────────────────────── */
+  .gshell {
+    display: grid;
+    gap: 0.7rem;
+  }
+  .gshell kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.7em;
+    padding: 0 0.35em;
+    border: 2px solid currentColor;
+    border-radius: 5px;
+    font-family: var(--font-body);
+    font-size: 0.85em;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+  .gshell__hud {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 1.1rem;
+    padding: 0.45rem 0.6rem 0.45rem 0.9rem;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    background: #0d0a18;
+    color: #fff4e0;
+  }
+  .gshell__readout {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    color: #b9b2d9;
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .gshell__readout b {
+    color: #fff4e0;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    letter-spacing: 0;
+  }
+  .gshell__readout[data-low] b {
+    color: #ff6b6b;
+  }
+  .gshell__lives {
+    display: inline-flex;
+    gap: 2px;
+    align-self: center;
+  }
+  .gshell__life--lost {
+    opacity: 0.25;
+    filter: grayscale(1);
+  }
+  .gshell__stat {
+    color: #6be6ff;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .gshell__pause {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 36px;
+    margin-left: auto;
+    padding: 0.2rem 0.8rem;
+    border: 2px solid #ff6aa6;
+    border-radius: 999px;
+    background: none;
+    color: #fff4e0;
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .gshell__pause:focus-visible {
+    outline: 3px dashed #22d3ee;
+    outline-offset: 2px;
+  }
+  .gshell__stage {
+    position: relative;
+    display: grid;
+    min-height: min(560px, calc(100dvh - 210px));
+    overflow: hidden;
+    border: 3px solid var(--ink);
+    border-radius: 18px;
+    background: radial-gradient(120% 100% at 50% 0%, #1d1540, #0b0818 70%);
+    color: #fff4e0;
+  }
+  .gshell__field {
+    position: relative;
+    display: grid;
+    align-content: center;
+    padding: 1rem;
+  }
+  .gshell__card {
+    display: grid;
+    place-self: center;
+    justify-items: center;
+    gap: 0.65rem;
+    max-width: 42rem;
+    padding: 1.6rem 1.2rem;
+    text-align: center;
+    animation: gs-card-in calc(var(--motion) * 260ms + 1ms) var(--ease-pop) both;
+  }
+  .gshell__emblem {
+    width: 112px;
+    height: auto;
+    filter: drop-shadow(0 4px 0 rgb(0 0 0 / 0.4));
+  }
+  .gshell__name {
+    color: #fff4e0;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 900;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+  .gshell__kicker {
+    display: block;
+    color: #ffc83d;
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .gshell__based {
+    color: #e4e1ec;
+  }
+  .gshell__how {
+    display: grid;
+    gap: 0.35rem;
+    color: #e4e1ec;
+    font-size: var(--text-sm);
+  }
+  .gshell__goal {
+    padding: 0.4rem 0.9rem;
+    border: 2px dashed rgb(255 200 61 / 0.5);
+    border-radius: 10px;
+    color: #fff4e0;
+    font-weight: 700;
+  }
+  .gshell__best,
+  .gshell__hint {
+    color: #b9b2d9;
+    font-size: var(--text-sm);
+  }
+  .gshell__best b,
+  .gshell__score b {
+    color: #fff4e0;
+    font-family: var(--font-display);
+  }
+  .gshell__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    display: grid;
+    background: rgb(7 6 15 / 0.82);
+    backdrop-filter: blur(3px);
+  }
+  .gshell__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 0.3rem;
+  }
+  .gshell__headline {
+    color: #fff4e0;
+    font-family: var(--font-display);
+    font-size: var(--text-xl);
+    font-weight: 900;
+    line-height: 1.15;
+  }
+  .gshell__results[data-won] .gshell__headline {
+    color: #ffc83d;
+  }
+  .gshell__score {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #b9b2d9;
+  }
+  .gshell__score b {
+    font-size: 2rem;
+    line-height: 1;
+  }
+  .gshell__new {
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+    background: #ffc83d;
+    color: #07060f;
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .gshell__notes {
+    display: grid;
+    gap: 0.2rem;
+    color: #e4e1ec;
+    font-size: var(--text-sm);
+  }
+  .gshell__loot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem 0.6rem;
+  }
+  .gshell__loot li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.7rem;
+    border: 2px solid #3b2e66;
+    border-radius: 999px;
+    background: #1a1233;
+    color: #fff4e0;
+    font-size: var(--text-sm);
+  }
+  .gshell__real {
+    max-width: 34rem;
+    padding: 0.7rem 1rem;
+    border: 2px solid #22d3ee;
+    border-radius: 12px;
+    background: rgb(34 211 238 / 0.08);
+    color: #e9fdf9;
+    line-height: 1.5;
+  }
+  .gshell__real .gshell__kicker {
+    color: #6be6ff;
+  }
+  .gshell__msg {
+    place-self: center;
+    color: #b9b2d9;
+  }
+  .gfloat {
+    position: absolute;
+    z-index: 5;
+    padding: 0 0.3rem;
+    color: #b6ff3b;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 900;
+    text-shadow: 0 2px 0 #07060f;
+    white-space: nowrap;
+    transform: translate(-50%, 0);
+    pointer-events: none;
+  }
+  .gfloat[data-tone="bad"] {
+    color: #ff6b6b;
+  }
+  .gfloat[data-tone="gold"] {
+    color: #ffc83d;
+  }
+
+  /* ── Token Squeeze ──────────────────────────────────────────────────────────────────────────────────────── */
+  .ts {
+    display: grid;
+    align-content: start;
+    gap: 0.9rem;
+    width: 100%;
+    max-width: 54rem;
+    margin-inline: auto;
+  }
+  .ts-meter {
+    position: relative;
+    height: 30px;
+    overflow: hidden;
+    border: 3px solid #07060f;
+    border-radius: 8px;
+    background: #1a1233;
+  }
+  .ts-meter__fill {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg, #ff3d8b 0 10px, #ff6aa6 10px 14px);
+    transform: scaleX(var(--p));
+    transform-origin: left;
+    transition: transform calc(var(--motion) * 260ms) var(--ease-pop);
+  }
+  .ts-meter__band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--a) * 100%);
+    width: calc((var(--b) - var(--a)) * 100%);
+    border-inline: 2px dashed #b6ff3b;
+    background: rgb(182 255 59 / 0.3);
+  }
+  .ts-meter__label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35em;
+    color: #fff4e0;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    text-shadow: 0 1px 0 #07060f;
+  }
+  .ts-meter__label b,
+  .ts-tokens b {
+    font-family: var(--font-display);
+  }
+  .ts-tokens {
+    color: #b9b2d9;
+    font-size: var(--text-sm);
+  }
+  .ts-tokens b {
+    color: #fff4e0;
+  }
+  .ts-prompt {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.4rem;
+    padding: 1rem;
+    border: 2px dashed rgb(255 255 255 / 0.15);
+    border-radius: 14px;
+    background: rgb(255 255 255 / 0.03);
+  }
+  .ts-tile {
+    min-height: 40px;
+    padding: 0.3rem 0.6rem;
+    border: 2px solid #4a3a80;
+    border-radius: 8px;
+    background: #241a46;
+    color: #fff4e0;
+    font-size: 1.02rem;
+    line-height: 1.3;
+    transition:
+      translate calc(var(--motion) * 120ms),
+      background-color 120ms;
+  }
+  .ts-tile:hover {
+    background: #33255f;
+    translate: 0 -2px;
+  }
+  .ts-tile:focus-visible {
+    outline: 3px dashed #22d3ee;
+    outline-offset: 2px;
+  }
+  .ts-tile[data-gone] {
+    animation: ts-crunch calc(var(--motion) * 200ms + 1ms) ease-in forwards;
+    pointer-events: none;
+  }
+  .ts-tile[data-shake] {
+    border-color: #ff6b6b;
+    animation: ts-shake calc(var(--motion) * 320ms + 1ms) ease-in-out;
+  }
+
+  /* ── Cache Hit! ─────────────────────────────────────────────────────────────────────────────────────────── */
+  .ch {
+    display: grid;
+    place-items: center;
+  }
+  .ch-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.7rem;
+    width: min(100%, 560px);
+  }
+  .ch-card {
+    aspect-ratio: 0.82;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: none;
+    perspective: 700px;
+  }
+  .ch-card[data-hit] {
+    animation: ch-hit calc(var(--motion) * 420ms + 1ms) ease-out;
+  }
+  .ch-card:focus-visible {
+    outline: 3px dashed #22d3ee;
+    outline-offset: 3px;
+  }
+  .ch-card__inner {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform calc(var(--motion) * 320ms) var(--ease-pop);
+  }
+  .ch-card[data-up] .ch-card__inner {
+    transform: rotateY(180deg);
+  }
+  .ch-card__back,
+  .ch-card__front {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem;
+    border: 3px solid #07060f;
+    border-radius: 12px;
+    backface-visibility: hidden;
+  }
+  .ch-card__back {
+    background: repeating-linear-gradient(45deg, #2a1d4f 0 8px, #241a46 8px 16px);
+    color: #b9b2d9;
+  }
+  .ch-card:hover .ch-card__back {
+    background: repeating-linear-gradient(45deg, #33255f 0 8px, #2a1d4f 8px 16px);
+  }
+  .ch-card__chip {
+    width: 26px;
+    height: 20px;
+    border: 2px solid #b9b2d9;
+    border-radius: 4px;
+    background: repeating-linear-gradient(90deg, #b9b2d9 0 2px, transparent 2px 5px);
+  }
+  .ch-card__word {
+    font-family: var(--font-pixel);
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .ch-card__front {
+    background: #fff4e0;
+    color: #07060f;
+    transform: rotateY(180deg);
+  }
+  .ch-card__logo {
+    color: color-mix(in srgb, var(--tone, #07060f) 55%, #07060f);
+  }
+  .ch-card__name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .ch-card__hash {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+  }
+  .ch-card[data-matched] .ch-card__front {
+    background: #ecffd6;
+    box-shadow: inset 0 0 0 3px #7ac70c;
+  }
+  /* reduced motion: no turn — the faces cross-fade */
+  .ch[data-reduced] .ch-card__inner,
+  .ch[data-reduced] .ch-card[data-up] .ch-card__inner {
+    transform: none;
+    transition: none;
+  }
+  .ch[data-reduced] .ch-card__front {
+    transform: none;
+    opacity: 0;
+    transition: opacity 160ms;
+  }
+  .ch[data-reduced] .ch-card[data-up] .ch-card__front {
+    opacity: 1;
+  }
+
+  /* ── Bug Whack ──────────────────────────────────────────────────────────────────────────────────────────── */
+  .bw-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+    width: min(100%, 780px);
+    margin-inline: auto;
+  }
+  .bw-cell {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-height: 124px;
+    padding: 0;
+    overflow: hidden;
+    border: 3px solid #07060f;
+    border-radius: 12px;
+    background: #0f0b1f;
+    color: #e9e6f5;
+    text-align: left;
+    transition: border-color 120ms;
+  }
+  .bw-cell[data-kind="bug"] {
+    border-color: #ff6b6b;
+  }
+  .bw-cell[data-kind="feature"] {
+    border-color: #b6ff3b;
+  }
+  .bw-cell:focus-visible {
+    outline: 3px dashed #22d3ee;
+    outline-offset: 2px;
+  }
+  .bw-cell__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    border-bottom: 2px solid #07060f;
+    background: #1e1540;
+    font-size: 0.72rem;
+  }
+  .bw-cell__dots {
+    width: 26px;
+    height: 8px;
+    background: radial-gradient(circle, #5b5375 3px, transparent 3.5px) 0 0 / 9px 8px;
+  }
+  .bw-cell__file {
+    color: #b9b2d9;
+    font-family: var(--font-mono);
+  }
+  .bw-cell__key {
+    margin-left: auto;
+    color: #ffc83d;
+    font-family: var(--font-display) !important;
+  }
+  .bw-code {
+    display: grid;
+    align-content: start;
+    padding: 0.35rem 0.55rem;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    line-height: 1.55;
+    white-space: pre;
+  }
+  .bw-line[data-glitch] {
+    color: #ff6b6b;
+    text-shadow:
+      2px 0 #22d3ee,
+      -2px 0 #ff3d8b;
+  }
+  .bw-kw {
+    color: #ff8cc0;
+  }
+  .bw-str {
+    color: #c8ff7a;
+  }
+  .bw-num {
+    color: #ffd23f;
+  }
+  .bw-com {
+    color: #9d96c2;
+  }
+  .bw-sprite {
+    position: absolute;
+    top: calc(1.9rem + var(--line) * 1.08rem);
+    left: 50%;
+    z-index: 2;
+    display: grid;
+    justify-items: center;
+    translate: -50% 0;
+    filter: drop-shadow(0 2px 0 #07060f);
+    animation: bw-pop calc(var(--motion) * 220ms + 1ms) var(--ease-pop) both;
+    pointer-events: none;
+  }
+  .bw-sprite__tag {
+    padding: 0 0.3rem;
+    border-radius: 4px;
+    background: #b6ff3b;
+    color: #07060f;
+    font-family: var(--font-pixel);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .bw-splat {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background: radial-gradient(circle at 50% 45%, rgb(255 210 63 / 0.55), transparent 55%);
+    animation: bw-splat calc(var(--motion) * 360ms + 1ms) ease-out forwards;
+    pointer-events: none;
+  }
+  .bw-splat[data-kind="feature"] {
+    background: radial-gradient(circle at 50% 45%, rgb(255 107 107 / 0.5), transparent 55%);
+  }
+  .bw-splat[data-kind="miss"] {
+    background: radial-gradient(circle at 50% 45%, rgb(185 178 217 / 0.22), transparent 50%);
+  }
+  .bw[data-reduced] .bw-line[data-glitch] {
+    text-shadow: none;
+    text-decoration: wavy underline #ff6b6b;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .gshell__stage {
+    min-height: calc(100dvh - 190px);
+  }
+  .gshell__field {
+    padding: 0.6rem;
+  }
+  .ch-grid,
+  .bw-grid {
+    gap: 0.45rem;
+  }
+  .bw-cell {
+    min-height: 108px;
+  }
+  .bw-code {
+    font-size: 0.6rem;
+  }
+  .ts-tile {
+    font-size: 0.95rem;
+  }
+}
+/* phones: the dialog's title (a Tailwind utility, so this rule is unlayered) stays to one or two lines */
+@media (max-width: 47.99rem) {
+  .game-modal h2 {
+    font-size: var(--text-lg);
+    line-height: 1.2;
+  }
+}

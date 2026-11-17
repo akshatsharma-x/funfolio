@@ -384,6 +384,7 @@ export function VaultFx() {
         const target = e.target as Element;
         const quest = target.closest<HTMLElement>("[data-open-game]");
         if (quest) {
+          quest.focus({ preventScroll: true }); // (Safari) so the game's dialog returns focus to the side quest
           const r = quest.getBoundingClientRect();
           command({ type: "openGame", id: quest.dataset.openGame ?? "", origin: { x: Math.round(r.left + r.width / 2), y: Math.round(r.top) } });
           return;

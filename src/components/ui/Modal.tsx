@@ -16,9 +16,11 @@ type ModalProps = {
   footer?: ReactNode;
   /** Close by clicking the backdrop (default true; games may turn it off). */
   dismissOnBackdrop?: boolean;
-  /** md = 560px dialogs · lg = 900px (pause menu). */
-  size?: "md" | "lg";
+  /** md = 560px dialogs · lg = 900px (pause menu) · full = the arcade's game screen. */
+  size?: "md" | "lg" | "full";
   className?: string;
+  /** Esc first asks this (a game pauses instead of closing); return true when it handled the key. */
+  onEscape?: () => boolean;
 };
 
 const FOCUSABLE = "a[href], button, input, select, textarea, [tabindex]";
@@ -40,7 +42,7 @@ function tabbable(root: HTMLElement): HTMLElement[] {
  * Native <dialog> modal: top layer (never covers the cursor — R2), focus trap + restore, Esc, scroll lock that keeps
  * Lenis in sync, pop-in from 0.9 + blurred backdrop (fade only under reduced motion).
  */
-export function Modal({ open, onClose, title, description, children, footer, dismissOnBackdrop = true, size = "md", className }: ModalProps) {
+export function Modal({ open, onClose, title, description, children, footer, dismissOnBackdrop = true, size = "md", className, onEscape }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const locked = useRef(false);
@@ -91,6 +93,8 @@ export function Modal({ open, onClose, title, description, children, footer, dis
 
   const handleCancel = (e: SyntheticEvent<HTMLDialogElement>) => {
     e.preventDefault(); // animate out instead of closing instantly
+    // (browsers only honour this once per user activation: a second Esc in a row closes the dialog regardless)
+    if (onEscape?.()) return;
     onClose();
   };
 

@@ -81,6 +81,8 @@ export type SaveActions = {
   findEgg: (id: string) => boolean;
   /** A spare coin (sticker peels…): +1 wallet once per id — not one of the 12 hidden coins. */
   collectSpare: (id: string, origin?: Point) => boolean;
+  /** PART 11 · arcade rewards: +N wallet coins, at most ARCADE_COIN_CAP per session. Returns what was paid. */
+  earnCoins: (amount: number, reason: string) => number;
   setBytePos: (fx: number | null, fy: number | null) => void;
   setByteMinimized: (minimized: boolean) => void;
   /** Marks a once-only BYTE line as said; false if it already was. */
@@ -105,6 +107,9 @@ const SPARE_XP = 10;
 /** Explorer = every world except the credits (credits = completionist). */
 const EXPLORER_WORLDS = WORLDS.map((w) => w.id).filter((id) => id !== "credits");
 let sessionGameXp = 0;
+/** Arcade rewards per session (page load), like the game-XP cap: replaying pays, farming doesn't empty the shop. */
+export const ARCADE_COIN_CAP = 15;
+let sessionArcadeCoins = 0;
 
 function freshData(now = Date.now()): SaveData {
   return {
@@ -445,6 +450,16 @@ export const useSave = create<SaveStore>()(
         bus.emit("item:acquired", { title: "Spare coin", detail: "+1 wallet coin (spend it at the Prize Counter)", icon: "coin" });
         get().addXp(SPARE_XP, reason, origin); // also records the one-time claim
         return true;
+      },
+
+      earnCoins(amount, reason) {
+        const grant = Math.min(Math.floor(amount), ARCADE_COIN_CAP - sessionArcadeCoins);
+        if (!(grant > 0)) return 0;
+        sessionArcadeCoins += grant;
+        const s = get();
+        set({ player: { ...s.player, wallet: s.player.wallet + grant } });
+        bus.emit("coins:earned", { amount: grant, reason, total: s.player.wallet + grant });
+        return grant;
       },
 
       setBytePos(fx, fy) {

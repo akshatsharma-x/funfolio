@@ -3,9 +3,11 @@
 import { useEffect, useRef, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import type { ByteScript } from "@/content/quips";
+import { useSave } from "@/lib/store";
 import { PixelFrame } from "@/components/ui/PixelFrame";
 import { startByte } from "./brain";
 import { FACE_COLS, FACE_ROWS } from "./faces";
+import { ByteHatArt } from "./hats";
 
 const INK = "var(--ink)";
 const SHELL = "#FFF4E0";
@@ -17,6 +19,7 @@ const SHELL = "#FFF4E0";
  */
 export default function Byte({ script }: { script: ByteScript }) {
   const ref = useRef<HTMLDivElement>(null);
+  const hat = useSave((s) => s.inventory.equipped.byteHat);
 
   useEffect(() => {
     const root = ref.current;
@@ -42,6 +45,8 @@ export default function Byte({ script }: { script: ByteScript }) {
           <span className="byte__float">
             <span className="byte__halo" aria-hidden="true" />
             <svg className="byte__svg" viewBox="0 0 64 72" width="64" height="72" aria-hidden="true" focusable="false">
+              {/* PART 11: the hat from the Prize Counter (its back part sits behind the antenna and the head's top edge) */}
+              {hat ? <ByteHatArt hat={hat} layer="back" /> : null}
               {/* antenna + bulb (its glow is the HTML halo below — compositor-only, so idle BYTE costs no paint) */}
               <line x1="32" y1="14" x2="32" y2="7" stroke={INK} strokeWidth="3" strokeLinecap="round" />
               <circle className="byte__bulb" cx="32" cy="5.5" r="4.2" fill="var(--world)" stroke={INK} strokeWidth="2" />
@@ -71,6 +76,7 @@ export default function Byte({ script }: { script: ByteScript }) {
                 <rect width={FACE_COLS} height={FACE_ROWS} fill="none" />
               </g>
               <rect x="14.5" y="20.5" width="9" height="2.5" rx="1.25" fill="#FFFFFF" opacity="0.16" />
+              {hat ? <ByteHatArt hat={hat} layer="front" /> : null}
             </svg>
           </span>
         </span>

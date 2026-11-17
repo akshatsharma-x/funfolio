@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Modal } from "@/components/ui/Modal";
 import { Tabs, type TabItem } from "@/components/ui/Tabs";
 import { bus } from "@/lib/bus";
@@ -15,6 +16,9 @@ import {
   SaveFilePanel,
   SettingsPanel,
 } from "./PausePanels";
+
+// PART 11 — the same Prize Counter as the Arcade's booth (its own lazy chunk)
+const PrizeCounter = dynamic(() => import("@/components/prizes/PrizeCounter"), { ssr: false });
 
 /**
  * Pause menu (PART 3 #8). Native <dialog> (focus trap, Esc, blurred backdrop, scroll lock) + a vertical tab menu.
@@ -41,6 +45,7 @@ export default function PauseMenu({ open, resumeHref }: { open: boolean; resumeH
     { id: "resume", label: "Resume", icon: "controller", content: <ResumePanel onResume={close} /> },
     { id: "map", label: "Map", icon: "map", content: <MapPanel onJump={close} /> },
     { id: "achievements", label: "Achievements", icon: "trophy", content: <AchievementsPanel /> },
+    { id: "prizes", label: "Prize Counter", icon: "coin", content: <PrizeCounter variant="pause" /> },
     { id: "settings", label: "Settings", icon: "gear", content: <SettingsPanel /> },
     { id: "controls", label: "Controls", icon: "key", content: <ControlsPanel /> },
     { id: "patch", label: "Patch notes", icon: "scroll", content: <PatchNotesPanel active={open && tab === "patch"} /> },
