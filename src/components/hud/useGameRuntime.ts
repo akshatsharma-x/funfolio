@@ -226,6 +226,11 @@ export function useCommandHandler(resumeHref: string | null) {
           bus.emit("item:acquired", { title: c.title, detail: c.detail });
           break;
         case "openGame": {
+          // PART 13: the JD Scanner is a Skill Tree tool, not a cabinet — its side quest opens the scanner tab
+          if (c.id === "jd-scanner" && document.getElementById("skills-jd")) {
+            bus.emit("skills:open", { tab: "jd" });
+            break;
+          }
           // PART 11: ready games open in the game host (full-screen modal); the rest are still "coming soon"
           const game = GAME_BY_ID[c.id];
           if (game?.ready) {

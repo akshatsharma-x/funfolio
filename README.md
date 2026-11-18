@@ -54,7 +54,7 @@ World 2b (the Quest Log) starts with the ACTIVE QUEST — the current role, with
 its real numbers (a cost dial, a token squeeze, a SHA-256 cache hit, a knowledge graph) and a hidden coin on "$0.08".
 The COMPLETED QUESTS follow, newest first, on a trail that draws itself as you scroll while a tiny BYTE walks it (a
 straight rail on phones): checklists tick, stamps thump down, emblems spin when clicked, and every loot chip opens its
-Skill Tree entry. Side quest buttons say "coming soon" until the Arcade exists. Reading a card for 3s pays +10 XP once.
+Skill Tree entry. Side quest buttons open their games in the Arcade. Reading a card for 3s pays +10 XP once.
 
 World 3 (The Lab) has a research-route globe — drag it, pause its spin, "Show the route" — from Manipal University
 Jaipur to SCI-2026 (a flat map on phones and without 3D). Each paper is a boss: scroll it into view to watch the
@@ -80,6 +80,16 @@ a game `P` or `Esc` pauses (so does leaving the window), `R` restarts, `Esc` on 
 beat any game's target for a hidden coin; play all six for Arcade Rat. Spend coins at the Prize Counter (next to the
 cabinets, and in Pause → Prize Counter) on cursor skins, confetti, the Retro CRT theme and hats for BYTE.
 
+World 6 (the Skill Tree) has three views. TREE: every skill as a hex node on five type-colored branches around the
+root (a vertical tree on phones); hover, focus or tap a node for its card — type, "Used in:" (click to jump to that
+quest, or to insert that project's cartridge) and the evidence count. Arrow keys move between nodes, `Esc` closes a
+card. INVENTORY: the same skills as an RPG slot grid with type filters and a search that knows aliases ("js",
+"postgres", "ml"); equip up to three for the LOADOUT, which shows where they were used together. JD SCANNER ("Party
+Compatibility Check"): paste a job description and SCAN — it runs entirely in the browser (offline too) and lists the
+matching skills by type, bonus perks, what else the résumé shows and what isn't on the save file yet; counts only,
+never a percentage. "Try a sample JD" fills in a generic AI/ML internship. Without JavaScript and in Speedrun Mode the
+tree is a plain list with "Used in" for every skill.
+
 BYTE, the robot mascot, lives in the bottom-right corner: click for a quip, drag or throw it, rub it for hearts,
 minimize it with the `–` button (or turn it off in Pause → Settings). `/playground` has a Juice kit & BYTE panel.
 
@@ -92,3 +102,8 @@ choices: [`docs/DECISIONS.md`](docs/DECISIONS.md). Design check: `/playground`.
 While `player.bio` is `"TODO"`, the Profile shows a DRAFT bio assembled only from these facts — write your own in
 `player.bio` to replace it. Until `player.photo` is set, the Character Card shows a pixel avatar; its colors are in
 `src/content/avatar.ts`. Perk names and the Focus Radar's domain buckets live in `src/content/profile.ts`.
+
+Skills come from `skills` in content.ts (each listed once — the build checks). A skill's "Used in" is computed from the
+roles' and projects' `stack`s through the alias map in `src/lib/skills-index.ts` ("GPT-4.1" counts for LLMs, "Django
+REST Framework" for Django); a skill no stack names says "On the skills list". Pick 5–8 `skills.signature` items for
+the holo-foil. The JD scanner's "not on the save file yet" vocabulary is in the same file.

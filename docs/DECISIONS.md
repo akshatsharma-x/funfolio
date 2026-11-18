@@ -681,3 +681,88 @@ change an entry only when the decision itself changes.
      closes, so a stale "PLAY" label no longer hangs over a game.
 140. **Phones.** The stages are shorter on touch screens (room for the arrow pad) and the full-size game dialog scrolls
      if a screen is still too short. Arcade Rat is reachable now: all six games played.
+
+## PART 13 — World 6: Skill Tree
+
+141. **One vocabulary, two halves.** `src/lib/skills-index.ts` is pure and client-safe — the alias map (the brief's
+     list plus the obvious spellings), the tokenizer, the matcher, the inventory search, the JD scan — and imports no
+     content. `src/content/skills.ts` (server-only) builds the rest from `content.skills`: nodes, evidence, the radial
+     layout, the scanner's index (a prop for the island) and the build checks in schema.ts — every skill listed once;
+     every alias, short label and logo points at a real skill; one term never names two things (two skills, a skill and
+     a résumé item, or the vocabulary); every stack item spelled exactly like a skill shows up in its evidence.
+142. **Evidence = the stacks, read through the aliases — never a score.** "Used in" lists every role and project whose
+     stack names the skill: by name, another spelling (React.js, postgres) or a family (`gpt*`, `claude*`, `gemini*`,
+     `llm*` → LLMs; `django*` → Django). So GPT-4.1, Claude Sonnet 4.5 and LLM Monitoring count for LLMs at United
+     Airlines, Gemini 1.5 / Gemini Vision at Cognivault AI, Django REST Framework for Django at EY; the item shows next to
+     the link ("as GPT-4.1, …"). No "tf" alias (TF-IDF isn't TensorFlow), no bare "c". 27 of the 67 skills are in no
+     stack (Machine Learning, JavaScript, SQL, DSA…): their cards say "On the skills list · no role or project stack names
+     it" — never "Evidence: 0", and nothing is borrowed from the bullets (R1). Adding them to a stack lights them up.
+143. **One DOM, three layouts.** Each skill is one `<li id="skill-<slug>">` (PART 8's ids, unchanged) with its trigger
+     and its card. CSS lays the same list out as the radial tree (Play Mode, the tree ≥ 1100px wide), a vertical trunk
+     with stacked branches (Play Mode, narrower) or a plain list with "Used in" inline (no JS, Speedrun Mode) — every
+     skill appears exactly once in every mode and the loot links always land. Triggers are plain text on the server;
+     the island makes them `role="button"` with one roving tab stop (no dead buttons without JS, #117).
+144. **The radial layout is computed at build time** (`src/content/skillLayout.ts`, pure): five fans around the root —
+     the biggest branch (Spells, 24) on the right, Gear and Gadgets on the left, Weapons on top, Runes below — rows or
+     columns bent into arcs, every node reserving a two-line label, so labels can't collide whatever they say. Positions
+     are container units (the tree is 100 × 69 of its own width); each edge joins a node to the nearest node one lane
+     in, or to its hub. A branch that outgrows its fan makes the page use the vertical tree. Measured in Chrome, WebKit
+     and Firefox at 1160–1440px: no overlaps. (An inline label takes its block's strut: the label's size and line
+     height live on the trigger, or two-line labels came out 70% taller than reserved.)
+145. **Branches grow, packets flow.** First view below the fold (PlayOnView): edges draw out lane by lane and nodes pop
+     (≤ 1.3s), one rising ding per branch. Data packets ride the trunks and the outer spokes — 15 compositor-only
+     `::after` loops on `--play`, declared only for an on-screen `#skills` — and the root has a beacon; they rest off
+     screen, at the idle nap and in the pause menu, and don't exist under reduced motion. Measured at rest on the tree:
+     0–1 animation frames per 2s.
+146. **Cards.** Hover (after 140ms of hover intent, so a sweep across the tree doesn't park cards over the neighbours),
+     focus or a tap opens a node's card: name, type, "Used in:", "Evidence: N". The pointer can move onto it (a hover
+     bridge), Esc closes it before the pause menu (WCAG 1.4.13, #114), and it shifts sideways or opens above the node to
+     stay on screen; in the plain list (cards inline) Esc stays the pause menu's. The card is its trigger's (and its
+     inventory slot's) description. 10 distinct skills inspected (hovered, focused or tapped for ≥ 350ms, tree or
+     inventory) → Skill Issue? Nope.
+147. **Getting around.** Arrows move in 2D (the nearest node in a ~68° cone, reading order as the fallback),
+     PageUp/PageDown jump branches, Home is the root. In Play Mode any `#skill-…` link (Quest Log, Vault) lands on its
+     node: the TREE tab, centered, focus on the node, its card, a flash (two pulses in 1.5s). "Used in" role links
+     scroll to the quest heading (focused; the card flashes); project links scroll to the Vault and insert that
+     cartridge (`vault:insert`). In Speedrun Mode and without JS they're plain anchors (`#quest-<id>`, `#screen-<id>`).
+     `/#skills-inventory` and `/#skills-jd` open that tab with an instant jump — a smooth one aimed where the box was
+     before the Prize Counter mounted above it. The root, AKSHAT, knocked twice within 450ms (two clicks, two Enters, a
+     double tap) → coin #10; its hint now reads "Every tree grows from one root. Knock twice."
+148. **Tabs.** Custom ARIA tabs (the UI kit's `Tabs` keeps inactive panels `hidden` even without JS): TREE · Skill map,
+     INVENTORY · Grid & loadout, JD SCANNER · Job description match; ←/→ with automatic activation, Home/End. Inactive
+     panels hide only with the runtime; INVENTORY and JD SCANNER are `data-needs-js` and hidden in Speedrun Mode.
+149. **Inventory.** An RPG slot grid — 8 columns (6 on tablets, 4 on phones; empty slots fill the last row), type-colored
+     frames, one tab stop with 2D arrows. Type filters (`aria-pressed`) and an alias-aware search ("js" → JavaScript,
+     React, Next.js, Node.js, Express.js; "postgres" → PostgreSQL); one- or two-letter queries need a whole alias word
+     and neighbours don't count, so "c" doesn't light Docker through "containers"; a miss keeps its text readable. The
+     LOADOUT has three slots (click / Enter equips, a fourth replaces the oldest, the loadout's buttons unequip); with
+     two or more it lists the roles and projects whose evidence has all of them — "COMBO! FastAPI + FAISS + Docker →
+     Cognivault AI", with a star burst from the slot (never on the text) — or "Untested combo — Akshat's down to try 😄"
+     and the closest pairs. Drag-to-equip (optional in the brief) isn't built; click and keys cover it. A detail pane
+     shows a visual copy of the focused slot's card.
+150. **JD scanner: counts only, and nothing leaves the browser.** The scan ships with the island (no lazy import), so
+     it works offline once the page has loaded (measured with the network off in Chrome, WebKit and Firefox). Words are
+     folded the way tech writing spells them (C++, C#, .NET, Next.js) and matched longest phrase first (React Native
+     isn't React, Node.js isn't also JavaScript, LlamaIndex isn't a Llama), with case where it matters (React, REST,
+     Windows, Excel — not the verbs). Results: "N matching skills" (named or spelled another way) by type; bonus perks,
+     implied by a neighbour ("containers" → Docker, "AWS" → AWS Secrets Manager, "vector database" → FAISS); "also on
+     the save file" — coursework, stack items that aren't Skill Tree entries, research keywords and vocabulary words
+     content.ts already uses (cloud → WalkingTree Technologies), each with where it appears; and "Not on the save file
+     yet — Akshat learns fast." for recognised tech words the résumé never mentions (~90 tools and platforms; concepts it
+     could imply without naming, like statistics or time series, are left out). Laser sweep + beeps (1.3s; instant under
+     reduced motion), the matched skills light up and bounce in the inventory, Perfect Match. The pasted text is only
+     read — results are DOM-built. The sample JD is a generic AI/ML internship (no company). The Vault's "JD Scanner" side
+     quest opens the tab (`skills:open`).
+151. **Page weight.** The Skill Tree adds 7.3 KB gzip of initial JS (176.6 KB, budget 250) and ~30 KB gzip of HTML. Its
+     31 tech logos are one static file, `/skill-logos.svg` (a `force-static` route handler, 12.7 KB gzip), `<use>`d by
+     nodes and slots — inline, the path data was paid twice (HTML + RSC payload) and compresses poorly. The item-type
+     pixel icons are inline symbols; icons built at run time (scan tiles, the loadout) use those, so they draw offline
+     (WebKit re-requests an external `<use>` for every new element).
+152. **Signature items** (holo-foil + a crown pip) are wired, but `skills.signature` is empty — Akshat picks them (R1);
+     the QA checks the hook on a copy.
+153. **BYTE and things that grow in place** (found by part4 I1 on a phone). BYTE avoids clickable boxes by measuring
+     them on scroll and on layout changes; the tree's nodes popped in from `scale: 0`, so at the measurement they were
+     nothing and grew under BYTE. Now the pop-in animates an inner wrapper (`.sk-node__art`), never the trigger, so
+     BYTE sees each button's real box from the first frame — and `byte.recheck()` (bus `byte:recheck`, measured 220ms
+     later) is the call for controls that appear without a scroll or a layout change: the tree sends it when the
+     branches have grown and when a card opens (BYTE steps off the card's links).

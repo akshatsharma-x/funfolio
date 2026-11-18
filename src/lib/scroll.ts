@@ -48,17 +48,19 @@ function focusTarget(el: HTMLElement) {
 /** Space kept clear for the fixed HUD (56px) when jumping to a target. */
 export const HUD_OFFSET = 64;
 
-/** Smoothly scrolls to an element (or instantly when Lenis is off), then focuses it. */
-export function scrollToElement(el: HTMLElement, opts: { focus?: boolean; onComplete?: () => void } = {}) {
+/** Smoothly scrolls to an element (or instantly when Lenis is off), then focuses it. `block: "center"` lands it in the
+ *  middle of the screen (a node deep inside a big figure) instead of under the HUD. */
+export function scrollToElement(el: HTMLElement, opts: { focus?: boolean; onComplete?: () => void; block?: "start" | "center" } = {}) {
   const done = () => {
     if (opts.focus) focusTarget(el);
     opts.onComplete?.();
   };
+  const offset = opts.block === "center" ? -Math.max(HUD_OFFSET, (window.innerHeight - el.getBoundingClientRect().height) / 2) : -HUD_OFFSET;
   if (instance) {
-    instance.scrollTo(el, { offset: -HUD_OFFSET, onComplete: done });
+    instance.scrollTo(el, { offset, onComplete: done });
     wakeLoop();
   } else {
-    el.scrollIntoView({ block: "start" });
+    el.scrollIntoView({ block: opts.block ?? "start" });
     done();
   }
 }

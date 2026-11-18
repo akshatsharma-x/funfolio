@@ -35,6 +35,8 @@ export type BusEvents = {
   "byte:react": { mood: ByteMood };
   "byte:point": { selector: string };
   "byte:visit": { selector: string; text?: string };
+  /** Something clickable appeared without a scroll or a layout change (a pop-in, a card) — BYTE re-checks its spot. */
+  "byte:recheck": Record<string, never>;
   /** A WorldHeader intro started (PART 4). */
   "world:intro": { id: string };
   /** The boot screen is gone and the Title Screen is revealed (PART 5) — typewriters, blinks and BYTE's tips start. */
@@ -45,6 +47,10 @@ export type BusEvents = {
   "gate:assemble": { crates: { x: number; y: number; w: number; h: number; angle: number; label: string }[] };
   /** Marks a world-header intro as already seen (another animation is about to own that header). */
   "intro:skip": { id: string };
+  /** PART 13 · open a Skill Tree view (the JD Scanner side quest lands on "jd"): switch, scroll there, focus it. */
+  "skills:open": { tab: "tree" | "inventory" | "jd" };
+  /** PART 13 · insert a cartridge in the Vault (a skill's "Used in" project link, once the page has scrolled there). */
+  "vault:insert": { id: string };
 };
 
 type EventName = keyof BusEvents;

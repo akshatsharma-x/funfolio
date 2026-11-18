@@ -66,10 +66,11 @@
     rotate: calc(var(--face, 1) * 7deg);
   }
 }
-@keyframes skill-flash {
+/* a skill's "Used in" link landed on this quest (PART 13) */
+@keyframes quest-flash {
   15%,
   55% {
-    box-shadow: 0 0 0 5px var(--world);
+    outline-color: var(--world-fg);
   }
 }
 
@@ -721,16 +722,11 @@
     background: var(--world);
   }
 
-  /* Skill Tree entries the loot chips jump to */
-  .skill-item[data-flash] > .chip {
-    animation: skill-flash calc(var(--motion) * 1500ms + 1ms) ease-out;
-  }
-  .skill-item:focus {
-    outline: none;
-  }
-  .skill-item:focus-visible > .chip {
-    outline: 3px dashed var(--world-fg);
-    outline-offset: 3px;
+  /* the Skill Tree's "Used in" links land here (PART 13; loot links land on the tree — src/app/skills.css) */
+  [data-quest-card][data-flash] {
+    outline: 4px solid transparent;
+    outline-offset: 6px;
+    animation: quest-flash calc(var(--motion) * 1500ms + 1ms) ease-out;
   }
 }
 

@@ -1,51 +1,72 @@
 import { skills } from "@/content/content";
 import { counts, ITEM_META, ITEM_TYPES } from "@/content/derived";
-import { skillAnchor } from "@/content/quests";
-import { Chip } from "@/components/ui/Chip";
-import { PixelIcon } from "@/components/ui/PixelIcon";
-import { StickerCard } from "@/components/ui/StickerCard";
+import { skillNodes, skillsIndex, skillTree } from "@/content/skills";
 import { WorldHeader } from "@/components/ui/WorldHeader";
 import { WorldSection } from "./parts";
+import { Inventory, type InventoryType } from "./skills/Inventory";
+import { JdScanner } from "./skills/JdScanner";
+import { IconSprite } from "./skills/SkillParts";
+import { SkillsFx } from "./skills/SkillsFx";
+import { SkillTree } from "./skills/SkillTree";
 
-/** World 6 · SKILL TREE · Skills. PART 13 adds the tree, inventory, "used in" evidence and the JD scanner; every skill
- *  already has its `#skill-<slug>` anchor (the Quest Log's loot links). */
+const TABS = [
+  { id: "tree", label: "Tree", plain: "Skill map" },
+  { id: "inventory", label: "Inventory", plain: "Grid & loadout" },
+  { id: "jd", label: "JD Scanner", plain: "Job description match" },
+] as const;
+
+/**
+ * World 6 · SKILL TREE · Skills (PART 13). Three views behind ARIA tabs — TREE (default), INVENTORY, JD SCANNER — all
+ * server-rendered; one delegated island (`SkillsFx`) plays them. Inactive panels hide only with JS; without JS and in
+ * Speedrun Mode the tree shows as a plain list with "Used in" inline and the runtime-only views stay hidden.
+ */
 export function SkillsSection() {
-  const signature = new Set(skills.signature);
+  const nodes = skillNodes();
+  const types: InventoryType[] = ITEM_TYPES.map((t) => ({
+    id: t,
+    name: ITEM_META[t].name,
+    label: skills[t].label,
+    tone: ITEM_META[t].tone,
+    pixel: ITEM_META[t].icon,
+    count: skills[t].items.length,
+  }));
   return (
-    <WorldSection id="skills" world="skills" labelledBy="skills-title">
+    <WorldSection id="skills" world="skills" labelledBy="skills-title" className="skills-world">
       <WorldHeader world="skills" id="skills-title">
         <p className="text-muted">
-          {counts.skills} skills across {ITEM_TYPES.length} item types.
+          {counts.skills} skills across {ITEM_TYPES.length} item types — each with the roles and projects that used it.
         </p>
       </WorldHeader>
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {ITEM_TYPES.map((type) => {
-          const meta = ITEM_META[type];
-          const category = skills[type];
-          return (
-            <StickerCard key={type} as="section" aria-labelledby={`skills-${type}`} bodyClassName="grid content-start gap-4">
-              <h3 id={`skills-${type}`} className="flex items-center gap-3 text-lg">
-                <span className="grid size-10 place-items-center rounded-lg border-2 border-ink text-ink" data-tone={meta.tone} style={{ background: "var(--tone)" }}>
-                  <PixelIcon name={meta.icon} size={24} mono />
-                </span>
-                <span>
-                  {meta.name} <span className="text-muted">·</span> {category.label}
-                </span>
-              </h3>
-              <ul aria-label={category.label} className="flex flex-wrap gap-2">
-                {category.items.map((item) => (
-                  // #skill-<slug>: the Quest Log's loot chips land here (PART 8; PART 13 keeps the ids)
-                  <li key={item} id={skillAnchor(item)} className="skill-item">
-                    <Chip type={type} holo={signature.has(item)}>
-                      {item}
-                    </Chip>
-                  </li>
-                ))}
-              </ul>
-            </StickerCard>
-          );
-        })}
+      <IconSprite pixels={ITEM_TYPES.map((t) => ITEM_META[t].icon)} />
+      <div className="skills" data-skills="">
+        <div className="skills-tabs" role="tablist" aria-label="Skill Tree views" data-needs-js="" data-speedrun="hide">
+          {TABS.map((t, i) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              id={`skills-tab-${t.id}`}
+              className="skills-tab"
+              aria-controls={`skills-${t.id}`}
+              aria-selected={i === 0}
+              tabIndex={i === 0 ? 0 : -1}
+              data-skills-tab={t.id}
+            >
+              {t.label} <span className="skills-tab__plain">· {t.plain}</span>
+            </button>
+          ))}
+        </div>
+        <div role="tabpanel" id="skills-tree" aria-labelledby="skills-tab-tree" className="skills-panel" data-panel="tree" data-active="">
+          <SkillTree tree={skillTree()} />
+        </div>
+        <div role="tabpanel" id="skills-inventory" aria-labelledby="skills-tab-inventory" className="skills-panel" data-panel="inventory" data-needs-js="" data-speedrun="hide">
+          <Inventory nodes={nodes} types={types} />
+        </div>
+        <div role="tabpanel" id="skills-jd" aria-labelledby="skills-tab-jd" className="skills-panel" data-panel="jd" data-needs-js="" data-speedrun="hide" data-jd-scanner="">
+          <JdScanner types={types} />
+        </div>
       </div>
+      <SkillsFx index={skillsIndex()} />
     </WorldSection>
   );
 }

@@ -40,6 +40,9 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
 - One-shot "play on first view" animations wrap their element in `PlayOnView` (`src/components/ui/PlayOnView.tsx`):
   render the FINAL state on the server; CSS animates from `[data-play="armed"]` to `[data-play="run"]`.
 - `byte.visit(selector, text?)` flies BYTE next to an element for a moment (never onto anything clickable).
+  `byte.recheck()` makes BYTE re-check that it covers nothing clickable — call it when controls appear without a scroll
+  or a layout change (a transform-only pop-in, a popover); and animate a wrapper inside a button, never the button
+  itself, from `scale: 0` (BYTE measures the real boxes, #153).
 - Idle nap (#67) + off-screen pause (#78): after 30s without input `html[data-idle]`, and on any world section that
   isn't on screen `[data-offscreen]`, set `--play: paused` — every new continuous CSS loop must use
   `animation-play-state: var(--play)` (and live inside its world's section). `announce()` spaces messages ≥ 1s (#76).
@@ -86,6 +89,15 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   imports `@/components/three/quietThree` first. While a game is open `html[data-game-open]` rests the page behind it
   (`--play`, the grid, 3D stages) — honour it in any new background loop. The Prize Counter is
   `src/components/prizes/PrizeCounter.tsx` (booth portal + pause-menu tab); BYTE's hats are `src/components/byte/hats.tsx`.
+- Skill Tree (PART 13): the vocabulary — aliases, matching, the JD scan, the inventory search, the "not on the save
+  file yet" words — is `src/lib/skills-index.ts` (pure, client-safe, no content import); nodes, "Used in" evidence
+  (stacks read through the aliases), the client index and the build checks are `src/content/skills.ts`; the radial
+  positions are `src/content/skillLayout.ts` (pure; build time, container units). One `<li id="skill-<slug>">` per skill
+  serves the radial tree, the vertical tree and the plain list (no JS / Speedrun) — CSS picks the layout
+  (`src/app/skills.css`). Server components in `src/components/sections/skills/`; `SkillsFx` is the one island (tabs,
+  2D arrows, cards, the root coin, inventory, loadout, the scan). Logos come from `/skill-logos.svg` (a static route);
+  icons built at run time use the inline pixel sprite. `bus`: `skills:open` (a tab, e.g. the JD side quest) and
+  `vault:insert` (a project's cartridge).
 - `@keyframes` names are global across every stylesheet: prefix new ones by feature (`funsole-on`, `quest-pop`); the
   build fails on a name defined twice with different bodies (#120).
 - Keep the page idle (docs/DECISIONS.md #40–41): no always-on rAF loops, continuous CSS animations only on HTML elements' transform/opacity (never on SVG elements), no style writes inside scroll events (use `onScrollMotion`), and get GSAP/ScrollTrigger via `loadScrollTrigger()` only where needed.

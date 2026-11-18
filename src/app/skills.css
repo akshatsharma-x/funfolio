@@ -1,0 +1,1506 @@
+/* World 6 · SKILL TREE (PART 13): the tree (radial / vertical / plain list), the inventory and the JD scanner. Yellow
+   leads (R8); the five item-type colors mark branches, slots and tiles (Bible §3). One server-rendered DOM per view:
+   the radial positions come from src/content/skillLayout.ts in container units (cqw) — the tree is 100 × --h of its
+   own width. Continuous loops (data packets, the root's beacon, holo-foil) are compositor-only, run on --play and are
+   declared only for an on-screen #skills. Without JS and in Speedrun Mode the tree is a plain list with "Used in". */
+
+@layer theme, base, components, utilities;
+
+@keyframes sk-grow {
+  from {
+    transform: rotate(var(--rot)) scaleX(0);
+  }
+}
+@keyframes sk-pop {
+  from {
+    scale: 0;
+  }
+  70% {
+    scale: 1.12;
+  }
+}
+@keyframes sk-packet {
+  from {
+    transform: translateX(-12%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+@keyframes sk-trunk {
+  from {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+@keyframes sk-ring {
+  from {
+    transform: scale(0.72);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1.32);
+    opacity: 0;
+  }
+}
+@keyframes sk-holo {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@keyframes sk-flash {
+  15%,
+  55% {
+    scale: 1.28;
+  }
+}
+@keyframes sk-flash-label {
+  15%,
+  55% {
+    background-color: var(--world);
+    color: var(--ink);
+  }
+}
+@keyframes inv-bounce {
+  30% {
+    translate: 0 -10px;
+  }
+  55% {
+    translate: 0 0;
+  }
+  72% {
+    translate: 0 -4px;
+  }
+}
+@keyframes jd-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.07);
+  }
+}
+
+@layer components {
+  .skills-world {
+    overflow-x: clip; /* a card near an edge can't widen the page */
+    background: radial-gradient(60% 40% at 50% 55%, color-mix(in srgb, var(--world) 8%, transparent), transparent 70%);
+  }
+  .skills {
+    display: grid;
+    gap: 1.5rem;
+  }
+  .sk-sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+  .sk-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+
+  /* ── tabs ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+  .skills-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    width: fit-content;
+    max-width: 100%;
+    padding: 0.35rem;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow:
+      0 4px 0 var(--ink),
+      inset 0 0 0 1px var(--rim);
+  }
+  .skills-tab {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+    min-height: 44px;
+    padding: 0.6rem 0.95rem 0.5rem;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-pixel);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color calc(var(--motion) * 150ms);
+  }
+  .skills-tab__plain {
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .skills-tab:hover:not([aria-selected="true"]) {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .skills-tab[aria-selected="true"] {
+    background: var(--world);
+    color: var(--ink);
+    box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--ink) 30%, transparent);
+  }
+  .skills-tab:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 3px;
+  }
+  .skills-panel:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 6px;
+  }
+
+  /* ── the tree: shared pieces ──────────────────────────────────────────────────────────────────────────────── */
+  .sk-map {
+    container: skilltree / inline-size;
+  }
+  .sk-tree {
+    --hex: 2.9rem;
+    position: relative;
+  }
+  .sk-hex {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--hex);
+    aspect-ratio: 0.866;
+    margin: 0 auto 0.3rem;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    background: var(--ink);
+    color: var(--ink);
+    transition: scale calc(var(--motion) * 160ms) cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .sk-hex::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    background: linear-gradient(160deg, color-mix(in srgb, var(--tone), white 22%), var(--tone) 55%, color-mix(in srgb, var(--tone), black 14%));
+  }
+  .sk-logo {
+    position: relative;
+    width: 46%;
+    height: auto;
+    fill: currentColor;
+  }
+  .sk-node {
+    position: relative;
+    list-style: none;
+  }
+  /* the label's size lives on the block: an inline label's lines take the block's strut (font-size, line-height) */
+  .sk-node__btn {
+    position: relative;
+    display: block;
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: center;
+    text-wrap: balance;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sk-node__btn[role="button"] {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .sk-node__art {
+    display: block;
+  }
+  .sk-node__btn[role="button"]:hover .sk-hex,
+  .sk-node__btn:focus-visible .sk-hex {
+    scale: 1.1;
+  }
+  .sk-node__btn:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 3px;
+  }
+  /* inline, so the dark plate hugs each line (readable over the edges, R6) */
+  .sk-node__name {
+    display: inline;
+    padding: 0 0.25em;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    color: var(--text);
+    overflow-wrap: anywhere;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .sk-rest {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .sk-crown {
+    position: absolute;
+    left: 50%;
+    top: -0.45rem;
+    width: 0.95rem;
+    height: 0.6rem;
+    translate: -50% 0;
+    background: var(--world);
+    clip-path: polygon(0 100%, 0 20%, 25% 60%, 50% 0, 75% 60%, 100% 20%, 100% 100%);
+    filter: drop-shadow(0 1px 0 var(--ink));
+  }
+  .sk-node[data-signature] .sk-hex::after {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    background: conic-gradient(#ff3d8b, #ffd23f, #b6ff3b, #22d3ee, #a78bfa, #ff3d8b);
+    opacity: 0.42;
+  }
+
+  /* hubs: the branch headings (game name · plain name · count) */
+  .sk-hub {
+    display: inline-grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    justify-content: start;
+    column-gap: 0.45rem;
+    width: fit-content;
+    margin: 0;
+    padding: 0.35rem 0.75rem 0.4rem 0.5rem;
+    border: 3px solid var(--ink);
+    border-radius: 12px;
+    background: var(--tone);
+    color: var(--ink);
+    box-shadow: 0 3px 0 var(--ink);
+    line-height: 1.1;
+  }
+  .sk-hub__icon {
+    grid-row: span 2;
+    display: grid;
+    place-items: center;
+  }
+  .sk-hub__name {
+    font-family: var(--font-pixel);
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .sk-hub__plain {
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .sk-hub__count {
+    font-family: var(--font-display);
+  }
+
+  /* the root: AKSHAT */
+  .sk-root {
+    display: flex;
+    justify-content: center;
+  }
+  .sk-root__btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 6.5rem;
+    aspect-ratio: 0.866;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .sk-root__btn::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 128%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border: 2px solid var(--world);
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sk-root__hex {
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    background: var(--ink);
+  }
+  .sk-root__hex::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    background: radial-gradient(circle at 50% 30%, #fff1a8, var(--world) 55%, #c98a00);
+  }
+  .sk-root__label {
+    position: relative;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+  }
+  .sk-root__btn:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 4px;
+    border-radius: 12px;
+  }
+
+  /* cards: the game tooltip (dark in every theme, like the HUD's) */
+  .sk-card {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    top: calc(100% + 8px);
+    width: max-content;
+    max-width: min(18.5rem, calc(100vw - 24px));
+    translate: calc(-50% + var(--cx, 0px)) 0;
+    padding: 0.65rem 0.85rem 0.75rem;
+    border: 3px solid var(--ink);
+    border-top: 5px solid var(--tone);
+    border-radius: 10px;
+    background: #120e26;
+    color: #fff4e0;
+    box-shadow:
+      0 5px 0 var(--ink),
+      0 14px 30px rgb(0 0 0 / 0.35);
+    font-size: 0.85rem;
+    line-height: 1.35;
+    text-align: left;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      opacity calc(var(--motion) * 120ms) ease,
+      visibility 0s linear calc(var(--motion) * 120ms + 80ms);
+  }
+  .sk-card::before {
+    /* the pointer can cross the gap to the card without closing it (WCAG 1.4.13) */
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: 12px;
+  }
+  .sk-node[data-flip] > .sk-card {
+    top: auto;
+    bottom: calc(100% + 8px);
+  }
+  .sk-node[data-flip] > .sk-card::before {
+    top: 100%;
+    bottom: auto;
+  }
+  .sk-node:is(:hover, :focus-within, [data-open]) {
+    z-index: 6;
+  }
+  /* hover intent: a card opened by the pointer waits 140ms, so sweeping across the tree doesn't pop (and park) cards
+     over the neighbours; focus and a pinned card open at once */
+  .sk-node:hover:not([data-dismissed]) > .sk-card {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: calc(var(--motion) * 140ms + 1ms);
+  }
+  .sk-node:is(:focus-within, [data-open]):not([data-dismissed]) > .sk-card {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0s;
+  }
+  :is(.sk-card, .inv-detail__card) .sk-card__name {
+    margin: 0 0 0.1rem;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  :is(.sk-card, .inv-detail__card) .sk-card__type {
+    margin: 0 0 0.5rem;
+    color: color-mix(in srgb, var(--tone), white 30%);
+    font-family: var(--font-pixel);
+    font-size: 0.72rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  :is(.sk-card, .inv-detail__card) .sk-card__label {
+    margin: 0 0 0.3rem;
+    color: #b9b2d9;
+    font-family: var(--font-pixel);
+    font-size: 0.72rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  :is(.sk-card, .inv-detail__card) .sk-card__used {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  :is(.sk-card, .inv-detail__card) .sk-ev {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0.1rem 0.6rem;
+    border: 2px solid #3a3166;
+    border-radius: 999px;
+    background: #251e4a;
+    color: #fff4e0;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .sk-card .sk-ev:hover,
+  .sk-card .sk-ev:focus-visible {
+    border-color: var(--world);
+  }
+  .sk-card .sk-ev:focus-visible {
+    outline: 3px dashed var(--world);
+    outline-offset: 2px;
+  }
+  :is(.sk-card, .inv-detail__card) .sk-ev__via {
+    color: #b9b2d9;
+    font-size: 0.78rem;
+  }
+  :is(.sk-card, .inv-detail__card) .sk-card__count {
+    margin: 0.5rem 0 0;
+    color: var(--world);
+    font-family: var(--font-pixel);
+    font-size: 0.72rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  :is(.sk-card, .inv-detail__card) .sk-card__none {
+    margin: 0;
+    color: #b9b2d9;
+    font-size: 0.8rem;
+  }
+
+  /* ── the tree, vertical (Play Mode on narrower screens): a trunk with the branches under the root ─────────── */
+  .sk-edges {
+    display: none;
+  }
+  .sk-tree .sk-root {
+    margin-bottom: 1.25rem;
+  }
+  .sk-branches {
+    position: relative;
+    display: grid;
+    gap: 1.75rem;
+    margin: 0;
+    padding: 0 0 0 1.75rem;
+    list-style: none;
+  }
+  .sk-branches::before {
+    content: "";
+    position: absolute;
+    left: 0.55rem;
+    top: -1.25rem;
+    bottom: 1rem;
+    border-left: 3px dashed color-mix(in srgb, var(--world) 70%, transparent);
+  }
+  .sk-branches::after {
+    /* a data packet travelling down the trunk */
+    content: "";
+    position: absolute;
+    left: calc(0.55rem - 3px);
+    top: -1.25rem;
+    bottom: 1rem;
+    width: 9px;
+    background: radial-gradient(circle at 50% 4px, #fff 0 2px, var(--world) 3px, transparent 5px) no-repeat;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .sk-branch {
+    position: relative;
+    list-style: none;
+  }
+  .sk-branch::before {
+    content: "";
+    position: absolute;
+    left: -1.2rem;
+    top: 1.15rem;
+    width: 1.1rem;
+    border-top: 3px dashed var(--tone);
+  }
+  .sk-nodes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(5.6rem, 1fr));
+    gap: 0.9rem 0.4rem;
+    margin: 0.9rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* ── the inventory ────────────────────────────────────────────────────────────────────────────────────────── */
+  .inv {
+    display: grid;
+    gap: 1.1rem;
+  }
+  .inv__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.25rem;
+  }
+  .inv-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .inv-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 40px;
+    padding: 0.3rem 0.7rem;
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font-pixel);
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    box-shadow: 0 3px 0 var(--ink);
+    cursor: pointer;
+  }
+  .inv-filter__plain {
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .inv-filter__n {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+  .inv-filter__icon {
+    display: grid;
+    place-items: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 5px;
+    background: var(--tone);
+    color: var(--ink);
+  }
+  .inv-filter[aria-pressed="true"] {
+    background: var(--world);
+    color: var(--ink);
+    translate: 0 2px;
+    box-shadow: 0 1px 0 var(--ink);
+  }
+  .inv-filter:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 3px;
+  }
+  .inv-search {
+    display: grid;
+    grid-template-columns: auto minmax(10rem, 16rem);
+    align-items: center;
+    gap: 0.25rem 0.6rem;
+  }
+  .inv-search__label {
+    font-family: var(--font-pixel);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .inv-search__input {
+    min-height: 44px;
+    padding: 0.4rem 0.8rem;
+    border: 3px solid var(--ink);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    font: 500 0.95rem var(--font-body);
+  }
+  .inv-search__input::placeholder {
+    color: var(--muted);
+  }
+  .inv-search__input:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 2px;
+  }
+  .inv-search__status {
+    grid-column: 1 / -1;
+    min-height: 1.2em;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .inv-jd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin: 0;
+    padding: 0.5rem 0.8rem;
+    border: 2px dashed color-mix(in srgb, var(--world) 70%, transparent);
+    border-radius: 10px;
+    font-size: 0.9rem;
+  }
+  .inv-jd__clear,
+  .loadout__clear {
+    min-height: 36px;
+    padding: 0.2rem 0.7rem;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font: 600 0.85rem var(--font-body);
+    cursor: pointer;
+  }
+  .inv-jd__clear:focus-visible,
+  .loadout__clear:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 2px;
+  }
+  .inv__main {
+    display: grid;
+    gap: 1.5rem;
+  }
+  .inv-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.6rem;
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    background:
+      linear-gradient(color-mix(in srgb, var(--ink) 35%, transparent), color-mix(in srgb, var(--ink) 35%, transparent)),
+      var(--surface);
+    box-shadow:
+      0 5px 0 var(--ink),
+      inset 0 0 0 1px var(--rim);
+    list-style: none;
+  }
+  .inv-slot {
+    min-width: 0;
+    list-style: none;
+  }
+  .inv-slot--empty {
+    aspect-ratio: 1;
+    border: 2px dashed color-mix(in srgb, var(--muted) 35%, transparent);
+    border-radius: 10px;
+  }
+  .inv-slot__btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 0.3rem;
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 0.35rem 0.25rem;
+    border: 3px solid var(--tone);
+    border-radius: 10px;
+    background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--tone) 18%, var(--surface-2)), var(--surface) 75%);
+    color: var(--text);
+    box-shadow:
+      inset 0 0 0 2px var(--ink),
+      0 3px 0 var(--ink);
+    font: 600 0.72rem/1.15 var(--font-body);
+    text-align: center;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    transition:
+      translate calc(var(--motion) * 120ms),
+      box-shadow calc(var(--motion) * 120ms);
+  }
+  .inv-slot__btn:hover {
+    translate: 0 -2px;
+  }
+  .inv-slot__btn:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 3px;
+  }
+  .inv-slot__icon {
+    display: grid;
+    place-items: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 7px;
+    background: var(--tone);
+    color: var(--ink);
+    flex: none;
+  }
+  .inv-slot__icon .sk-logo {
+    width: 62%;
+  }
+  .inv-slot__name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+  .inv-slot__btn[aria-pressed="true"] {
+    background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--world) 35%, var(--surface-2)), var(--surface) 80%);
+    box-shadow:
+      inset 0 0 0 2px var(--ink),
+      0 0 0 3px var(--world),
+      0 3px 0 var(--ink);
+  }
+  .inv-slot__btn[aria-pressed="true"]::before {
+    content: "E";
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    display: grid;
+    place-items: center;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 4px;
+    background: var(--world);
+    color: var(--ink);
+    font: 400 0.62rem/1 var(--font-pixel);
+  }
+  .inv-slot[data-out],
+  .inv-grid[data-filtered] .inv-slot--empty {
+    display: none;
+  }
+  .inv-grid[data-searching] .inv-slot[data-miss] .inv-slot__btn {
+    border-color: color-mix(in srgb, var(--tone) 25%, transparent);
+    background: var(--surface);
+  }
+  .inv-grid[data-searching] .inv-slot[data-miss] .inv-slot__icon {
+    opacity: 0.3;
+  }
+  .inv-slot[data-hit] .inv-slot__btn {
+    box-shadow:
+      inset 0 0 0 2px var(--ink),
+      0 0 0 3px var(--world),
+      0 0 18px color-mix(in srgb, var(--world) 55%, transparent);
+  }
+  .inv-slot:is([data-jd-match], [data-jd-bonus]) .inv-slot__btn::after {
+    content: "JD";
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    padding: 0.05rem 0.2rem;
+    border-radius: 4px;
+    background: var(--world);
+    color: var(--ink);
+    font: 400 0.58rem/1.2 var(--font-pixel);
+  }
+  .inv-slot[data-jd-match] .inv-slot__btn {
+    box-shadow:
+      inset 0 0 0 2px var(--ink),
+      0 0 0 3px var(--world),
+      0 0 16px color-mix(in srgb, var(--world) 50%, transparent);
+  }
+  .inv-slot[data-jd-bonus] .inv-slot__btn {
+    outline: 3px dashed var(--world);
+    outline-offset: 1px;
+  }
+  .inv-grid[data-bounce] .inv-slot:is([data-jd-match], [data-jd-bonus]) .inv-slot__btn {
+    animation: inv-bounce calc(var(--motion) * 700ms + 1ms) ease-out calc(var(--motion) * var(--k, 0) * 45ms) backwards;
+  }
+
+  .inv-side {
+    display: grid;
+    align-content: start;
+    gap: 1rem;
+  }
+  .loadout {
+    display: grid;
+    gap: 0.6rem;
+    padding: 0.9rem 1rem 1rem;
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow:
+      0 5px 0 var(--ink),
+      inset 0 0 0 1px var(--rim);
+  }
+  .loadout__title {
+    margin: 0;
+    font-family: var(--font-pixel);
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .loadout__plain {
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .loadout__hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+  .loadout__slots {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .loadout-slot {
+    display: grid;
+    min-height: 5.25rem;
+    border: 3px dashed color-mix(in srgb, var(--muted) 45%, transparent);
+    border-radius: 12px;
+  }
+  .loadout-slot[data-full] {
+    border: 3px solid var(--tone);
+    background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--tone) 22%, var(--surface-2)), var(--surface) 80%);
+  }
+  .loadout-slot__empty {
+    display: grid;
+    place-items: center;
+    padding: 0.3rem;
+    color: var(--muted);
+    font-family: var(--font-pixel);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  .loadout-slot__btn {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.25rem;
+    border: 0;
+    border-radius: 9px;
+    background: none;
+    color: var(--text);
+    font: 700 0.72rem/1.15 var(--font-body);
+    text-align: center;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+  .loadout-slot__btn:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 2px;
+  }
+  .combo {
+    min-height: 3.2rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 12px;
+    background: var(--surface-2);
+  }
+  .combo p {
+    margin: 0;
+  }
+  .combo__idle {
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+  .combo__kicker {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+  }
+  .combo[data-state="combo"] {
+    background: color-mix(in srgb, var(--world) 22%, var(--surface-2));
+    box-shadow: inset 0 0 0 3px var(--world);
+  }
+  .combo[data-state="combo"] .combo__kicker {
+    color: var(--world-fg);
+  }
+  .combo__line,
+  .combo__near {
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  .combo .combo__near {
+    margin-top: 0.35rem;
+    color: var(--muted);
+  }
+  .combo .sk-ev {
+    color: var(--text);
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-color: var(--world-fg);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+  .combo .sk-ev:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 2px;
+  }
+  .inv-detail {
+    min-height: 7rem;
+    padding: 0.75rem 0.9rem 0.85rem;
+    border: 3px solid var(--ink);
+    border-top: 5px solid var(--tone, var(--world));
+    border-radius: 12px;
+    background: #120e26;
+    color: #fff4e0;
+    box-shadow: 0 5px 0 var(--ink);
+    font-size: 0.85rem;
+  }
+  .inv-detail__idle {
+    margin: 0;
+    color: #b9b2d9;
+  }
+
+  /* ── the JD scanner ───────────────────────────────────────────────────────────────────────────────────────── */
+  .jd {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .jd__head {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .jd__title {
+    margin: 0;
+    font-family: var(--font-pixel);
+    font-size: 1.15rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .jd__plain {
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .jd__privacy {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+    margin: 0;
+    padding: 0.4rem 0.75rem;
+    border: 2px solid color-mix(in srgb, var(--world) 65%, transparent);
+    border-radius: 999px;
+    font-size: 0.9rem;
+  }
+  .jd__form {
+    display: grid;
+    gap: 0.6rem;
+    max-width: 52rem;
+  }
+  .jd__label {
+    font-family: var(--font-pixel);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .jd__paper {
+    position: relative;
+    overflow: hidden;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    box-shadow: 0 5px 0 var(--ink);
+  }
+  .jd__text {
+    display: block;
+    width: 100%;
+    min-height: 13rem;
+    padding: 0.85rem 1rem;
+    border: 0;
+    background:
+      repeating-linear-gradient(transparent 0 1.55rem, color-mix(in srgb, var(--line) 100%, transparent) 1.55rem calc(1.55rem + 1px)),
+      var(--surface);
+    background-attachment: local;
+    color: var(--text);
+    font: 500 0.95rem/1.55rem var(--font-mono);
+    resize: vertical;
+  }
+  .jd__text::placeholder {
+    color: var(--muted);
+  }
+  .jd__text:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: -6px;
+  }
+  .jd__laser {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--world) 12%, #fff 50%, var(--world) 88%, transparent);
+    box-shadow: 0 0 14px 3px color-mix(in srgb, var(--world) 65%, transparent);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .jd__form[data-scanning] .jd__laser {
+    opacity: 1;
+  }
+  .jd__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .jd__status {
+    min-height: 1.3em;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .jd-res {
+    display: grid;
+    gap: 0.9rem;
+    max-width: 60rem;
+    padding: 1.1rem 1.25rem 1.25rem;
+    border: 3px solid var(--ink);
+    border-radius: 18px;
+    background: var(--surface);
+    box-shadow:
+      0 6px 0 var(--ink),
+      inset 0 0 0 1px var(--rim);
+  }
+  .jd-res__head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .jd-res__check {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid var(--ink);
+    border-radius: 8px;
+    background: var(--world);
+    color: var(--ink);
+  }
+  .jd-res__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+  }
+  .jd-res__title:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 3px;
+  }
+  .jd-res__note,
+  .jd-part__hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .jd-res__groups {
+    display: grid;
+    gap: 0.8rem;
+  }
+  .jd-group__title,
+  .jd-part__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    font-family: var(--font-pixel);
+    font-size: 0.85rem;
+    font-weight: 400;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+  .jd-group__plain {
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .jd-group__n,
+  .jd-part__title [data-jd-n] {
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+  .jd-part {
+    display: grid;
+    gap: 0.35rem;
+    padding-top: 0.75rem;
+    border-top: 2px dashed var(--line);
+  }
+  .jd-tiles,
+  .jd-chips,
+  .jd-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 0.3rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .jd-list {
+    display: grid;
+    gap: 0.25rem;
+  }
+  .jd-list__name {
+    font-weight: 700;
+  }
+  .jd-list__src {
+    color: var(--muted);
+  }
+  .jd-tile {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 36px;
+    padding: 0.2rem 0.7rem 0.2rem 0.3rem;
+    border: 3px solid var(--ink);
+    border-radius: 10px;
+    background: var(--tone);
+    color: var(--ink);
+    box-shadow: 0 3px 0 var(--ink);
+    font-size: 0.85rem;
+    font-weight: 700;
+    animation: jd-pop calc(var(--motion) * 520ms + 1ms) cubic-bezier(0.3, 1.6, 0.5, 1) calc(var(--motion) * var(--i, 0) * 55ms) backwards;
+  }
+  .jd-tile .inv-slot__icon {
+    width: 1.55rem;
+    height: 1.55rem;
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
+  }
+  .jd-tile__via {
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .jd-res__empty {
+    margin: 0;
+  }
+
+  /* ── wide screens ─────────────────────────────────────────────────────────────────────────────────────────── */
+  @media (min-width: 40rem) {
+    .inv-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 64rem) {
+    .inv__main {
+      grid-template-columns: minmax(0, 1fr) 19rem;
+      align-items: start;
+    }
+    .inv-grid {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+    }
+    .inv-side {
+      position: sticky;
+      top: 5rem;
+    }
+  }
+}
+
+/* ── the radial tree (Play Mode, a tree at least 1100px wide; src/content/skillLayout.ts) ─────────────────────── */
+@container skilltree (min-width: 1100px) {
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] {
+    --hex: 3.2cqw;
+    aspect-ratio: 100 / var(--h);
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-root {
+    position: absolute;
+    z-index: 3;
+    left: calc(var(--x) * 1cqw);
+    top: calc(var(--y) * 1cqw);
+    margin: 0;
+    translate: -50% -50%;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-root__btn {
+    width: 7cqw;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-root__label {
+    font-size: 1.12cqw;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-branches {
+    position: static;
+    display: block;
+    padding: 0;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-branches::before,
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-branches::after,
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-branch::before {
+    display: none;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-branch {
+    position: static;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-hub {
+    position: absolute;
+    z-index: 2;
+    left: calc(var(--hx) * 1cqw);
+    top: calc(var(--hy) * 1cqw);
+    max-width: 13.2cqw;
+    padding: 0.3cqw 0.7cqw 0.35cqw 0.45cqw;
+    border-radius: 0.95cqw;
+    translate: -50% -50%;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-hub__name {
+    font-size: max(10px, 0.92cqw);
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-hub__plain {
+    font-size: max(10px, 0.78cqw);
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-nodes {
+    display: block;
+    margin: 0;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-node {
+    position: absolute;
+    z-index: 1;
+    left: calc(var(--x) * 1cqw - 4.2cqw);
+    top: calc(var(--y) * 1cqw - 1.85cqw);
+    width: 8.4cqw;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-node:is(:hover, :focus-within, [data-open]) {
+    z-index: 6;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-hex {
+    margin-bottom: 0.35cqw;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-node__btn {
+    font-size: max(10.5px, 0.9cqw);
+    line-height: 1.15;
+  }
+  html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-radial] .sk-edges {
+    position: absolute;
+    inset: 0;
+    display: block;
+    pointer-events: none;
+  }
+  .sk-edge {
+    position: absolute;
+    left: calc(var(--x) * 1cqw);
+    top: calc(var(--y) * 1cqw - 0.5cqw);
+    width: calc(var(--len) * 1cqw);
+    height: 1cqw;
+    overflow: hidden;
+    transform: rotate(var(--rot));
+    transform-origin: 0 50%;
+    background:
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--tone), white 25%) 0 0.55cqw, transparent 0.55cqw 1cqw) 0 50% / 100% 2px no-repeat,
+      linear-gradient(transparent 22%, color-mix(in srgb, var(--tone) 24%, transparent) 50%, transparent 78%);
+  }
+  .sk-edge[data-packet]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 0.5cqw 50%, #fff 0 0.17cqw, var(--tone) 0.27cqw, transparent 0.48cqw) no-repeat;
+    opacity: 0;
+  }
+}
+
+/* ── one-shots: the branches grow, the nodes pop (PlayOnView: armed → run; never in Speedrun Mode) ─────────────── */
+html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-play="armed"] .sk-edge {
+  transform: rotate(var(--rot)) scaleX(0);
+}
+/* the art inside a trigger pops, not the trigger (BYTE measures interactive boxes; a scaled-to-0 button is invisible
+   to it and would get covered as it grows) */
+html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-play="armed"] :is(.sk-node__art, .sk-hub, .sk-root__hex, .sk-root__label) {
+  scale: 0;
+}
+html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-play="run"] .sk-edge {
+  animation: sk-grow calc(var(--motion) * 320ms + 1ms) cubic-bezier(0.2, 0.7, 0.3, 1) var(--e, 0s) backwards;
+}
+html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-play="run"] .sk-node__art {
+  animation: sk-pop calc(var(--motion) * 380ms + 1ms) cubic-bezier(0.3, 1.6, 0.5, 1) var(--p, 0s) backwards;
+}
+html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-play="run"] .sk-hub {
+  animation: sk-pop calc(var(--motion) * 380ms + 1ms) cubic-bezier(0.3, 1.6, 0.5, 1) var(--p, 0.2s) backwards;
+}
+html[data-js]:not([data-mode="speedrun"]) .sk-tree[data-play="run"] :is(.sk-root__hex, .sk-root__label) {
+  animation: sk-pop calc(var(--motion) * 380ms + 1ms) cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
+}
+/* a loot link landed here: two pulses in 1.5s (R5: well under 3 flashes a second) */
+.sk-node[data-flash] .sk-hex {
+  animation: sk-flash calc(var(--motion) * 1500ms + 1ms) ease-out;
+}
+.sk-node[data-flash] .sk-node__name {
+  animation: sk-flash-label calc(var(--motion) * 1500ms + 1ms) ease-out;
+}
+.sk-node:focus {
+  outline: none; /* a loot link's target in the plain list gets tabindex=-1; its row shows the focus instead */
+}
+.sk-node:focus-visible {
+  outline: 3px dashed var(--world-fg);
+  outline-offset: 3px;
+}
+
+/* ── continuous loops: compositor-only, on --play, only while #skills is on screen (#78, #40) ─────────────────── */
+#skills:not([data-offscreen]) .sk-edge[data-packet]::after {
+  animation: sk-packet calc(3.4s / var(--fx, 1)) linear var(--pd, 0s) infinite backwards;
+  animation-play-state: var(--play);
+}
+#skills:not([data-offscreen]) .sk-branches::after {
+  animation: sk-trunk 4.2s linear infinite backwards;
+  animation-play-state: var(--play);
+}
+#skills:not([data-offscreen]) .sk-root__btn::after {
+  animation: sk-ring 2.8s ease-out infinite;
+  animation-play-state: var(--play);
+}
+#skills:not([data-offscreen]) .sk-node[data-signature] .sk-hex::after {
+  animation: sk-holo 6s linear infinite;
+  animation-play-state: var(--play);
+}
+:root[data-motion="reduce"] .sk-edge::after,
+:root[data-motion="reduce"] .sk-branches::after,
+:root[data-motion="reduce"] .sk-root__btn::after {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .sk-edge::after,
+  :root:not([data-motion="full"]) .sk-branches::after,
+  :root:not([data-motion="full"]) .sk-root__btn::after {
+    display: none;
+  }
+}
+
+/* ── views: inactive panels hide only with the runtime; Speedrun Mode and no-JS get the plain list ───────────── */
+html[data-js]:not([data-mode="speedrun"]) .skills-panel:not([data-active]) {
+  display: none;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-branches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: 1.5rem 2.5rem;
+  padding: 0;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-branches::before,
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-branches::after,
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-branch::before,
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-edges {
+  display: none;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-nodes {
+  display: grid;
+  grid-template-columns: none;
+  gap: 0;
+  margin: 0.6rem 0 0;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-node {
+  display: grid;
+  grid-template-columns: minmax(7rem, 42%) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0.15rem 0.8rem;
+  padding: 0.4rem 0.1rem;
+  border-bottom: 1px dashed var(--line);
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-node__art {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-hex {
+  --hex: 1.35rem;
+  flex: none;
+  margin: 0;
+  align-self: center;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-node__name {
+  margin: 0;
+  padding: 0;
+  background: none;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: left;
+  text-wrap: pretty;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-rest {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree :is(.sk-crown, .sk-card__why) {
+  display: none;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-card {
+  position: static;
+  width: auto;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  box-shadow: none;
+  font-size: 0.9rem;
+  translate: none;
+  visibility: visible;
+  opacity: 1;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-card::before,
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree :is(.sk-card__name, .sk-card__type, .sk-card__count) {
+  display: none;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-card__label {
+  display: inline;
+  margin: 0 0.35em 0 0;
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree :is(.sk-card__used, .sk-card__used li) {
+  display: inline;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-card__used li + li::before {
+  content: ", ";
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-ev {
+  display: inline;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--world-fg);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree :is(.sk-ev__via, .sk-card__none) {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-node[data-flash] {
+  animation: sk-flash-label calc(var(--motion) * 1500ms + 1ms) ease-out;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .sk-tree .sk-node[data-flash] :is(.sk-hex, .sk-node__name) {
+  animation: none;
+}
+html[data-mode="speedrun"] .sk-tree .sk-node {
+  padding-block: 0.25rem;
+}

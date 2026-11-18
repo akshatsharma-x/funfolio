@@ -714,6 +714,8 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     bus.on("byte:react", ({ mood: m }) => react(m)),
     bus.on("byte:point", ({ selector }) => point(selector)),
     bus.on("byte:visit", ({ selector, text }) => visit(selector, text)),
+    // a pop-in or a card: wait until it shows (cards have a 140ms hover intent), then measure
+    bus.on("byte:recheck", () => avoidSoon(220)),
     bus.on("achievement:unlocked", () => react("happy", 1400)),
     bus.on("coin:collected", () => react("love", 1400)),
     bus.on("level:up", () => react("cool", 2200)),

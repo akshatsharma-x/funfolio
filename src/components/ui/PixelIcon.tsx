@@ -39,6 +39,9 @@ function pathsFor(name: PixelIconName, mono: boolean): Path[] {
   return paths;
 }
 
+/** The single-color path of an icon — for SVG sprites that draw an icon once and `<use>` it (PART 13's Skill Tree). */
+export const monoPixelPath = (name: PixelIconName): string => pathsFor(name, true)[0]?.d ?? "";
+
 type PixelIconProps = {
   name: PixelIconName;
   /** Rendered size in px; multiples of 16 stay pixel-perfect. */

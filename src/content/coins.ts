@@ -21,7 +21,7 @@ export const COINS = [
   { id: "cleared-smog", number: 7, name: "Clear-Sky Coin", location: "The Lab — after the smog clears", hint: "Beat the golem, breathe the air." },
   { id: "locked-cartridge", number: 8, name: "Cartridge Coin", location: "Cartridge Vault — the locked cartridge", hint: "Not every cartridge is a project." },
   { id: "arcade-target", number: 9, name: "High-Score Coin", location: "Arcade — first target score in any game", hint: "Beat any game's target." },
-  { id: "skill-root", number: 10, name: "Root Coin", location: "Skill Tree — the root of the tree", hint: "Every tree starts at the bottom." },
+  { id: "skill-root", number: 10, name: "Root Coin", location: "Skill Tree — the root of the tree", hint: "Every tree grows from one root. Knock twice." },
   { id: "capsule-machine", number: 11, name: "Capsule Coin", location: "Trophy Room — the capsule machine", hint: "Turn the crank." },
   { id: "credits-roll", number: 12, name: "Credits Coin", location: "Credits — during the roll", hint: "Stay until the very end." },
 ] as const satisfies readonly Coin[];

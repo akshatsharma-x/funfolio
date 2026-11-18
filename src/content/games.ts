@@ -12,7 +12,7 @@ export const GAMES: readonly GameDef[] = [
   { id: "rag-catcher", name: "RAG Catcher", ready: true, arcade: true },
   { id: "pipeline", name: "Pipeline", ready: true, arcade: true },
   { id: "gradient-descent", name: "Gradient Descent", ready: true, arcade: true },
-  // the JD Scanner is a Skill Tree tool (PART 13), reached the same way
+  // the JD Scanner is a Skill Tree tool (PART 13), reached the same way: openGame("jd-scanner") opens its tab
   { id: "jd-scanner", name: "JD Scanner", ready: false, arcade: false },
 ];
 

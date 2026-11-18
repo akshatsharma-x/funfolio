@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.13.0",
+    date: "2026-11-18",
+    title: "Skill Tree",
+    notes: [
+      "World 6 is open: every skill on a five-branch tree, each with the roles and projects that used it.",
+      "Hover, focus or tap a node for its card; arrow keys move around the tree. Knock on the root.",
+      "Inventory: filter, search (aliases work — try \"js\"), and equip three skills to find a combo.",
+      "JD Scanner: paste a job description and see the matching skills. It runs in your browser, even offline.",
+      "Loot chips in the Quest Log and the Vault now land on their node in the tree.",
+    ],
+  },
+  {
     version: "0.12.0",
     date: "2026-11-18",
     title: "Action games",

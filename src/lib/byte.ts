@@ -33,4 +33,11 @@ export const byte = {
   visit(selector: string, text?: string): void {
     bus.emit("byte:visit", { selector, text });
   },
+  /**
+   * Re-checks that BYTE covers nothing clickable — after controls appear without a scroll or a layout change (a
+   * transform-only pop-in, a card opening). Scrolls and resizes already trigger the check.
+   */
+  recheck(): void {
+    bus.emit("byte:recheck", {});
+  },
 };

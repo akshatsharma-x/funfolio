@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { announce } from "@/lib/announce";
+import { bus } from "@/lib/bus";
 import { command } from "@/lib/commands";
 import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
 import { fx } from "@/lib/juice";
@@ -446,7 +447,19 @@ export function VaultFx() {
     };
     narrow.addEventListener("change", onResize, on);
 
+    // PART 13 · a skill's "Used in" project link: the page has scrolled here; show that project (a hidden cartridge
+    // first comes back on the shelf, so it can fly from its own slot)
+    const offInsert = bus.on("vault:insert", ({ id }) => {
+      const slot = slotOf(id);
+      if (!slot) return;
+      void (async () => {
+        if (slot.hasAttribute("data-hidden")) await applyFilter("all");
+        await insert(id);
+      })();
+    });
+
     return () => {
+      offInsert();
       abort.abort();
       timers.forEach((t) => window.clearTimeout(t));
       if (sheetLocked) unlockScroll();

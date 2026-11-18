@@ -14,6 +14,7 @@ import "./lab.css";
 import "./vault.css";
 import "./arcade.css";
 import "./games.css";
+import "./skills.css";
 import "./boot.css";
 import { CursorLayer } from "@/components/cursor/CursorLayer";
 import { GameRuntimeLoader } from "@/components/hud/GameRuntimeLoader";
