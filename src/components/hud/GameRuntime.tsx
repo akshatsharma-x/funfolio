@@ -36,11 +36,19 @@ const BOOT_MODE = typeof document === "undefined" ? null : document.documentElem
 // PART 11 — the arcade's game host (any page) and the live Prize Counter for the Arcade's booth
 const GameHost = dynamic(() => import("@/components/games/GameHost"), { ssr: false });
 const PrizeCounter = dynamic(() => import("@/components/prizes/PrizeCounter"), { ssr: false });
+// PART 14 — the visitor's trophy shelf in the Trophy Room (live from the save file)
+const TrophyShelf = dynamic(() => import("@/components/trophies/TrophyShelf"), { ssr: false });
 
 /** The booth beside the cabinets is server-rendered (a static price list); the live counter is portaled into it. */
 function PrizeBooth({ pathname }: { pathname: string }) {
   const el = useMemo(() => (pathname && typeof document !== "undefined" ? document.getElementById("prize-counter-live") : null), [pathname]);
   return el ? createPortal(<PrizeCounter variant="booth" />, el) : null;
+}
+
+/** The Trophy Room's shelf is server-rendered (every achievement locked); the live one is portaled over it. */
+function TrophyShelfMount({ pathname }: { pathname: string }) {
+  const el = useMemo(() => (pathname && typeof document !== "undefined" ? document.getElementById("trophy-shelf-live") : null), [pathname]);
+  return el ? createPortal(<TrophyShelf />, el) : null;
 }
 
 /**
@@ -82,6 +90,7 @@ export default function GameRuntime({ resumeHref, byteScript, bootScript, arcade
       {pauseEverOpened ? <PauseMenu open={pauseOpen} resumeHref={resumeHref} /> : null}
       {gameEverOpened ? <GameHost data={arcade} /> : null}
       <PrizeBooth pathname={pathname} />
+      <TrophyShelfMount pathname={pathname} />
     </>
   );
 }

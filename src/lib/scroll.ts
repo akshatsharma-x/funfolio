@@ -57,7 +57,11 @@ export function scrollToElement(el: HTMLElement, opts: { focus?: boolean; onComp
   };
   const offset = opts.block === "center" ? -Math.max(HUD_OFFSET, (window.innerHeight - el.getBoundingClientRect().height) / 2) : -HUD_OFFSET;
   if (instance) {
-    instance.scrollTo(el, { offset, onComplete: done });
+    // Lenis adds an element's offset to where it *thinks* the page is. After a native jump it didn't register (a hash
+    // link at load, find-in-page, scrollIntoView) that's stale and the flight lands short — measured: 582px. So resync
+    // an idle Lenis to the real position first, and aim at a number from the real geometry.
+    if (!instance.isScrolling && Math.abs(instance.animatedScroll - window.scrollY) > 1) instance.scrollTo(window.scrollY, { immediate: true });
+    instance.scrollTo(window.scrollY + el.getBoundingClientRect().top + offset, { onComplete: done });
     wakeLoop();
   } else {
     el.scrollIntoView({ block: opts.block ?? "start" });

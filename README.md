@@ -90,6 +90,13 @@ matching skills by type, bonus perks, what else the résumé shows and what isn'
 never a percentage. "Try a sample JD" fills in a generic AI/ML internship. Without JavaScript and in Speedrun Mode the
 tree is a plain list with "Used in" for every skill.
 
+World 7 (the Trophy Room) starts with the Hall of Fame: one pedestal per honor under a spotlight, with a 3D trophy on
+desktop (gold medallions on phones). Hover a trophy to spin it; click or press Enter for its card (the camera dollies
+in), arrow keys move along the pedestals, `Esc` closes. The certificate cards flip and enlarge when clicked — until
+there are certificates, three sealed packs wait for them. The capsule machine deals the same honors and certificates:
+wind the crank (or press TURN) and a capsule rolls out and pops open — one in five holds something extra. "Your
+trophies" is a shelf of the achievements you've unlocked on this browser.
+
 BYTE, the robot mascot, lives in the bottom-right corner: click for a quip, drag or throw it, rub it for hearts,
 minimize it with the `–` button (or turn it off in Pause → Settings). `/playground` has a Juice kit & BYTE panel.
 

@@ -260,8 +260,9 @@ export function startCursorEngine(root: HTMLElement, { reducedMotion }: EngineOp
     lastX = e.clientX;
     lastY = e.clientY;
     lastT = t;
-    // rubbing BYTE (petting, PART 4) is not "I lost my cursor"
-    if (e.target instanceof Element && e.target.closest("[data-byte]")) {
+    // rubbing BYTE (petting, PART 4) is not "I lost my cursor" — nor is a drag (a button held: winding the capsule
+    // machine's crank, PART 14, the slingshot, throwing BYTE)
+    if (e.buttons !== 0 || (e.target instanceof Element && e.target.closest("[data-byte]"))) {
       reversals.length = 0;
       return;
     }

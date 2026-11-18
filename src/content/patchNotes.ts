@@ -4,6 +4,17 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.14.0",
+    date: "2026-11-18",
+    title: "Trophy Room",
+    notes: [
+      "World 7 is open: a Hall of Fame with a 3D trophy for every honor. Hover to spin, click for the story.",
+      "Certificates become collectible cards that flip — the packs are sealed until the first ones arrive.",
+      "A capsule machine: wind the crank and see what rolls out. Rumour has it one capsule in five is special.",
+      "Your trophies: every achievement you've unlocked, on a shelf of its own.",
+    ],
+  },
+  {
     version: "0.13.0",
     date: "2026-11-18",
     title: "Skill Tree",

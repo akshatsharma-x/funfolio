@@ -1,0 +1,1084 @@
+/* World 7 · TROPHY ROOM (PART 14): the Hall of Fame (3D trophies over HTML pedestals, or CSS-3D medallions), the card
+   collection (trading cards that flip and enlarge; sealed packs while there are none), the capsule machine and the
+   visitor's trophy shelf. Orange leads, warming to gold (R8; the gradient is decoration, #10). Stages are dark in every
+   theme (a hall at night). Continuous loops are compositor-only on --play and exist only for an on-screen #trophies.
+   Without JS and in Speedrun Mode the honors and certificates are plain lists. */
+
+@layer theme, base, components, utilities;
+
+@keyframes pack-shake {
+  20% {
+    rotate: -4deg;
+  }
+  40% {
+    rotate: 3deg;
+  }
+  60% {
+    rotate: -2deg;
+  }
+  80% {
+    rotate: 1deg;
+  }
+}
+@keyframes pack-sheen {
+  from {
+    translate: -120% 0;
+  }
+  35%,
+  to {
+    translate: 120% 0;
+  }
+}
+@keyframes capsule-flash {
+  from {
+    opacity: 0.95;
+    scale: 0.3;
+  }
+  to {
+    opacity: 0;
+    scale: 1.6;
+  }
+}
+@keyframes honor-card-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+@layer components {
+  .trophies-world {
+    overflow-x: clip;
+    background: radial-gradient(70% 40% at 50% 20%, color-mix(in srgb, var(--world) 9%, transparent), transparent 70%);
+  }
+  .trophies {
+    display: grid;
+    gap: 4.5rem;
+  }
+  .trophy-h {
+    margin: 0 0 0.4rem;
+    font-family: var(--font-pixel);
+    font-size: 1.15rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .trophy-h__plain {
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .trophy-sub {
+    margin: 0 0 1.1rem;
+    color: var(--muted);
+  }
+
+  /* ── HALL OF FAME ─────────────────────────────────────────────────────────────────────────────────────────── */
+  .hall__stage {
+    --n: 4;
+    position: relative;
+    height: clamp(330px, 34vw, 460px);
+    overflow: hidden;
+    border: 3px solid var(--ink);
+    border-radius: 22px;
+    background:
+      radial-gradient(60% 30% at 50% 100%, rgb(255 200 61 / 0.16), transparent 70%),
+      linear-gradient(#120c22, #1d1336 72%, #2a1a3c);
+    box-shadow:
+      0 6px 0 var(--ink),
+      inset 0 0 0 1px rgb(255 255 255 / 0.08);
+    color: #fff4e0;
+  }
+  .hall__canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .hall__canvas canvas {
+    display: block;
+  }
+  .hall__row {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  /* static on purpose: an open card is placed against the whole row (the stage), not its own column */
+  .hall__slot {
+    display: grid;
+    min-width: 0;
+  }
+  /* a spotlight beam per pedestal (decoration; the 3D hall draws its own) */
+  .hall__btn::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 70%;
+    height: 82%;
+    translate: -50% 0;
+    background: linear-gradient(rgb(255 241 168 / 0.22), rgb(255 241 168 / 0.02) 85%, transparent);
+    clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+    pointer-events: none;
+  }
+  .hall__btn {
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    justify-items: center;
+    align-items: center;
+    gap: 0.75rem;
+    height: 100%;
+    padding: 1.25rem 0.5rem 0.9rem;
+    border-radius: 16px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .hall__btn[role="button"] {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .hall__btn:focus-visible {
+    outline: 3px dashed var(--world);
+    outline-offset: -6px;
+  }
+  .hall__plate {
+    display: grid;
+    gap: 0.15rem;
+    width: min(100%, 15rem);
+    padding: 0.45rem 0.6rem 0.5rem;
+    border: 2px solid var(--ink);
+    border-top: 3px solid #ffc83d;
+    border-radius: 10px;
+    background: #0e0a1c;
+    color: #fff4e0;
+    text-align: center;
+    box-shadow: 0 4px 0 var(--ink);
+  }
+  .hall__name {
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  .hall__year {
+    color: #ffc83d;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  /* CSS-3D medallion (LOW / NONE tiers): a gold coin that flips to its back when its card is open */
+  .medal3d {
+    perspective: 700px;
+  }
+  .medal3d__coin {
+    position: relative;
+    display: block;
+    width: clamp(84px, 9vw, 120px);
+    aspect-ratio: 1;
+    transform-style: preserve-3d;
+    transition:
+      rotate calc(var(--motion) * 600ms) cubic-bezier(0.3, 1.4, 0.5, 1),
+      translate calc(var(--motion) * 200ms);
+  }
+  .medal3d__face {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border: 4px solid var(--ink);
+    border-radius: 50%;
+    backface-visibility: hidden;
+    box-shadow:
+      inset 0 0 0 6px #c98a00,
+      inset 0 0 0 9px #fff1a8,
+      0 8px 0 rgb(0 0 0 / 0.35);
+  }
+  .medal3d__front {
+    background: radial-gradient(circle at 35% 30%, #fff1a8, #ffc83d 45%, #c98a00);
+  }
+  .medal3d__back {
+    rotate: y 180deg;
+    background: radial-gradient(circle at 60% 30%, #ffd77a, #e0a21a 55%, #a86f00);
+  }
+  .hall__btn[role="button"]:hover .medal3d__coin,
+  .hall__btn:focus-visible .medal3d__coin {
+    rotate: y 22deg;
+    translate: 0 -4px;
+  }
+  .hall__slot[data-selected] .hall__btn .medal3d__coin,
+  .hall__slot[data-selected] .hall__btn[role="button"]:hover .medal3d__coin {
+    rotate: y 180deg;
+  }
+
+  /* the detail card */
+  .honor-card {
+    display: none;
+    width: min(23rem, 100%);
+    padding: 1rem 1.15rem 1.1rem;
+    border: 3px solid var(--ink);
+    border-top: 6px solid #ffc83d;
+    border-radius: 14px;
+    background: #120e26;
+    color: #fff4e0;
+    box-shadow:
+      0 6px 0 var(--ink),
+      0 18px 40px rgb(0 0 0 / 0.4);
+    text-align: left;
+  }
+  .honor-card[data-open] {
+    display: grid;
+    align-content: start;
+    gap: 0.4rem;
+    animation: honor-card-in calc(var(--motion) * 260ms + 1ms) ease-out;
+  }
+  .honor-card__kicker {
+    margin: 0;
+    color: #ffc83d;
+    font-family: var(--font-pixel);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .honor-card__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .honor-card__meta {
+    margin: 0;
+    color: #e4dcff;
+    font-weight: 600;
+  }
+  .honor-card__detail {
+    margin: 0;
+    color: #fff4e0;
+  }
+  .honor-card__close {
+    justify-self: start;
+    min-height: 40px;
+    margin-top: 0.35rem;
+    padding: 0.3rem 0.85rem;
+    border: 2px solid #3a3166;
+    border-radius: 999px;
+    background: #251e4a;
+    color: #fff4e0;
+    font: 600 0.88rem var(--font-body);
+    cursor: pointer;
+  }
+  .honor-card__close:hover {
+    border-color: #ffc83d;
+  }
+  .honor-card__close:focus-visible {
+    outline: 3px dashed #ffc83d;
+    outline-offset: 2px;
+  }
+
+  /* ── CARD COLLECTION ──────────────────────────────────────────────────────────────────────────────────────── */
+  .certs__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5rem), 15rem));
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  /* no `perspective` here: it would make the card's slot the containing block of the enlarged (fixed) card — the
+     depth lives in the card's own transform instead */
+  .tcard {
+    position: relative;
+    aspect-ratio: 5 / 7;
+    list-style: none;
+  }
+  .tcard__flip {
+    --mx: 50%;
+    --my: 30%;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform: perspective(1100px) rotateY(0deg);
+    transform-style: preserve-3d;
+    transition: transform calc(var(--motion) * 450ms) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .tcard__flip[data-flipped] {
+    transform: perspective(1100px) rotateY(180deg);
+  }
+  .tcard__face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    backface-visibility: hidden;
+    box-shadow: 0 6px 0 var(--ink);
+  }
+  .tcard__front {
+    background:
+      repeating-linear-gradient(135deg, rgb(255 255 255 / 0.07) 0 6px, transparent 6px 14px),
+      linear-gradient(160deg, #ffd23f, #ff8a1f 70%, #e8641a);
+    color: var(--ink);
+  }
+  .tcard__btn {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    gap: 0.35rem;
+    height: 100%;
+    padding: 0.85rem 0.9rem 1rem;
+    text-align: left;
+  }
+  .tcard__btn[role="button"] {
+    cursor: pointer;
+  }
+  .tcard__btn:focus-visible {
+    outline: 3px dashed var(--ink);
+    outline-offset: -8px;
+    border-radius: 12px;
+  }
+  .tcard__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .tcard__emblem {
+    display: grid;
+    place-items: center;
+    min-width: 3.2rem;
+    height: 3.2rem;
+    padding: 0 0.4rem;
+    border: 3px solid var(--ink);
+    border-radius: 12px;
+    background: #fff4e0;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 900;
+    clip-path: var(--px-sm);
+  }
+  .tcard__kind {
+    font-family: var(--font-pixel);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .tcard__name {
+    align-self: end;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .tcard__issuer {
+    font-weight: 700;
+  }
+  .tcard__date {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .tcard__foil {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background:
+      radial-gradient(circle at var(--mx) var(--my), rgb(255 255 255 / 0.55), transparent 42%),
+      conic-gradient(from 210deg at var(--mx) var(--my), #ff3d8b55, #ffd23f55, #b6ff3b55, #22d3ee55, #a78bfa55, #ff3d8b55);
+    mix-blend-mode: soft-light;
+    opacity: 0.35;
+    pointer-events: none;
+    transition: opacity calc(var(--motion) * 200ms);
+  }
+  .tcard:hover .tcard__foil,
+  .tcard__flip[data-enlarged] .tcard__foil {
+    opacity: 0.85;
+  }
+  .tcard__back {
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
+    padding: 1rem;
+    rotate: y 180deg;
+    background: #120e26;
+    color: #fff4e0;
+  }
+  .tcard__back-name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .tcard__field {
+    display: grid;
+    gap: 0.1rem;
+    margin: 0;
+  }
+  .tcard__label {
+    color: #ffc83d;
+    font-family: var(--font-pixel);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .tcard__id {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+  }
+  .tcard__skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tcard__verify {
+    justify-self: start;
+    color: #ffc83d;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .tcard__verify:focus-visible,
+  .tcard__close:focus-visible {
+    outline: 3px dashed #ffc83d;
+    outline-offset: 2px;
+  }
+  .tcard__close {
+    justify-self: start;
+    min-height: 36px;
+    padding: 0.2rem 0.8rem;
+    border: 2px solid #3a3166;
+    border-radius: 999px;
+    background: #251e4a;
+    color: #fff4e0;
+    font: 600 0.85rem var(--font-body);
+    cursor: pointer;
+  }
+  .tcard__flip[data-enlarged] {
+    position: fixed;
+    z-index: 95;
+    left: 50%;
+    top: 50%;
+    width: min(22rem, 86vw);
+    height: auto;
+    aspect-ratio: 5 / 7;
+    translate: -50% -50%;
+  }
+  .tcard-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 94;
+    background: rgb(7 6 15 / 0.6);
+  }
+
+  /* the sealed packs (no certificates yet) */
+  .packs {
+    display: grid;
+    justify-items: center;
+    gap: 1.25rem;
+    margin-top: 1rem;
+  }
+  .packs__row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .pack {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    justify-items: center;
+    width: 10.5rem;
+    aspect-ratio: 5 / 7.4;
+    overflow: hidden;
+    border: 3px solid var(--ink);
+    border-radius: 12px;
+    background: linear-gradient(160deg, #ffd23f, #ff8a1f 60%, #e8641a);
+    color: var(--ink);
+    box-shadow: 0 6px 0 var(--ink);
+    rotate: calc((var(--i) - 1) * 4deg);
+  }
+  .pack:hover {
+    animation: pack-shake calc(var(--motion) * 520ms + 1ms) ease-in-out;
+  }
+  .pack__foil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 35%, rgb(255 255 255 / 0.45) 50%, transparent 65%);
+    translate: -120% 0;
+    pointer-events: none;
+  }
+  .pack__crimp {
+    width: 100%;
+    height: 14px;
+    background: repeating-linear-gradient(90deg, var(--ink) 0 3px, transparent 3px 9px);
+    opacity: 0.55;
+  }
+  .pack__art {
+    display: grid;
+    place-items: center;
+    width: 4.6rem;
+    aspect-ratio: 1;
+    margin-top: 1.4rem;
+    border: 3px solid var(--ink);
+    border-radius: 50%;
+    background: #fff4e0;
+  }
+  .pack__label {
+    padding: 0 0.6rem 0.7rem;
+    font-family: var(--font-pixel);
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  .packs__note {
+    margin: 0;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* ── CAPSULE MACHINE ──────────────────────────────────────────────────────────────────────────────────────── */
+  .capsules__play {
+    display: grid;
+    gap: 2rem;
+    align-items: start;
+    justify-items: center;
+  }
+  .machine {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    width: 16.5rem;
+  }
+  .machine__dome {
+    position: relative;
+    z-index: 1;
+    width: 14rem;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: 4px solid var(--ink);
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, #2a1f4d, #150f2b 70%);
+    box-shadow: inset 0 -12px 0 rgb(0 0 0 / 0.25);
+  }
+  .machine__glass {
+    position: absolute;
+    inset: 6% 10% auto auto;
+    z-index: 2;
+    width: 38%;
+    height: 22%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 30% 30%, rgb(255 255 255 / 0.55), transparent 65%);
+    rotate: 28deg;
+    pointer-events: none;
+  }
+  .cap {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 2.75rem;
+    aspect-ratio: 1;
+    border: 3px solid var(--ink);
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgb(255 244 224 / 0.92) 0 46%, var(--ink) 46% 54%, var(--c) 54%);
+    box-shadow: inset 4px 4px 0 rgb(255 255 255 / 0.35);
+    translate: -50% -50%;
+    rotate: var(--r);
+  }
+  .machine__neck {
+    width: 5.5rem;
+    height: 1rem;
+    margin-top: -0.4rem;
+    border: 4px solid var(--ink);
+    border-radius: 0 0 8px 8px;
+    background: #c98a00;
+  }
+  .machine__body {
+    position: relative;
+    width: 100%;
+    height: 10.5rem;
+    margin-top: -0.2rem;
+    border: 4px solid var(--ink);
+    border-radius: 18px;
+    background: linear-gradient(160deg, #ffd23f, #ff8a1f 70%);
+    box-shadow:
+      0 7px 0 var(--ink),
+      inset 0 5px 0 rgb(255 255 255 / 0.35);
+  }
+  .machine__plate {
+    position: absolute;
+    left: 50%;
+    top: 0.65rem;
+    translate: -50% 0;
+    padding: 0.15rem 0.55rem;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    background: #fff4e0;
+    color: var(--ink);
+    font-family: var(--font-pixel);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .machine__crank {
+    position: absolute;
+    right: 1.4rem;
+    top: 2.6rem;
+    width: 4.6rem;
+    aspect-ratio: 1;
+    border: 4px solid var(--ink);
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #fff4e0, #e4d4b8);
+    cursor: grab;
+    touch-action: none;
+  }
+  .machine__crank[data-grabbed] {
+    cursor: grabbing;
+  }
+  .machine__crank-arm {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2.6rem;
+    height: 0.7rem;
+    translate: 0 -50%;
+    border: 3px solid var(--ink);
+    border-radius: 6px;
+    background: #ff4d4d;
+  }
+  .machine__crank-grip {
+    position: absolute;
+    right: -0.5rem;
+    top: 50%;
+    width: 1.2rem;
+    aspect-ratio: 1;
+    translate: 0 -50%;
+    border: 3px solid var(--ink);
+    border-radius: 50%;
+    background: #ff4d4d;
+  }
+  .machine__crank-hub {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1.3rem;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border: 3px solid var(--ink);
+    border-radius: 50%;
+    background: #c98a00;
+  }
+  .machine__chute {
+    position: absolute;
+    left: 1.3rem;
+    bottom: 1rem;
+    width: 4.6rem;
+    height: 3.6rem;
+    overflow: hidden;
+    border: 4px solid var(--ink);
+    border-radius: 10px 10px 4px 4px;
+    background: #150f2b;
+  }
+  .machine__flap {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 42%;
+    border-bottom: 3px solid var(--ink);
+    background: rgb(255 244 224 / 0.25);
+    transform-origin: top;
+    transition: rotate calc(var(--motion) * 160ms);
+  }
+  .capsules__play[data-turning] .machine__flap {
+    rotate: x 60deg;
+  }
+  .machine__tray {
+    position: relative;
+    width: 78%;
+    height: 4.2rem;
+    margin-top: 0.6rem;
+    border: 4px solid var(--ink);
+    border-radius: 0 0 22px 22px;
+    background: linear-gradient(#2a1f4d, #150f2b);
+  }
+  .capsule-out {
+    position: absolute;
+    left: 1.6rem;
+    bottom: 0.35rem;
+    width: 3.4rem;
+    aspect-ratio: 1;
+    opacity: 0;
+  }
+  .capsule-out[data-out] {
+    opacity: 1;
+  }
+  .capsule-out__top,
+  .capsule-out__bottom {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    border: 3px solid var(--ink);
+  }
+  .capsule-out__top {
+    top: 0;
+    border-radius: 999px 999px 0 0;
+    background: rgb(255 244 224 / 0.95);
+    transform-origin: 0 100%;
+    transition: rotate calc(var(--motion) * 320ms) cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .capsule-out__bottom {
+    bottom: 0;
+    border-radius: 0 0 999px 999px;
+    background: var(--c, #ff8a1f);
+  }
+  .capsule-out[data-open] .capsule-out__top {
+    rotate: -115deg;
+  }
+  .capsules__side {
+    display: grid;
+    gap: 1.25rem;
+    width: min(26rem, 100%);
+  }
+  .capsules__controls {
+    display: grid;
+    justify-items: start;
+    gap: 0.4rem;
+  }
+  .capsules__hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .capsule-prize {
+    position: relative;
+    display: grid;
+    gap: 0.35rem;
+    padding: 1rem 1.15rem 1.1rem;
+    border: 3px solid var(--ink);
+    border-top: 6px solid var(--rarity, #ff8a1f);
+    border-radius: 14px;
+    background: #120e26;
+    color: #fff4e0;
+    box-shadow: 0 6px 0 var(--ink);
+  }
+  .capsule-prize[data-rarity="rare"] {
+    --rarity: #ff8a1f;
+  }
+  .capsule-prize[data-rarity="epic"] {
+    --rarity: #ffc83d;
+  }
+  .capsule-prize[data-rarity="legendary"] {
+    --rarity: #ffc83d;
+    border-color: transparent;
+    background:
+      linear-gradient(#120e26, #120e26) padding-box,
+      linear-gradient(90deg, #ff3d8b, #ffd23f, #b6ff3b, #22d3ee, #a78bfa) border-box;
+  }
+  .capsule-prize__flash {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 12rem;
+    aspect-ratio: 1;
+    margin: -6rem 0 0 -6rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--rarity, #ffc83d), transparent 65%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .capsule-prize:not([hidden]) .capsule-prize__flash {
+    animation: capsule-flash calc(var(--motion) * 700ms + 1ms) ease-out;
+  }
+  .capsule-prize__rarity {
+    margin: 0;
+    color: var(--rarity, #ffc83d);
+    font-family: var(--font-pixel);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .capsule-prize__card {
+    display: grid;
+    gap: 0.3rem;
+  }
+  .capsule-prize__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .capsule-prize__meta {
+    margin: 0;
+    color: #e4dcff;
+    font-weight: 600;
+  }
+  .capsule-prize__detail {
+    margin: 0;
+  }
+
+  /* ── YOUR TROPHIES ────────────────────────────────────────────────────────────────────────────────────────── */
+  .shelf:has(#trophy-shelf-live > *) .shelf__static {
+    display: none;
+  }
+  .shelf__count {
+    margin: 0 0 1rem;
+    color: var(--muted);
+  }
+  .shelf__num {
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 800;
+  }
+  .shelf__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.25rem), 1fr));
+    gap: 1.6rem 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .plaque {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 0.3rem;
+    padding: 0.8rem 0.6rem 1rem;
+    border-radius: 12px;
+    text-align: center;
+  }
+  /* the shelf board under each trophy */
+  .plaque::after {
+    content: "";
+    position: absolute;
+    left: -0.5rem;
+    right: -0.5rem;
+    bottom: 0;
+    height: 0.5rem;
+    border: 2px solid var(--ink);
+    border-radius: 3px;
+    background: linear-gradient(#c98a00, #8a5a00);
+    box-shadow: 0 4px 0 rgb(0 0 0 / 0.3);
+  }
+  .plaque__trophy {
+    display: grid;
+    place-items: center;
+    width: 3.4rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+  }
+  /* a locked trophy is a flat grey silhouette (readable on night and day) */
+  .plaque:not([data-unlocked]) .plaque__trophy svg {
+    filter: brightness(0) invert(0.55);
+    opacity: 0.6;
+  }
+  .plaque[data-unlocked] .plaque__trophy {
+    background: radial-gradient(circle, rgb(255 200 61 / 0.35), transparent 70%);
+  }
+  .plaque__title {
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .plaque:not([data-unlocked]) .plaque__title {
+    color: var(--muted);
+  }
+  .plaque__hint {
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+  .plaque__state {
+    margin-bottom: 0.4rem;
+    color: var(--muted);
+    font-family: var(--font-pixel);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .plaque[data-unlocked] .plaque__state {
+    color: var(--world-fg);
+  }
+  .plaque__xp {
+    font-family: var(--font-display);
+  }
+
+  /* ── narrower screens ─────────────────────────────────────────────────────────────────────────────────────── */
+  @media (min-width: 56rem) {
+    .capsules__play {
+      grid-template-columns: auto minmax(0, 1fr);
+      justify-items: start;
+      gap: 3rem;
+    }
+  }
+  @media (max-width: 47.99rem) {
+    .hall__stage {
+      height: auto;
+    }
+    .hall__row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      height: auto;
+    }
+    .hall__btn {
+      min-height: 15rem;
+    }
+  }
+}
+
+/* ── the 3D hall is live: the trophies stand over the plates; the medallions step aside ──────────────────────── */
+.hall__stage[data-live] .medal3d {
+  visibility: hidden;
+}
+.hall__stage[data-live] .hall__btn::before {
+  display: none;
+}
+/* an open card: the 3D camera dollies to its trophy (left of centre) and the card takes the right side; on the CSS
+   tier it sits over the side away from its medallion */
+html[data-js]:not([data-mode="speedrun"]) .honor-card[data-open] {
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  right: 1.25rem;
+  translate: 0 -50%;
+  width: min(23rem, 46%);
+}
+html[data-js]:not([data-mode="speedrun"]) .hall[data-side="left"] .honor-card[data-open] {
+  right: auto;
+  left: 1.25rem;
+}
+/* the camera has dollied away from the columns: the plates fade out until the card closes (opacity, not visibility:
+   they are the pedestal buttons' names) */
+html[data-js]:not([data-mode="speedrun"]) .hall[data-detail] .hall__stage[data-live] .hall__plate {
+  opacity: 0;
+}
+@media (max-width: 47.99rem) {
+  html[data-js]:not([data-mode="speedrun"]) .honor-card[data-open] {
+    inset: 0.75rem;
+    width: auto;
+    translate: none;
+    overflow: auto;
+  }
+}
+/* the card backs are only focusable while they face you (and the fronts only while they do) */
+html[data-js]:not([data-mode="speedrun"]) .tcard__back {
+  visibility: hidden;
+  transition: visibility 0s linear calc(var(--motion) * 450ms);
+}
+html[data-js]:not([data-mode="speedrun"]) .tcard__flip[data-flipped] .tcard__back {
+  visibility: visible;
+  transition-delay: 0s;
+}
+html[data-js]:not([data-mode="speedrun"]) .tcard__flip[data-flipped] .tcard__front {
+  visibility: hidden;
+  transition: visibility 0s linear calc(var(--motion) * 450ms);
+}
+
+/* ── continuous loops: only for an on-screen #trophies, on --play ─────────────────────────────────────────────── */
+#trophies:not([data-offscreen]) .pack__foil {
+  animation: pack-sheen 4.5s ease-in-out calc(var(--i) * 0.6s) infinite;
+  animation-play-state: var(--play);
+}
+
+/* ── no JS and Speedrun Mode: the honors and certificates as plain lists ──────────────────────────────────────── */
+:is(html:not([data-js]), html[data-mode="speedrun"]) .hall__stage {
+  height: auto;
+  overflow: visible;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--text);
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .hall__row {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 1.25rem;
+  height: auto;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .hall__btn::before,
+:is(html:not([data-js]), html[data-mode="speedrun"]) .hall__plate {
+  display: none;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .hall__slot {
+  align-content: start;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .hall__btn {
+  height: auto;
+  padding: 0 0 0.75rem;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .medal3d__coin {
+  width: 4.5rem;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .honor-card {
+  display: grid;
+  gap: 0.35rem;
+  width: auto;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .tcard {
+  aspect-ratio: auto;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .tcard__flip {
+  transform: none;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .tcard__flip {
+  display: grid;
+  gap: 0.75rem;
+  height: auto;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .tcard__face {
+  position: relative;
+  rotate: none;
+}
+:is(html:not([data-js]), html[data-mode="speedrun"]) .tcard__front {
+  min-height: 12rem;
+}
+html[data-mode="speedrun"] .hall__btn {
+  display: none;
+}
+html[data-mode="speedrun"] .trophies {
+  gap: 2.5rem;
+}
+
+/* reduced motion: cards cross-fade instead of turning */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .tcard__flip[data-flipped] {
+    transform: none;
+  }
+  :root:not([data-motion="full"]) .tcard__face {
+    backface-visibility: visible;
+    rotate: none;
+  }
+  :root:not([data-motion="full"]) .tcard__flip:not([data-flipped]) .tcard__back,
+  :root:not([data-motion="full"]) .tcard__flip[data-flipped] .tcard__front {
+    opacity: 0;
+  }
+}
+:root[data-motion="reduce"] .tcard__flip[data-flipped] {
+  transform: none;
+}
+:root[data-motion="reduce"] .tcard__face {
+  backface-visibility: visible;
+  rotate: none;
+}
+:root[data-motion="reduce"] .tcard__flip:not([data-flipped]) .tcard__back,
+:root[data-motion="reduce"] .tcard__flip[data-flipped] .tcard__front {
+  opacity: 0;
+}

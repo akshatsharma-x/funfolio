@@ -766,3 +766,57 @@ change an entry only when the decision itself changes.
      BYTE sees each button's real box from the first frame — and `byte.recheck()` (bus `byte:recheck`, measured 220ms
      later) is the call for controls that appear without a scroll or a layout change: the tree sends it when the
      branches have grown and when a card opens (BYTE steps off the card's links).
+
+## PART 14 — World 7: Trophy Room
+
+154. **What the room shows is computed** in `src/content/trophies.ts` (server-only): every honor exactly as content.ts
+     has it (title, year, org, the detail only when there is one) plus its trophy's plain name ("Cup", "Medal on a
+     ribbon"…); certificate cards with whatever fields exist (an empty credential ID, skill or URL is left out) and an
+     issuer monogram made of its initials — text, never an issuer's logo (R4). The capsule machine deals only these
+     same honors and certificates.
+155. **The Hall of Fame is the world's only canvas.** HTML pedestal buttons (title + year plates, a detail card each)
+     are the hit targets — no raycasting (#54). On the HIGH tier a lazy R3F canvas stands one procedural trophy over each
+     button: the scene measures the width the camera sees at the trophies' depth and gives every pedestal the same
+     column as its button, so hover / focus / click map 1:1 at any width. Trophies: a lathe-turned cup with handles, a
+     medal hanging from a T-stand by a two-tone ribbon, a star on a plaque, a rolled scroll with gold knobs — toon
+     materials, ink outlines, gold accents, a spotlight and an additive light beam per pedestal, sparkles, a slow spin.
+     Hover / focus spins a trophy faster and brightens its spotlight; opening one dollies the camera to it (the trophy
+     lands left of centre, its HTML card on the right), with confetti and +10 XP the first time (`open:honor-<id>`);
+     arrows (←/→/Home/End) move along the pedestals and take an open card with them; Esc or "Back to the hall" closes
+     it. While a card is open in 3D the plates fade (opacity — they are the buttons' names; `visibility` dropped them
+     from the accessibility tree). The canvas loads near the viewport, draws only on screen, unpaused, awake and with
+     no game open, and unmounts beyond a viewport. Measured: ~9,600 draw calls a second on screen (≈80 a frame at
+     120 Hz), none at the idle nap, in the pause menu or off screen; the context is released when far away (Chrome,
+     WebKit, Firefox). Reduced motion: frames on demand, no spin, the dolly jumps.
+156. **LOW / NONE tiers: CSS-3D medallions** (phones — a coarse pointer is LOW — and browsers without GPU WebGL): a gold
+     coin per pedestal (two columns on phones) that tilts on hover and flips when its card opens; the card covers the
+     side away from its medallion (the whole stage on phones). Without JS and in Speedrun Mode the honors are plain
+     cards (title, org · year, detail); the triggers are plain text on the server and become buttons with the island,
+     so there are no dead buttons (#117).
+157. **Certificate cards.** Trading cards, both faces server-rendered: front — the monogram, the name, the issuer, the
+     date and a holo foil that follows the pointer; back — credential ID, skills, Verify ↗ (new tab, `noopener`). Open =
+     a GSAP Flip flight to the middle of the screen over a backdrop, then a 3D turn to the back (focus moves there); Esc,
+     the backdrop, "Flip back" or focus leaving the card puts it back (WCAG 2.4.11). Only the face you see is focusable.
+     The depth is in the card's own transform (`perspective()`): a `perspective` on its slot made the slot the
+     containing block of the fixed, enlarged card. No-JS / Speedrun: both faces flat. With no certificates (today):
+     three sealed packs, "NEW CARDS DROPPING SOON", that shake on hover. Tested with 0 (content) and 1 and 12 (fixtures
+     swapped into content.ts for the test and restored byte for byte): same-size cards, nothing spills, one card
+     centred (`auto-fit`, not `auto-fill`), no sideways scroll at 1440 or 390.
+158. **The capsule machine** (original: a glass dome of two-tone capsules, an orange body with a crank, a chute and a
+     tray). Wind the crank a full turn either way (pointer drag; `touch-action: none`) or press TURN (the keyboard path):
+     the capsules jostle, one rolls out and bounces, the top pops open on a random honor or certificate — never the same
+     twice in a row — with a rarity flash (certificate "Rare", honor "Epic", the coin "Legendary": labels about the toy,
+     not a ranking of the honors). One capsule in five holds coin #11, never more than five turns away and only until
+     it's found (the runtime's `data-collected`); the first turn → Lucky Capsule; the prize is announced. A turn starts
+     on the press (the machine is busy, the last prize goes back in the box), so a double press can't queue a turn that
+     then gets lost. Reduced motion: the capsule is simply there. The shake-to-find detector (#21) now ignores movement
+     with a button held: winding the crank fast counted as "shaking to find the cursor" in WebKit.
+159. **Your trophies.** Every achievement as a plaque on a shelf — server-rendered all locked; the runtime portals the
+     live, store-connected shelf over it (like the Prize Counter's booth, #131): the visitor's unlocked trophies first
+     (newest first), then the rest as grey silhouettes with their hints (secret ones "???"), and "You've unlocked
+     n/total — keep exploring!". Hidden without JS and in Speedrun Mode (it's game state, not résumé content).
+160. **In-page jumps aim at the real page** (found by the PART 14 regression). Lenis adds an element's offset to where
+     it *thinks* the page is; after a native jump it didn't register (a hash link at load, find-in-page,
+     `scrollIntoView`) that position is stale and the flight landed short — measured 582px, the Vault's JD Scanner side
+     quest stopping above the scanner. `scrollToElement` now resyncs an idle Lenis to `window.scrollY` and aims at a
+     number from the real geometry (every world's jumps go through it).

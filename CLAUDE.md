@@ -98,6 +98,13 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   2D arrows, cards, the root coin, inventory, loadout, the scan). Logos come from `/skill-logos.svg` (a static route);
   icons built at run time use the inline pixel sprite. `bus`: `skills:open` (a tab, e.g. the JD side quest) and
   `vault:insert` (a project's cartridge).
+- Trophy Room (PART 14): honors and certificate cards are computed in `src/content/trophies.ts` (server-only). The Hall
+  of Fame's 3D view is `src/components/three/HallCanvas.tsx` (lazy, HIGH tier, the world's only canvas) behind
+  `HallStage`; it shares hover / selection with the HTML pedestals through `src/lib/hall.ts` (like `island.ts`) and lays
+  its trophies out in the buttons' columns. Server components in `src/components/sections/trophies/`; `TrophiesFx` is
+  the one island (pedestals, cards, the capsule machine). The live trophy shelf is
+  `src/components/trophies/TrophyShelf.tsx`, portaled by the runtime into `#trophy-shelf-live`. Coin #11 sits on the
+  machine (`data-coin-id="capsule-machine"`); tests can force a capsule with an opt-in `window.__QA_CAPSULE`.
 - `@keyframes` names are global across every stylesheet: prefix new ones by feature (`funsole-on`, `quest-pop`); the
   build fails on a name defined twice with different bodies (#120).
 - Keep the page idle (docs/DECISIONS.md #40–41): no always-on rAF loops, continuous CSS animations only on HTML elements' transform/opacity (never on SVG elements), no style writes inside scroll events (use `onScrollMotion`), and get GSAP/ScrollTrigger via `loadScrollTrigger()` only where needed.
