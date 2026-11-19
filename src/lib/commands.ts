@@ -18,6 +18,8 @@ export type Command =
   | { type: "pause"; tab?: string }
   | { type: "preview-cursor-skin"; id: string }
   | { type: "item"; title: string; detail?: string; kicker?: string }
+  /** PART 16 · run an easter egg's effect (the /playground/eggs trigger buttons). */
+  | { type: "egg"; id: string }
   /** Opens a soft gate (PART 7: the Quest Log behind the Launchpad) — however it happened. */
   | { type: "gate"; id: "quest-log"; how: GateHow }
   /** Starts a side quest / arcade cartridge (src/content/games.ts). Until PART 11 builds the Arcade: a toast. */

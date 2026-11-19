@@ -895,3 +895,77 @@ change an entry only when the decision itself changes.
      noreferrer"`, announced); the Save File portal stays "Coming soon" until the PDF exists in `public/` (a build-time
      check) and downloads it otherwise (Save File); the phone portal exists only with `showPhone` and a number, revealed
      on click (#1). The availability card appears once `player.availability` is filled in (R1).
+
+## PART 16 — Secrets & surprises
+
+172. **One registry, one provider.** `src/lib/eggs.ts` is data — id, name, trigger, effect, achievement, `minFx`, `speedrun`,
+     a hint (the brief's `effect` is a description; the implementations live in a lazy chunk keyed by id, so the
+     registry stays client-safe data that /playground/eggs and the terminal read). `EggProvider` (lazy, inside the
+     runtime) attaches every listener once; `effects.ts` (its own chunk) draws; Matter.js loads only for the letter rain.
+     A first find is recorded in `stats.eggsFound` (the save has had `findEgg` since PART 3) and pays its achievement —
+     Corner Case once all four corners are found; Explorer stays the world tracker's.
+173. **Gating.** Speedrun Mode keeps only the terminal (` · the HUD button · `sudo` · the menu) and the right-click menu.
+     `data-fx`: the letter rain, the bugs and the steam need Normal; everything else plays in CHILL, minus particles
+     (the cheat code's coin rain). Reduced motion: static versions (the door fades, the logo pulses, no physics, bugs,
+     steam or coin rain). An egg that can't play says so — an "Egg found" toast — instead of counting silently. Ambient
+     eggs (corners, idle, chests) wait while a dialog, a game or the boot is up.
+174. **Typed words and the cheat code ride the keyboard manager** (#28): keys it doesn't use reach the eggs over the bus —
+     observed, never swallowed (arrows still scroll). Fields, dialogs, games and modifier keys never count; a word resets
+     after a 1.5s gap, the code after 3s. akshat → six physics letter blocks (2.4s, click-through) — and, while the
+     Title's name is on screen, coin #3: the keyboard path #59 promised. hire → confetti, BYTE "Excellent choice." and the
+     flight to the Lobby. bug → three bugs scurry (a pointer toy: aria-hidden, untabbable; Bug Whack is the accessible
+     squashing). coffee → steam at the pointer for 5s, never over reading text (R6). sudo → the terminal. ↑↑↓↓←→←→BA →
+     CHEAT ACTIVATED: unlocking Cheat Code grants the Retro CRT theme (prizes.ts), the theme switches, BYTE wears pixel
+     shades for the session, coins rain. (A classic web code — no console brand's assets, R4.)
+175. **The four corners**: a 28px square in each corner of the content box (not the window — with a classic scrollbar,
+     WebKit's and Windows', the window's edge is the scrollbar; found by engines-p16), held 600ms; a pass doesn't count,
+     leaving re-arms it. Touch = a long-press, and the click that ends it is swallowed (HUD buttons live there). TL the HUD
+     logo flips like a coin; TR a secret gear (6s) that switches on CHAOS; BL a pixel door creaks open on an original
+     dev-room doodle (desk, CRT, mug, rubber duck); BR BYTE ducks off-screen and peeks back, waving.
+176. **AKSHAT-OS** (`src/components/terminal/`, lazy): a native modal `<dialog>` in JetBrains Mono, prompt
+     `player2@akshat-os:~$` (pink · cyan · yellow · lime), history ↑/↓ for the page view, Tab completion (choices listed
+     when ambiguous), Ctrl+L. Tab completes, so the dialog doesn't trap Tab: Esc, `exit` and the close button leave (WCAG
+     2.1.2), and focus returns to the opener. Output is plain text in a polite `role="log"` (never HTML — bytesay echoes
+     the visitor's words safely; an `<ol role="log">` failed axe, so it's a div). Facts come from content.ts through a
+     server-built prop (`src/content/eggs.ts`, like BYTE's script); live state from the save. All the brief's commands,
+     plus quit; `theme retro` stays locked until earned; `sudo hire akshat` → Root Access, fireworks, the Lobby; opening
+     → Hacker. Ways in: ` (the keyboard manager), the HUD button (desktop), `sudo`, the game menu, and Pause → Controls →
+     "Open the terminal" (phones have no ` key).
+177. **The game menu** (right-click · Shift+F10 · the menu key): a WAI-ARIA menu in the top layer — focus on the first
+     item, ↑/↓/Home/End, Enter/Space, Esc or Tab close and return focus; a click elsewhere, a scroll, a resize or a blur
+     close it. Copy email (Copycat) · Download résumé ("coming soon", disabled but focusable per the APG, until the PDF
+     exists) · Toggle sound · Open terminal · Locate cursor · Inspect (a console nudge). The browser's own menu stays for
+     Shift + right-click, links, fields, media, dialogs, popovers and any text selection (copying must always work). A
+     3D canvas outside games only *prevents* the menu (three's OrbitControls), so the game menu opens there.
+178. **DevTools**: a multicolor block-letter AKSHAT + "Hey dev 👋 try akshat.hire() or akshat.help()" once per page, and
+     `window.akshat` { help, hire, coins, secret } — any call is Console Cowboy. Not in Speedrun Mode.
+179. **Proctor alert**: a hidden tab gets "👾 Come back, Player 1!" and a sad pixel favicon (an SVG data: URL — no
+     request, R10); back → both restored and "⚠ TAB SWITCH DETECTED — just like QuizMUJ's proctoring. −0 marks." (the
+     project name from content, only while a project's bullets mention tab-switch tracking) once a session; Caught
+     Switching Tabs once. The Vault's QuizMUJ hint pays off.
+180. **Idle**: the page still naps at 30s (#67). At 45s BYTE sleeps — its own 1s check (it was 30s; now one constant,
+     `EGG_TIMING.sleepAfterMs`) — and the Zzz rises three times, then rests (no loop through the nap); the living grid
+     runs one marquee lap around the screen's edge (2.6s, below the HUD, skipping cells behind text; not in CHILL — the
+     grid's `chase()`). At 90s "Bored? Squash some bugs" (bottom-left) opens Bug Whack; it outlives the wake-up by 8s so
+     the pointer can reach it. Tests shorten the timings with an opt-in `window.__QA_EGGS`.
+181. **Night owl**: 00:00–04:59 local → BYTE's nightcap (session-only, over any equipped hat) + Night Owl.
+182. **Selection**: `::selection` is the world colour with ink text (+ a glow) — every coloured fill carries ink (#4).
+     Selecting text that contains the word BYTE makes BYTE blush (pink cheeks + the love mood).
+183. **Loot chests**: entering a world rolls 1 in 15 (at most 3 a session); a chest hops into the gutter left of the
+     column (never over text; phones have no gutter, so no chest) for 6s; opening it pays +50 XP and a line — Akshat's
+     fun facts once content has some, otherwise a "Did you know?" that restates a résumé value (R1).
+184. **Milestones**: the 100th click, 5 minutes played and every world visited (with Explorer) each get a mini fanfare —
+     three notes and stars under the HUD, a toast for the first two.
+185. **Hidden coins** (consolidated in coins.ts since PART 3, with the terminal's hints): a collected coin now spins in at
+     its spot, sparkles, flies to the HUD's wallet chip and bumps it (reduced motion: the bump only, as a glow); all 12 →
+     Treasure Hunter + the Golden cursor, as before.
+186. **Patch notes**: every content.ts export is hashed at build time (sha256, 12 hex). A save that saw an older hash —
+     a returning visitor — gets "PATCH NOTES v<version>" with a button to the pause menu's list, once per new hash; a save
+     without one (a first visit, an older save) stores it quietly. SAVE_VERSION 3 (`meta.contentHash`; the v2 → v3 step
+     adds nothing — normalizeSave fills null).
+187. **/playground/eggs** (noindex, unlinked): every egg from the registry with a Trigger button (a `command({ type: "egg"
+     })` → the provider). Triggers count as finds; Speedrun Mode and reduced motion still apply.
+188. **HUD page labels** (a PART 15 gap): pages without worlds name themselves with `data-hud-label` on their `<main>` —
+     "Game over · Page not found", "Playground · …" — instead of "World 0 · Title Screen". Page weight: initial JS 181.3
+     KB (+0.3); the provider, the effects, the terminal and Matter are lazy chunks; the eggs' data prop adds ~2.9 KB gzip
+     of HTML.

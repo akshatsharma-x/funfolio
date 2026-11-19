@@ -17,6 +17,7 @@ import "./games.css";
 import "./skills.css";
 import "./trophies.css";
 import "./lobby.css";
+import "./eggs.css";
 import "./boot.css";
 import { CursorLayer } from "@/components/cursor/CursorLayer";
 import { GameRuntimeLoader } from "@/components/hud/GameRuntimeLoader";
@@ -24,6 +25,7 @@ import { InlineScript } from "@/components/system/InlineScript";
 import { SmoothScroll } from "@/components/system/SmoothScroll";
 import { player } from "@/content/content";
 import { buildArcadeData } from "@/content/arcade";
+import { buildEggData } from "@/content/eggs";
 import { buildBootScript } from "@/content/boot";
 import { buildByteScript } from "@/content/quips";
 import { site, siteUrl } from "@/content/site";
@@ -79,6 +81,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           byteScript={buildByteScript()}
           bootScript={buildBootScript()}
           arcade={buildArcadeData()}
+          eggs={buildEggData()}
         />
         {children}
         <CursorLayer />

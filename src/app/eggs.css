@@ -1,0 +1,606 @@
+/* PART 16 · secrets & surprises: the eggs' layers (letters, bugs, steam, the dev room, CHEAT ACTIVATED, a coin's
+   flight), the secret gear, loot chests, the bored chip, the proctor's notice, the patch-notes toast, the game menu,
+   the AKSHAT-OS terminal, BYTE's peek / blush / bounded Zzz, and the selection's glow. Effect layers are fixed,
+   click-through and aria-hidden (only the bugs take a click); nothing here loops forever. */
+
+@layer theme, base, components, utilities;
+
+@keyframes egg-hop {
+  0% {
+    translate: 0 40px;
+    scale: 0.4;
+    opacity: 0;
+  }
+  45% {
+    translate: 0 -14px;
+    scale: 1.08;
+    opacity: 1;
+  }
+  70% {
+    translate: 0 0;
+    scale: 0.96 1.04;
+  }
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+@keyframes egg-wiggle {
+  25% {
+    rotate: -8deg;
+  }
+  75% {
+    rotate: 8deg;
+  }
+}
+@keyframes egg-gear-in {
+  from {
+    scale: 0;
+    rotate: -180deg;
+  }
+}
+@keyframes egg-slide-up {
+  from {
+    translate: 0 16px;
+    opacity: 0;
+  }
+}
+@keyframes byte-peek {
+  0% {
+    translate: 0 0;
+  }
+  22%,
+  42% {
+    translate: 0 150%;
+  }
+  66% {
+    translate: 0 -10%;
+  }
+  78%,
+  100% {
+    translate: 0 0;
+  }
+}
+@keyframes byte-wave {
+  from {
+    rotate: -12deg;
+  }
+  to {
+    rotate: -78deg;
+  }
+}
+
+@layer components {
+  /* ── effect layers ─────────────────────────────────────────────────────────────────────────────────────────── */
+  .egg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 88;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .egg-letter {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    place-items: center;
+    border: 3px solid var(--ink);
+    border-radius: 10px;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    font-weight: 900;
+    box-shadow: 0 4px 0 var(--ink);
+    will-change: transform;
+  }
+  .egg-bug {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: crosshair;
+    pointer-events: auto;
+    filter: drop-shadow(0 2px 0 rgb(7 6 15 / 0.5));
+  }
+  .egg-bug--squashed {
+    filter: saturate(0.4) brightness(0.7);
+    scale: 1.3 0.35;
+  }
+  .egg-steam {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgb(255 244 224 / 0.85), rgb(255 244 224 / 0) 70%);
+  }
+  .egg-coin {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    filter: drop-shadow(0 0 8px rgb(255 200 61 / 0.8));
+  }
+  .egg-cheat {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 8vw, 5.5rem);
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    text-align: center;
+    background: linear-gradient(90deg, #ff3d8b, #ffd23f, #2ee59d, #22d3ee, #a78bfa);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 4px 0 var(--ink));
+  }
+
+  /* the dev room behind its door (bottom-left) */
+  .egg-door {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    width: 168px;
+    opacity: 0;
+  }
+  .egg-door__room {
+    display: block;
+    width: 168px;
+    height: 126px;
+    border: 3px solid var(--ink);
+    border-radius: 6px 6px 0 0;
+    image-rendering: pixelated;
+  }
+  .egg-door__label {
+    display: block;
+    margin-top: 4px;
+    color: var(--text);
+    font-family: var(--font-pixel);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 0 var(--ink);
+  }
+  .egg-door__panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 168px;
+    height: 126px;
+    border: 3px solid var(--ink);
+    border-radius: 6px 6px 0 0;
+    background:
+      radial-gradient(circle at 82% 52%, #ffc83d 0 5px, var(--ink) 5px 7px, transparent 7px),
+      repeating-linear-gradient(90deg, #8a5a2b 0 20px, #7a4d22 20px 22px);
+    transform-origin: left center;
+  }
+
+  /* ── things to click ───────────────────────────────────────────────────────────────────────────────────────── */
+  .egg-gear,
+  .egg-chest {
+    position: fixed;
+    z-index: 86;
+    display: grid;
+    place-items: center;
+    padding: 4px;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    background: var(--surface-2);
+    box-shadow: 0 4px 0 var(--ink);
+    cursor: pointer;
+  }
+  .egg-gear {
+    top: 76px;
+    right: 14px;
+    border-radius: 50%;
+    animation: egg-gear-in calc(var(--motion) * 420ms + 1ms) cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .egg-chest {
+    width: 64px;
+    height: 64px;
+    animation:
+      egg-hop calc(var(--motion) * 520ms + 1ms) cubic-bezier(0.3, 1.4, 0.5, 1),
+      egg-wiggle calc(var(--motion) * 360ms + 1ms) ease-in-out calc(var(--motion) * 700ms) 3;
+  }
+  .egg-gear:focus-visible,
+  .egg-chest:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 3px;
+  }
+  .egg-bored,
+  .egg-patch {
+    position: fixed;
+    left: 14px;
+    bottom: 14px;
+    z-index: 86;
+    max-width: min(22rem, calc(100vw - 120px));
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 5px 0 var(--ink);
+    animation: egg-slide-up calc(var(--motion) * 260ms + 1ms) ease-out;
+  }
+  .egg-bored {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+  }
+  .egg-bored__go,
+  .egg-patch__go {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 40px;
+    padding: 0.35rem 0.9rem;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: #b6ff3b;
+    color: #07060f;
+    font: 700 0.92rem var(--font-body);
+    cursor: pointer;
+  }
+  .egg-bored__x,
+  .egg-proctor__x,
+  .egg-patch__x {
+    min-width: 40px;
+    min-height: 40px;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: var(--text);
+    font: 700 1.1rem var(--font-body);
+    cursor: pointer;
+  }
+  .egg-patch {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.8rem 0.9rem;
+  }
+  .egg-patch__title {
+    margin: 0;
+    font-family: var(--font-pixel);
+    letter-spacing: 0.08em;
+  }
+  .egg-patch__text {
+    margin: 0;
+    color: var(--muted);
+  }
+  .egg-patch__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .egg-patch__x {
+    min-width: 0;
+    padding: 0 0.6rem;
+    font-size: 0.9rem;
+    text-decoration: underline;
+  }
+  .egg-proctor {
+    position: fixed;
+    left: 50%;
+    top: 72px;
+    z-index: 86;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: min(40rem, calc(100vw - 24px));
+    padding: 0.45rem 0.45rem 0.45rem 1rem;
+    translate: -50% 0;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    background: #ffd23f;
+    color: #07060f;
+    font: 700 0.95rem var(--font-body);
+    box-shadow: 0 5px 0 var(--ink);
+    animation: egg-slide-up calc(var(--motion) * 260ms + 1ms) ease-out;
+  }
+  .egg-proctor__x {
+    color: #07060f;
+  }
+  :is(.egg-bored__go, .egg-bored__x, .egg-patch__go, .egg-patch__x, .egg-proctor__x):focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 2px;
+  }
+
+  /* ── the game menu (right-click · Shift+F10) ───────────────────────────────────────────────────────────────── */
+  .egg-menu {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    min-width: 15rem;
+    padding: 0.4rem;
+    border: 3px solid var(--ink);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow:
+      0 6px 0 var(--ink),
+      0 0 0 1px var(--rim);
+  }
+  .egg-menu__title {
+    margin: 0.15rem 0.5rem 0.35rem;
+    color: var(--world-fg);
+    font-family: var(--font-pixel);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+  .egg-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    min-height: 40px;
+    padding: 0.35rem 0.6rem;
+    border: 0;
+    border-radius: 9px;
+    background: none;
+    color: var(--text);
+    font: 600 0.95rem var(--font-body);
+    text-align: left;
+    cursor: pointer;
+  }
+  .egg-menu__item:hover,
+  .egg-menu__item:focus-visible {
+    background: color-mix(in srgb, var(--world) 22%, var(--surface));
+    outline: none;
+  }
+  .egg-menu__item:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--world-fg);
+  }
+  .egg-menu__item[aria-disabled="true"] {
+    color: var(--muted);
+    cursor: not-allowed;
+  }
+  .egg-menu__hint {
+    margin: 0.35rem 0.5rem 0.15rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  /* ── AKSHAT-OS ─────────────────────────────────────────────────────────────────────────────────────────────── */
+  .terminal {
+    width: min(56rem, calc(100vw - 24px));
+    max-width: none;
+    height: min(40rem, calc(100svh - 48px));
+    max-height: none;
+    margin: auto;
+    padding: 0;
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    background: #07060f;
+    color: #fff4e0;
+    box-shadow:
+      0 0 0 2px #2ee59d55,
+      0 18px 60px rgb(0 0 0 / 0.6);
+    overflow: hidden;
+  }
+  .terminal::backdrop {
+    background: rgb(7 6 15 / 0.55);
+    backdrop-filter: blur(3px);
+  }
+  .terminal__frame {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100%;
+  }
+  .terminal__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.45rem 0.6rem 0.45rem 0.9rem;
+    border-bottom: 2px solid #251e4a;
+    background: #120f26;
+  }
+  .terminal__lights {
+    display: flex;
+    gap: 6px;
+  }
+  .terminal__lights i {
+    width: 11px;
+    height: 11px;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    background: #ff4d4d;
+  }
+  .terminal__lights i:nth-child(2) {
+    background: #ffd23f;
+  }
+  .terminal__lights i:nth-child(3) {
+    background: #2ee59d;
+  }
+  .terminal__title {
+    flex: 1;
+    margin: 0;
+    color: #b9b2d9;
+    font-family: var(--font-pixel);
+    font-size: 0.85rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .terminal__close {
+    min-width: 40px;
+    min-height: 36px;
+    border: 2px solid #251e4a;
+    border-radius: 10px;
+    background: none;
+    color: #fff4e0;
+    font: 700 1.1rem var(--font-body);
+    cursor: pointer;
+  }
+  .terminal__close:focus-visible,
+  .terminal__input:focus-visible {
+    outline: 2px dashed #2ee59d;
+    outline-offset: 2px;
+  }
+  .terminal__screen {
+    overflow-y: auto;
+    padding: 0.8rem 1rem 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    overscroll-behavior: contain;
+  }
+  .terminal__log {
+    margin: 0;
+    padding: 0;
+  }
+  .terminal__entry + .terminal__entry {
+    margin-top: 0.35rem;
+  }
+  .terminal__echo,
+  .terminal__out {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .terminal__out[data-tone="accent"] {
+    color: #22d3ee;
+  }
+  .terminal__out[data-tone="muted"] {
+    color: #b9b2d9;
+  }
+  .terminal__out[data-tone="ok"] {
+    color: #b6ff3b;
+  }
+  .terminal__out[data-tone="warn"] {
+    color: #ffd23f;
+  }
+  .terminal__out[data-tone="title"] {
+    color: #fff4e0;
+    font-weight: 700;
+  }
+  .terminal__out a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .terminal__user {
+    color: #ff3d8b;
+  }
+  .terminal__at {
+    color: #b9b2d9;
+  }
+  .terminal__host {
+    color: #22d3ee;
+  }
+  .terminal__path {
+    color: #ffd23f;
+  }
+  .terminal__dollar {
+    color: #b6ff3b;
+  }
+  .terminal__line {
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+    margin-top: 0.35rem;
+  }
+  .terminal__label {
+    flex: none;
+    white-space: nowrap;
+  }
+  .terminal__input {
+    flex: 1;
+    min-width: 0;
+    padding: 0 0.2rem;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: #fff4e0;
+    font: inherit;
+    caret-color: #2ee59d;
+  }
+}
+
+/* ── BYTE (its rules are layered in fx.css — these override them) ─────────────────────────────────────────────── */
+.byte__blush {
+  opacity: 0;
+  transition: opacity calc(var(--motion) * 220ms + 1ms);
+}
+.byte[data-blush] .byte__blush {
+  opacity: 0.85;
+}
+.byte[data-peek] .byte__bot {
+  animation: byte-peek 2s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.byte[data-peek] .byte__arm--r {
+  animation: byte-wave 0.34s ease-in-out 1.35s 4 alternate;
+}
+/* asleep (45s, PART 16): the z's rise three times, then rest where they stopped — no loop during the idle nap */
+.byte[data-mood="sleepy"] .byte__zzz i {
+  opacity: 0.9;
+  animation: byte-z 2.4s linear 3 backwards;
+  animation-play-state: running;
+}
+.byte[data-mood="sleepy"] .byte__zzz i:nth-child(2) {
+  translate: 6px -9px;
+  animation-delay: 0.8s;
+}
+.byte[data-mood="sleepy"] .byte__zzz i:nth-child(3) {
+  translate: 12px -19px;
+  animation-delay: 1.6s;
+}
+:root[data-motion="reduce"] :is(.byte[data-peek] .byte__bot, .byte[data-peek] .byte__arm--r, .byte[data-mood="sleepy"] .byte__zzz i) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) :is(.byte[data-peek] .byte__bot, .byte[data-peek] .byte__arm--r, .byte[data-mood="sleepy"] .byte__zzz i) {
+    animation: none;
+  }
+}
+
+/* selected text glows in the world's colour (ink on the bright fill, as every coloured fill carries) */
+::selection {
+  background: var(--world);
+  color: var(--ink);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--world) 60%, transparent);
+}
+
+/* /playground/eggs — the QA bench */
+@layer components {
+  .egg-bench {
+    padding-block: 6rem 4rem;
+  }
+  .egg-bench__title {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+  }
+  .egg-bench__lead {
+    margin: 0 0 1.5rem;
+    color: var(--muted);
+  }
+  .egg-bench__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .egg-bench__table :is(th, td) {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+  .egg-bench__table thead th {
+    color: var(--muted);
+    font-family: var(--font-pixel);
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}

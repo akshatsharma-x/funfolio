@@ -115,6 +115,14 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   `#credits-run-live`; NEW GAME+ is `newGamePlus()` in the store (keeps inventory + settings). The 404 is
   `src/app/not-found.tsx` (→ `out/404.html`): the root not-found boundary's client code ships with every page, so it is
   plain markup plus `GameOverFx`, a loader for `gameOverRun.ts`. Styles: `src/app/lobby.css`.
+- Secrets & surprises (PART 16): the egg registry is `src/lib/eggs.ts` (data: id, trigger, effect, achievement, minFx,
+  speedrun, hint — add an egg there first); `src/components/eggs/EggProvider.tsx` (lazy, in the runtime) attaches every
+  listener once and runs the effects from `effects.ts` (a lazy chunk); finds go to `stats.eggsFound`. Typed words and the
+  cheat code arrive from the keyboard manager as bus `egg:key` (keys it doesn't use — never swallowed). The terminal is
+  `src/components/terminal/` (lazy; `commands.ts` is the interpreter) fed by `src/content/eggs.ts` (server-built from
+  content.ts, with the chest's facts, the proctor line and the content hash). Speedrun Mode keeps only the terminal and
+  the right-click menu. `/playground/eggs` lists every egg with a Trigger button; tests can shorten idle / force chests
+  with an opt-in `window.__QA_EGGS`. A page without worlds names itself for the HUD with `data-hud-label` on its main.
 - Content that changes in place (a form that becomes something smaller) can leave its replacement off screen: call
   `revealElement(el)` from `src/lib/scroll.ts` (the least scroll that shows it under the HUD, through Lenis).
 - Cascade layers: a continuous loop declared outside `@layer` (it needs `#world:not([data-offscreen])`) beats every

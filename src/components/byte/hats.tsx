@@ -50,6 +50,31 @@ export function ByteHatArt({ hat, layer }: { hat: ByteHat; layer: "back" | "fron
   );
 }
 
+/** PART 16 · the night owl's nightcap (not for sale — midnight to 5 a.m. only). The antenna pokes through it. */
+export function ByteNightcap() {
+  return (
+    <g className="byte__hat" data-hat="nightcap">
+      <path d="M9 17 Q 20 -7 42 -2 Q 57 2 61 21 L 53 15 Z" fill="#3B5BDB" stroke={INK} strokeWidth="2.2" strokeLinejoin="round" />
+      <path d="M22 4 Q 34 0 46 4 M28 -1 Q 38 -2 50 3" fill="none" stroke="#A5B4FC" strokeWidth="1.6" strokeLinecap="round" />
+      <rect x="7" y="12.5" width="50" height="5.5" rx="2.75" fill="#FFF4E0" stroke={INK} strokeWidth="2" />
+      <circle cx="61" cy="23" r="4" fill="#FFF4E0" stroke={INK} strokeWidth="2" />
+    </g>
+  );
+}
+
+/** PART 16 · the cheat code's pixel shades, over the screen (drawn after the face). */
+export function ByteShades() {
+  return (
+    <g className="byte__shades" data-shades="">
+      <rect x="13.5" y="23.5" width="16" height="8" rx="1" fill="#07060F" stroke={INK} strokeWidth="1.6" />
+      <rect x="34.5" y="23.5" width="16" height="8" rx="1" fill="#07060F" stroke={INK} strokeWidth="1.6" />
+      <rect x="29.5" y="25.5" width="5" height="2.4" fill="#07060F" />
+      <rect x="16" y="25.5" width="4" height="2" fill="#FFFFFF" opacity="0.85" />
+      <rect x="37" y="25.5" width="4" height="2" fill="#FFFFFF" opacity="0.85" />
+    </g>
+  );
+}
+
 /** A small framed preview of a hat on BYTE's head outline (Prize Counter cards). */
 export function ByteHatPreview({ hat }: { hat: ByteHat }) {
   return (

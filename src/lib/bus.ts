@@ -28,8 +28,20 @@ export type BusEvents = {
   "coins:earned": { amount: number; reason: string; total: number };
   "shop:denied": { itemId: string; reason: "owned" | "locked" | "funds" };
   "save:reset": Record<string, never>;
-  /** Backtick (PART 16). */
+  /** Backtick, the HUD button, `sudo`, the right-click menu (PART 16). */
   "terminal:toggle": Record<string, never>;
+  /** PART 16 · eggs: a key the keyboard manager didn't use (typed words, the cheat code). */
+  "egg:key": { key: string };
+  /** PART 16 · run an egg's effect now (/playground/eggs, `command({ type: "egg" })`). */
+  "egg:trigger": { id: string };
+  /** PART 16 · an egg was found for the first time (saved in stats.eggsFound). */
+  "egg:found": { id: string };
+  /** PART 16 · the game-style context menu: at the pointer, or at the focused element (Shift+F10). */
+  "menu:open": { x?: number; y?: number };
+  /** PART 16 · BYTE ducks off-screen and peeks back in, waving (the bottom-right corner). */
+  "byte:peek": Record<string, never>;
+  /** PART 16 · BYTE blushes (someone selected its name). */
+  "byte:blush": Record<string, never>;
   /** BYTE (PART 4) — use the facade in src/lib/byte.ts. */
   "byte:say": { text: string; mood?: ByteMood; ms?: number; now?: boolean };
   "byte:react": { mood: ByteMood };

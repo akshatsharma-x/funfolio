@@ -17,6 +17,7 @@ import { useHtmlAttribute } from "@/lib/hooks/useHtmlAttribute";
 import { useSave, type ReducedMotionSetting } from "@/lib/store";
 import type { FxLevel, Theme } from "@/lib/prefs";
 import type { CursorSize } from "@/components/cursor/skins";
+import { useUi } from "@/lib/ui";
 import { jumpToWorld, setSpeedrun, switchTheme } from "./useGameRuntime";
 
 function formatPlayed(ms: number) {
@@ -219,7 +220,8 @@ const SHORTCUTS: [string, string][] = [
   ["Shift + S", "Sound on / off"],
   ["Shift + D", "Day / night"],
   ["Shift + R", "Recruiter Speedrun Mode"],
-  ["`", "Terminal (coming in a later patch)"],
+  ["`", "Terminal · AKSHAT-OS (type help)"],
+  ["Shift + F10", "Game menu (or right-click; Shift + right-click: the browser's)"],
   ["?", "This list"],
   ["Tab / Shift + Tab", "Move between controls"],
 ];
@@ -228,6 +230,12 @@ export function ControlsPanel() {
   return (
     <div className="grid gap-4">
       <p className="read text-muted">Shortcuts never fire while you type in a field. Inside a game or a dialog only Esc is global.</p>
+      <div>
+        {/* phones have no ` key — the terminal is one tap away here (PART 16) */}
+        <ArcadeButton type="button" variant="secondary" icon="terminal" size="sm" onClick={() => useUi.getState().setTerminal(true)}>
+          Open the terminal
+        </ArcadeButton>
+      </div>
       <table className="w-full border-separate border-spacing-y-1 text-left">
         <thead className="sr-only">
           <tr>

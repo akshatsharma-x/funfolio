@@ -22,7 +22,7 @@ import { bus, type Point } from "./bus";
 import { FX_LEVELS, LEGACY_PREFS_KEY, MODES, readLegacyPrefs, SAVE_KEY, THEMES, type FxLevel, type Mode, type Theme } from "./prefs";
 
 export { SAVE_KEY };
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 /** Soft gates that open once per save (PART 7: the Launchpad in front of the Quest Log). */
 export const GATE_IDS = ["quest-log"] as const;
@@ -53,7 +53,8 @@ export type SaveData = {
   inventory: { owned: string[]; equipped: Equipped };
   settings: Settings;
   stats: { clicks: number; sessionStart: number; timePlayedMs: number; eggsFound: string[] };
-  meta: { saveVersion: number; lastVisit: number | null; lastSeenPatch: string | null };
+  /** contentHash (v3, PART 16): the content.ts hash this visitor last saw — a new one means "new content" (patch toast). */
+  meta: { saveVersion: number; lastVisit: number | null; lastSeenPatch: string | null; contentHash: string | null };
   /** BYTE (PART 4): home position as fractions of the free viewport (null = docked bottom-right), minimized, and the
    *  once-only lines already said (world lines, first-run tips). Position + minimized survive a reset. */
   byte: { fx: number | null; fy: number | null; minimized: boolean; said: string[] };
@@ -81,6 +82,8 @@ export type SaveActions = {
   addStats: (clicks: number, playedMs: number) => void;
   markPatchSeen: (version: string) => void;
   findEgg: (id: string) => boolean;
+  /** PART 16: remember the content hash this visitor has now seen. */
+  setContentHash: (hash: string) => void;
   /** A spare coin (sticker peels…): +1 wallet once per id — not one of the 12 hidden coins. */
   collectSpare: (id: string, origin?: Point) => boolean;
   /** PART 11 · arcade rewards: +N wallet coins, at most ARCADE_COIN_CAP per session. Returns what was paid. */
@@ -122,7 +125,7 @@ function freshData(now = Date.now()): SaveData {
     inventory: { owned: [...DEFAULT_OWNED], equipped: { ...DEFAULT_EQUIPPED } },
     settings: { ...DEFAULT_SETTINGS },
     stats: { clicks: 0, sessionStart: now, timePlayedMs: 0, eggsFound: [] },
-    meta: { saveVersion: SAVE_VERSION, lastVisit: null, lastSeenPatch: null },
+    meta: { saveVersion: SAVE_VERSION, lastVisit: null, lastSeenPatch: null, contentHash: null },
     byte: { fx: null, fy: null, minimized: false, said: [] },
     gates: [],
   };
@@ -210,6 +213,7 @@ export function normalizeSave(input: unknown): SaveData {
       saveVersion: SAVE_VERSION,
       lastVisit: typeof meta.lastVisit === "number" ? meta.lastVisit : null,
       lastSeenPatch: typeof meta.lastSeenPatch === "string" ? meta.lastSeenPatch : null,
+      contentHash: typeof meta.contentHash === "string" ? meta.contentHash : null,
     },
     byte: { fx: frac(byte.fx), fy: frac(byte.fy), minimized: byte.minimized === true, said: strs(byte.said).slice(0, 64) },
     gates: strs(s.gates).filter(isGate),
@@ -237,6 +241,8 @@ export function migrateSave(persisted: unknown, version: number): SaveData {
     // v2 (PART 7) adds soft gates; no v1 save could have opened one — normalizeSave fills gates: [].
     data = { ...data, gates: [] };
   }
+  // v3 (PART 16) adds meta.contentHash; normalizeSave fills null, so an older save stores the current hash silently
+  // (no patch-notes toast for content it may well have seen).
   return normalizeSave(data);
 }
 
@@ -449,6 +455,11 @@ export const useSave = create<SaveStore>()(
       markPatchSeen(version) {
         const s = get();
         if (s.meta.lastSeenPatch !== version) set({ meta: { ...s.meta, lastSeenPatch: version } });
+      },
+
+      setContentHash(hash) {
+        const s = get();
+        if (s.meta.contentHash !== hash) set({ meta: { ...s.meta, contentHash: hash } });
       },
 
       findEgg(id) {

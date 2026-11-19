@@ -44,4 +44,12 @@ export const byte = {
   jetpack(): void {
     bus.emit("byte:jetpack", {});
   },
+  /** Ducks off the screen's edge and peeks back in, waving (PART 16 · the bottom-right corner). */
+  peek(): void {
+    bus.emit("byte:peek", {});
+  },
+  /** Pink cheeks for a moment (PART 16 · someone selected the word BYTE). */
+  blush(): void {
+    bus.emit("byte:blush", {});
+  },
 };

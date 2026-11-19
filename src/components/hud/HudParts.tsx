@@ -83,10 +83,11 @@ export function XpBar() {
 /** "WORLD 3 · THE LAB · Research" with a typewriter swap (instant under reduced motion). */
 export function WorldLabel() {
   const id = useUi((s) => s.currentWorld);
+  const page = useUi((s) => s.pageLabel);
   const w = worldById[id];
   const label = worldLabel(w);
-  const visual = [label.toUpperCase(), w.gameTitle.toUpperCase(), w.hudTitle].filter(Boolean).join(" · ");
-  const spoken = [label, w.gameTitle, w.hudTitle].filter(Boolean).join(", ");
+  const visual = page ? page.toUpperCase() : [label.toUpperCase(), w.gameTitle.toUpperCase(), w.hudTitle].filter(Boolean).join(" · ");
+  const spoken = page ?? [label, w.gameTitle, w.hudTitle].filter(Boolean).join(", ");
   const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -108,7 +109,7 @@ export function WorldLabel() {
   return (
     <p className="hud-world">
       <span ref={ref} aria-hidden="true" />
-      <span className="sr-only">Current world: {spoken}</span>
+      <span className="sr-only">{page ? `Page: ${spoken}` : `Current world: ${spoken}`}</span>
     </p>
   );
 }

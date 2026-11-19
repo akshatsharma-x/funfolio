@@ -16,6 +16,8 @@ const READ = "p, li, dd, dt, h1, h2, h3, h4, h5, h6, blockquote, figcaption, td,
 
 type Lit = { born: number; peak: number };
 type Ripple = { c: number; r: number; born: number; max: number; done: number };
+/** PART 16 · the idle show: a run of lit cells chasing once around the screen's edge, like marquee bulbs. */
+type Chase = { cells: number[]; born: number; ms: number; done: number };
 type Hsl = { h: number; s: number; l: number };
 
 function parseColor(value: string): Hsl | null {
@@ -49,6 +51,7 @@ export function createGrid(canvas: HTMLCanvasElement): GridEngine & { destroy():
   const root = document.documentElement;
   const lit = new Map<number, Lit>();
   const ripples: Ripple[] = [];
+  const chases: Chase[] = [];
   let dpr = 1;
   let cols = 0;
   let rows = 0;
@@ -104,6 +107,7 @@ export function createGrid(canvas: HTMLCanvasElement): GridEngine & { destroy():
     for (let r = 0; r <= rows; r++) ctx.fillRect(0, Math.round(r * CELL * dpr), canvas.width, lineW);
     lit.clear();
     ripples.length = 0;
+    chases.length = 0;
   };
 
   const setAwake = (on: boolean) => {
@@ -145,6 +149,14 @@ export function createGrid(canvas: HTMLCanvasElement): GridEngine & { destroy():
       rp.done = ring;
       if (ring >= rp.max) ripples.splice(k, 1);
     }
+    // the edge chase: light the cells the run has reached since the last frame (a 4-cell head; FADE draws the tail)
+    for (let k = chases.length - 1; k >= 0; k--) {
+      const ch = chases[k];
+      const reach = Math.min(ch.cells.length - 1, Math.floor(((now - ch.born) / ch.ms) * ch.cells.length));
+      for (let j = ch.done + 1; j <= reach; j++) for (let h = 0; h < 4 && j - h >= 0; h++) light(ch.cells[j - h], 0.8 - h * 0.15, now);
+      ch.done = reach;
+      if (reach >= ch.cells.length - 1) chases.splice(k, 1);
+    }
     // repaint dirty cells
     for (const [i, cell] of lit) {
       const [x, y, cw, ch] = cellRect(i);
@@ -159,7 +171,7 @@ export function createGrid(canvas: HTMLCanvasElement): GridEngine & { destroy():
       ctx.fillStyle = `hsla(${(world.h + drift + 360) % 360}, ${world.s.toFixed(1)}%, ${world.l.toFixed(1)}%, ${(level * alphaMax).toFixed(3)})`;
       ctx.fillRect(x, y, cw, ch);
     }
-    if (lit.size || ripples.length) raf = requestAnimationFrame(frame);
+    if (lit.size || ripples.length || chases.length) raf = requestAnimationFrame(frame);
     else setAwake(false);
   }
 
@@ -232,6 +244,29 @@ export function createGrid(canvas: HTMLCanvasElement): GridEngine & { destroy():
   root.setAttribute("data-grid", "live");
 
   return {
+    /** PART 16 · one lap around the screen's edge (below the HUD), skipping cells behind reading text — the idle
+     *  attract pattern. It runs during the idle nap (it *is* the idle show), never in CHILL, paused or hidden. */
+    chase(ms = 2600) {
+      if (paused() || fxLevel() === "chill" || chases.length || !cols || !rows) return;
+      const top = Math.ceil(72 / CELL);
+      const right = Math.floor((window.innerWidth - 1) / CELL);
+      const bottom = Math.floor((window.innerHeight - 1) / CELL);
+      if (right < 2 || bottom <= top + 1) return;
+      const ring: [number, number][] = [];
+      for (let c = 0; c <= right; c++) ring.push([c, top]);
+      for (let r = top + 1; r <= bottom; r++) ring.push([right, r]);
+      for (let c = right - 1; c >= 0; c--) ring.push([c, bottom]);
+      for (let r = bottom - 1; r > top; r--) ring.push([0, r]);
+      const cells = ring
+        .filter(([c, r]) => {
+          const el = document.elementFromPoint(c * CELL + CELL / 2, r * CELL + CELL / 2);
+          return !(el && el.closest(READ));
+        })
+        .map(([c, r]) => r * cols + c);
+      if (cells.length < 8) return;
+      chases.push({ cells, born: performance.now(), ms, done: -1 });
+      wake();
+    },
     ripple(x, y) {
       const i = cellAt(x, y);
       if (i < 0 || paused()) return;

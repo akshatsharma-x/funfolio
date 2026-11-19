@@ -22,7 +22,7 @@ const THEME_LABEL: Record<Theme, string> = {
 /** Dev page: every UI-kit component in all 3 themes + the style tile, to lock the look before building worlds. */
 export default function PlaygroundPage() {
   return (
-    <main id="main" className="pb-10">
+    <main id="main" className="pb-10" data-hud-label="Playground · Design check">
       <header className="shell grid gap-6 py-12">
         <p className="font-pixel text-sm uppercase tracking-[0.14em] text-muted">Dev page · not indexed</p>
         <h1 className="text-2xl">Playground · UI kit &amp; style tile</h1>

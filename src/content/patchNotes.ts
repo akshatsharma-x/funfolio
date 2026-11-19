@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.16.0",
+    date: "2026-11-19",
+    title: "Secrets & surprises",
+    notes: [
+      "Secrets everywhere: linger in a corner, type a word (outside a text box — try your favourite name), right-click, or remember an old code.",
+      "AKSHAT-OS: press ` for a terminal with history and Tab completion — whoami, experience, play <game>… and sudo hire akshat.",
+      "Leave BYTE alone and it falls asleep. Visit after midnight and it wears a nightcap.",
+      "Switch tabs and the proctor notices. Developers: check the console.",
+      "Rare loot chests, milestones, and a little ceremony for every hidden coin. All 12 still unlock the Golden cursor.",
+    ],
+  },
+  {
     version: "0.15.0",
     date: "2026-11-19",
     title: "Co-op Lobby & credits",

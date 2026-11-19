@@ -114,6 +114,13 @@ reduced motion the credits are a plain list.
 Any unknown address shows GAME OVER (`out/404.html`, served with status 404): "CONTINUE?" counts down from 10 and goes
 home — any key or click stops it — with a quick round of Bug Whack on offer.
 
+Secrets are everywhere (none of them gets in the way): linger in a screen corner, type a word outside a text box
+(try a name, or what recruiters are here to do), remember an old code (↑↑↓↓←→←→BA), right-click (Shift + right-click
+keeps the browser's menu), switch tabs, leave BYTE alone for a while, or visit after midnight. Press `` ` `` (or Pause →
+Controls → Open the terminal) for AKSHAT-OS, a terminal: `help`, `whoami`, `experience`, `play bug-whack`, `hint`, `cat
+secrets.txt`… and `sudo hire akshat`. Developers: check the console. `/playground/eggs` lists them all with a trigger
+button each. Recruiter Speedrun Mode keeps only the terminal and the right-click menu.
+
 BYTE, the robot mascot, lives in the bottom-right corner: click for a quip, drag or throw it, rub it for hearts,
 minimize it with the `–` button (or turn it off in Pause → Settings). `/playground` has a Juice kit & BYTE panel.
 

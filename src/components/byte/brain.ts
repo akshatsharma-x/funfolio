@@ -1,6 +1,6 @@
 // BYTE's brain (PART 4). Imperative on purpose (like the cursor engine): React renders the robot once; this controller
 // moves it, swaps faces, types speech and reacts — no React renders per frame.
-//   • moods from the face sheet; idle blinks every 3–6s; sleepy (Zzz) after 30s without input
+//   • moods from the face sheet; idle blinks every 3–6s; sleepy (Zzz) after 45s without input (PART 16)
 //   • eyes track the pointer (clamped) — a second cursor locator
 //   • speech queue + typewriter (blip every 2 chars); click BYTE or the bubble to fast-forward
 //   • click → a quip (facts from content.ts); once-only world lines and first-run tips (from the server-built script)
@@ -10,6 +10,7 @@
 //     (and back home once it's free); if nothing is free, it tucks away like minimized.
 //   • never talks over a game unasked: over a `[data-game-screen]` (and on phones) its lines wait behind a "!"
 
+import { EGG_TIMING } from "@/lib/eggs";
 import type { ByteScript } from "@/content/quips";
 import type { WorldId } from "@/content/worlds";
 import { announce } from "@/lib/announce";
@@ -27,7 +28,7 @@ const MARGIN = 10;
 const TOP_SAFE = 76; // below the HUD
 const PEEK = 22; // px of antenna that stay visible when minimized
 const TYPE_MS = 28;
-const SLEEP_AFTER = 30000;
+const SLEEP_AFTER = EGG_TIMING.sleepAfterMs; // PART 16: 45s without input (the page itself naps at 30s, #67)
 const PETS_FOR_ZOO = 10;
 const LABEL = "BYTE, the robot mascot. Press for a quip; arrow keys move BYTE.";
 const PENDING_LABEL = "BYTE, the robot mascot, has something to say. Press to hear it; arrow keys move BYTE.";
@@ -181,12 +182,13 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
       if (mood === "sleepy") setMood("idle");
     }
   };
+  // checked every second, so BYTE nods off within a second of 45s quiet (or right after finishing a line)
   const sleepTimer = window.setInterval(() => {
     if (baseMood !== "sleepy" && !speaking && performance.now() - lastInput > SLEEP_AFTER) {
       baseMood = "sleepy";
       if (mood === "idle") setMood("sleepy");
     }
-  }, 5000);
+  }, 1000);
 
   // ── speech ──────────────────────────────────────────────────────────────────────────────────────────────────
   const queue: Line[] = [];
@@ -721,6 +723,22 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
       root.setAttribute("data-jetpack", "");
       react("happy", 1800);
       later(() => root.removeAttribute("data-jetpack"), 1900);
+    }),
+    // PART 16 · the bottom-right corner: duck off the screen's edge, peek back in, wave (CSS; a wave only under
+    // reduced motion)
+    bus.on("byte:peek", () => {
+      if (root.hasAttribute("data-peek")) return;
+      onInput();
+      root.setAttribute("data-peek", "");
+      react("happy", 2100);
+      later(() => root.removeAttribute("data-peek"), 2100);
+    }),
+    // PART 16 · someone selected the word BYTE
+    bus.on("byte:blush", () => {
+      onInput();
+      root.setAttribute("data-blush", "");
+      react("love", 1600);
+      later(() => root.removeAttribute("data-blush"), 1700);
     }),
     bus.on("achievement:unlocked", () => react("happy", 1400)),
     bus.on("coin:collected", () => react("love", 1400)),

@@ -29,6 +29,16 @@ type UiState = {
   closeGame: () => void;
   /** After the dialog's close animation: forget the last game, so its shell (and any WebGL canvas) unmounts. */
   clearLastGame: () => void;
+  /** PART 16 — the AKSHAT-OS terminal (mounted once it has been opened). */
+  terminalOpen: boolean;
+  terminalEverOpened: boolean;
+  setTerminal: (open: boolean | "toggle") => void;
+  /** A page without worlds (the 404, the playground) names itself for the HUD: its main's data-hud-label. */
+  pageLabel: string | null;
+  setPageLabel: (label: string | null) => void;
+  /** PART 16 — BYTE's look for this session only: the night owl's nightcap, the cheat code's pixel shades. */
+  byteLook: { nightcap: boolean; shades: boolean };
+  setByteLook: (look: Partial<{ nightcap: boolean; shades: boolean }>) => void;
 };
 
 export const useUi = create<UiState>()((set) => ({
@@ -52,6 +62,16 @@ export const useUi = create<UiState>()((set) => ({
     }),
   closeGame: () => set({ game: null }),
   clearLastGame: () => set((s) => (s.game ? {} : { lastGame: null })),
+  terminalOpen: false,
+  terminalEverOpened: false,
+  setTerminal: (open) => set((s) => {
+    const next = open === "toggle" ? !s.terminalOpen : open;
+    return { terminalOpen: next, terminalEverOpened: s.terminalEverOpened || next, pauseOpen: next ? false : s.pauseOpen };
+  }),
+  pageLabel: null,
+  setPageLabel: (label) => set({ pageLabel: label }),
+  byteLook: { nightcap: false, shades: false },
+  setByteLook: (look) => set((s) => ({ byteLook: { ...s.byteLook, ...look } })),
 }));
 
 export function isPauseTab(v: unknown): v is PauseTab {

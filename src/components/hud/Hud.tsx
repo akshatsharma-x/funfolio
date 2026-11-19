@@ -2,6 +2,7 @@
 
 import { ACHIEVEMENTS, isAchievementId } from "@/content/achievements";
 import { COINS } from "@/content/coins";
+import { bus } from "@/lib/bus";
 import { levelProgress } from "@/content/levels";
 import { LATEST_PATCH } from "@/content/patchNotes";
 import { PixelIcon } from "@/components/ui/PixelIcon";
@@ -93,6 +94,7 @@ export function Hud() {
           pressed={mode === "speedrun"}
           onClick={() => setSpeedrun("toggle")}
         />
+        <HudButton label="Terminal" shortcut="`" icon="terminal" onClick={() => bus.emit("terminal:toggle", {})} className="hud-btn--optional" />
         <HudButton label="Map" shortcut="M" icon="map" onClick={() => openPause("map")} className="hud-btn--optional" />
         <HudButton label="Pause menu" shortcut="Escape" icon="pause" badge={patchUnseen} onClick={() => openPause()} />
       </div>

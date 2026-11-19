@@ -226,6 +226,9 @@ export function useCommandHandler(resumeHref: string | null) {
         case "item":
           bus.emit("item:acquired", { title: c.title, detail: c.detail, kicker: c.kicker });
           break;
+        case "egg":
+          bus.emit("egg:trigger", { id: c.id });
+          break;
         case "openGame": {
           // PART 13: the JD Scanner is a Skill Tree tool, not a cabinet — its side quest opens the scanner tab
           if (c.id === "jd-scanner" && document.getElementById("skills-jd")) {
@@ -304,6 +307,8 @@ export function useKeyboardShortcuts() {
           switchTheme("toggle", r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : undefined);
         } else if (k === "R" || k === "r") {
           setSpeedrun("toggle");
+        } else if (k === "F10") {
+          bus.emit("menu:open", {}); // the game menu at the focused element (PART 16) — a context-menu key's twin
         } else return;
         e.preventDefault();
         return;
@@ -312,7 +317,12 @@ export function useKeyboardShortcuts() {
       else if (k === "m" || k === "M") useUi.getState().openPause("map");
       else if (k === "l" || k === "L") locateCursor();
       else if (k === "`") bus.emit("terminal:toggle", {});
-      else return; // every other single letter is reserved for typed easter-egg words (PART 16)
+      else {
+        // every other key goes to the eggs (typed words, the cheat code) — observed, never swallowed: arrows still
+        // scroll, letters still do whatever the page does with them (PART 16)
+        if (k.length === 1 || k.startsWith("Arrow")) bus.emit("egg:key", { key: k });
+        return;
+      }
       e.preventDefault();
     };
     window.addEventListener("keydown", onKey);
@@ -324,6 +334,8 @@ export function useKeyboardShortcuts() {
 export function useWorldTracker(routeKey: string) {
   useEffect(() => {
     const sections = Array.from(document.querySelectorAll<HTMLElement>("main > section[data-world][id], body > footer[data-world][id]"));
+    // no worlds here (the 404, the playground): the HUD names the page instead of "World 0"
+    useUi.getState().setPageLabel(sections.length ? null : (document.querySelector<HTMLElement>("main[data-hud-label]")?.dataset.hudLabel ?? null));
     if (sections.length === 0) return;
     const ids = new Set(WORLDS.map((w) => w.id));
     let current: WorldId | null = null; // local, so the world in view at load is "entered" (and visited) too

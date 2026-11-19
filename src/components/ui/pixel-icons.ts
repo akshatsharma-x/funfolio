@@ -324,6 +324,27 @@ export const PIXEL_ICONS = {
       "................",
     ],
   },
+  terminal: {
+    palette: { k: INK, a: "#07060F", b: "#2EE59D", c: "#B9B2D9" },
+    rows: [
+      "................",
+      ".kkkkkkkkkkkkkk.",
+      ".kccccccccccccck",
+      ".kcaaaaaaaaaaack",
+      ".kcabaaaaaaaaack",
+      ".kcaabaaaaaaaack",
+      ".kcaaabaaaaaaack",
+      ".kcaabaaaaaaaack",
+      ".kcabaaabbbbaack",
+      ".kcaaaaaaaaaaack",
+      ".kcaaaaaaaaaaack",
+      ".kccccccccccccck",
+      ".kkkkkkkkkkkkkkk",
+      "......kkkk......",
+      "....kkkkkkkk....",
+      "................",
+    ],
+  },
   gear: {
     palette: { k: INK, a: "#22D3EE", b: "#0E7490", c: "#FFF4E0" },
     rows: [

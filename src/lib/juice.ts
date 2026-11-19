@@ -29,7 +29,7 @@ export type FxEngine = {
   clearTrail(): void;
 };
 
-export type GridEngine = { ripple(x: number, y: number): void };
+export type GridEngine = { ripple(x: number, y: number): void; chase(ms?: number): void };
 
 let engine: FxEngine | null = null;
 let grid: GridEngine | null = null;
@@ -68,6 +68,10 @@ export const fx = {
   /** Ripple ring on the background grid. */
   ripple(x: number, y: number): void {
     grid?.ripple(x, y);
+  },
+  /** PART 16 · one marquee lap of lit cells around the screen's edge (the idle attract pattern). */
+  gridChase(ms?: number): void {
+    grid?.chase(ms);
   },
   /** Multicolor pixel-dissolve transition. Resolves once the screen is covered; the reveal follows on its own. */
   pixelDissolve(opts?: DissolveOptions): Promise<void> {

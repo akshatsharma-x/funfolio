@@ -14,7 +14,7 @@ export const metadata: Metadata = {
  */
 export default function NotFound() {
   return (
-    <main id="main" className="gameover" data-gameover="">
+    <main id="main" className="gameover" data-gameover="" data-hud-label="Game over · Page not found">
       <div className="shell gameover__shell">
         <p className="gameover__code">404 · Page not found</p>
         <h1 className="gameover__title">Game over</h1>
