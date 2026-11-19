@@ -84,11 +84,16 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
   };
 
   // ── geometry ───────────────────────────────────────────────────────────────────────────────────────────────────
+  // PART 17 · Handheld Mode: BYTE lives above the controller bar
+  const padSpace = () => {
+    const pad = document.querySelector<HTMLElement>("[data-pad]");
+    return pad && getComputedStyle(pad).display !== "none" ? pad.offsetHeight + 14 : 0;
+  };
   const bounds = () => ({
     minX: MARGIN,
     maxX: Math.max(MARGIN, window.innerWidth - BYTE_W - MARGIN),
     minY: TOP_SAFE,
-    maxY: Math.max(TOP_SAFE, window.innerHeight - BYTE_H - MARGIN),
+    maxY: Math.max(TOP_SAFE, window.innerHeight - BYTE_H - MARGIN - padSpace()),
   });
   const homeFromSave = (): Vec => {
     const b = bounds();

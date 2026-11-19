@@ -969,3 +969,115 @@ change an entry only when the decision itself changes.
      "Game over · Page not found", "Playground · …" — instead of "World 0 · Title Screen". Page weight: initial JS 181.3
      KB (+0.3); the provider, the effects, the terminal and Matter are lazy chunks; the eggs' data prop adds ~2.9 KB gzip
      of HTML.
+
+## PART 17 — Handheld mode, accessibility, performance, SEO
+
+189. **Handheld Mode** = a coarse pointer or a window under 768px (`(pointer: coarse), (max-width: 47.99rem)`,
+     `HANDHELD_QUERY` in `src/lib/haptics.ts`), never in Speedrun Mode (the recruiter view keeps its HUD). The HUD becomes
+     a top strip — LV, XP, coins; the rest (sound, theme, Speedrun, map, terminal) is one START away in the pause menu —
+     and a 56px glass controller (`src/components/hud/HandheldPad.tsx`, inside the lazy runtime) sits 6px above the
+     bottom edge (plus the safe area): ◀ ▶ previous / next world (focus moves there), START = the pause menu, B, and A
+     with its label ("A — Launch", "A — Read the scroll"…). A = the current world's first visible `data-primary` control:
+     clicked, focused (the Lobby's name field) or sent its `data-primary-keys` (the Launchpad: ↑ then Enter = a 70% shot).
+     B = back: a synthetic Escape (flagged `padB` so the keyboard manager doesn't open the pause menu) goes to whatever is
+     focused — a card, the cartridge, the hall's open trophy — and if nothing takes it, the top of this world, else the
+     previous world. B sends that Escape on **pointerdown**: the page's own "a tap elsewhere closes it" handlers
+     (pointerdown, focusout) closed a skill card before B's click ran, so B then also flew to the top of the world
+     (part17-qa A7). Scrolling down tucks the pad away (`data-tucked`, a translate), scrolling up or to either end brings
+     it back; its own flights hold it up for 1.5s, a focused pad button keeps it, and the Vault's bottom sheet hides it.
+     The page keeps `--pad-space` free at the bottom (padding + `scroll-padding-bottom`, so focus is never hidden behind
+     it — WCAG 2.4.11), BYTE's home stays above it (`padSpace()` in brain.ts) and the bottom-left eggs sit over it. On
+     phones up to 420px the gaps tighten and START narrows; A's label is what gives way (an ellipsis on a 360px phone for
+     the longer ones — its name keeps the whole label), and under 340px A shows just "A" — every button stays ≥ 44px and
+     inside the bar (at first A pushed 3px past a 360px screen — qa.mjs's overflow check).
+190. **Touch.** Long-press (500ms, < 10px of movement) shows any tooltip for 2.6s and swallows the click that ends it
+     (and Android's long-press menu); hover tooltips are mouse/pen only; a tap's focus no longer opens a tooltip (it stuck
+     open until something else took focus — part17-qa B1). Haptics: `haptic(ms)` → `navigator.vibrate(10–20)` on a pad
+     press (10–14ms), a coin, a level-up (20) and an achievement (15) — coarse pointers only, never under reduced motion,
+     in CHILL or in Speedrun Mode. Tilt: on a touch screen with a live 3D island, "Enable tilt" (aria-pressed; iOS asks for
+     `DeviceOrientationEvent.requestPermission` on that tap) turns the phone's tilt into the island's parallax; nothing
+     listens to the sensor before that tap (Firefox also logs a deprecation warning for any `deviceorientation`
+     listener — engines-p17), and never under reduced motion. Lighter: the FX layer bursts and confetti use
+     0.6× the particles in Handheld Mode (14 → 8 measured), phones keep the LOW island tier and the SVG island until the
+     first tap or scroll (#2), and the Lab's globe stays the flat map on touch screens until "Spin the 3D globe" is tapped
+     (LOW tier). The slingshot, the games and the capsule crank already had touch input and buttons (TURN is A).
+191. **Touch targets ≥ 44 × 44px** on coarse pointers (`src/app/handheld.css`, unlayered so it wins over the components):
+     a 44px min-height for the controls whose box can grow (scroll cue, Peek, the Launchpad's HUD buttons, linked loot
+     chips, the globe's and purifier's buttons, Vault tabs, the Prize Counter's buttons, Copy address, Pause the roll, the
+     quest chips), an invisible `::after` hit area for those inside a number or a moving lane ("$0.08", coin #12, the HUD
+     chips). The UI kit's small arcade buttons said "≥ 44px" but measured 40 (an inset is taken from the padding box:
+     36 − 2 × 3px border + 2 × 5px): −7px now. The audit measures the hit area (box + positioned pseudo-elements).
+192. **Accessibility audit** (`a11y-audit.mjs`, part17-qa D: axe-core 4.14 on every world in night / day / retro, desktop
+     and a 360px phone, the pause menu, a game, an inserted cartridge, the terminal, /playground/eggs and the 404; plus a
+     Tab walk of the whole page). Landmarks (banner, main, contentinfo, the pad's nav), one h1 per page, no skipped
+     heading levels, every canvas aria-hidden or inside a named figure / application. Fixed: the retro theme's chromatic
+     split on the Skill Tree's hubs (ink on violet: the pink/cyan fringe is blended into the fill and dropped it under
+     4.5:1 — headings with ink on a fill keep the pixel face, not the split); the "READY? GO!" chip pops by scale only (a
+     half-faded chip was low-contrast text); the pad's A button name matches its visible text. Skip links: "Skip to
+     content" first, and "Skip mini-game" (`SkipLink`, invisible until focused) before the Launchpad stage (→ the Quest
+     Log) and the Arcade's cabinets (→ the Prize Counter). The keyboard walk reaches the footer and wraps (142 stops): every
+     stop on screen, under the HUD, `:focus-visible` with a ring. No AudioContext without a sound gesture.
+193. **In-page flights are timed** (`scrollToElement`: expo-out, 0.6s + distance / 6000px, at most 1.6s) instead of
+     Lenis's lerp, whose sub-pixel tail held `onComplete` — and so the focus move — back ~1.2s on a short hop and 2–3s for
+     Back to top (the PART 15 gap). Focus now lands as the page arrives (a skip link: 0.77s).
+194. **Zero layout shift.** On load (Lighthouse CLS 0.92 → 0): the Title's hotspot layer kept one box in both the SVG and
+     the 3D views (the projected buttons move by `translate` from where they rest — the layer switching boxes was 0.9 of
+     it); the boot log lines, the coin stage, the fast-boot line and CONTINUE? reserve their space (`visibility`, not
+     `display`); the HUD's world label holds its width with an invisible copy while the typed one fills in. While
+     scrolling the whole page (measured: desktop 0.055 → 0.0045, phone 0.12 → 0.0003): the "READY? GO!" chip was 5px
+     taller than the kicker line and pushed each world down for 1.5s (it's 19px now); the trophy shelf re-sorted itself
+     under the reader when Explorer unlocked as it scrolled by — it now keeps the order it had when the page loaded
+     (unlocked first, newest first) and new trophies light up where they stand (part14-qa H2 updated). Late web fonts
+     (slow mobile; `display: swap`): the 404's "GAME OVER" filled its box exactly in Unbounded and wrapped in the ~4%
+     wider fallback, so the swap turned two lines into one and the centred page re-centred (CLS 0.07 with the fonts held
+     back 1.5s). It's `min(11vw, 7.25rem)` now — one line in both faces at every width from 320px — and the block sits
+     near the top instead of centred: 0.005 with late fonts, 0.003 in Lighthouse (the home page: 0.011 with late fonts,
+     0 in Lighthouse).
+195. **The preview server behaves like a static host** (`scripts/serve-out.mjs`): brotli / gzip for text, `immutable`
+     caching for `/_next/static`, `max-age=0, must-revalidate` for pages, the 404 page with status 404, HEAD. Its cache is
+     keyed by path + mtime + size + encoding (it served stale HTML after a rebuild). Lighthouse numbers are measured
+     against it — an uncompressed server made mobile LCP 9.3s.
+196. **SEO & sharing, all static.** Title "Akshat Sharma — Funfolio · AI/ML Engineer & Full-Stack Developer" and the
+     description are composed from content.ts (`site` in `src/content/site.ts`); a JSON-LD `Person` (`src/content/seo.ts`:
+     name, the current role as jobTitle / worksFor, alumniOf Manipal University Jaipur, sameAs LinkedIn + GitHub;
+     `<` escaped). The share card is a 1200×630 "character card" — BYTE's head, LV badge, the name in the pixel font in
+     the palette, the first three classes, the current role, the pixel coin and the tagline — and the Apple icon a 180px
+     BYTE head, both rendered at build time by `force-static` route handlers (`src/app/og.png/route.tsx`,
+     `apple-icon.png/route.tsx`; the file conventions exported extension-less files a static host serves without a type).
+     The favicon is the 16×16 BYTE head as SVG (`src/app/icon.svg`, drawn from `src/content/brand.ts`), declared
+     explicitly (a metadata `icons` field replaces the convention's link); a web manifest; robots.txt allows everything
+     (noindex stays a meta tag on /playground, /playground/eggs and the 404, #15) and lists the sitemap once the domain is
+     known; `meta[name=theme-color]` follows the theme (night / retro #0e0b1e, day #fff4e0). `site.url` is still "TODO",
+     so the canonical link, og:url, og:image and the sitemap's entry are left out — they need an absolute URL, and a
+     localhost guess would be wrong (prompts.md Appendix A).
+197. **Performance.** Initial JS 182.3 KB gzip (the build's check; PART 16: 181.3 — the pad, haptics and long-press
+     tooltips are +1.0 KB); lazy chunks 729.5 KB in 40 files (gzip -9) — the largest: three + R3F 238 KB, axe-core (the page scan) 178 KB, GSAP with
+     ScrollTrigger / Flip 27 + 17 KB, Matter 25 KB, the 3D scenes with drei's pieces 21 + 13 KB, zod/mini 19 KB; the rest
+     (games, eggs, the pause menu, the terminal…) are 1–24 KB each. ≤ 2 live WebGL contexts (measured while scrolling the whole page:
+     1 at most on desktop and phone; the island, the globe and the hall are worlds apart and unmount beyond a viewport;
+     contexts are released — made 5, released 4, live 1). Off-screen: every 3D canvas renders only on screen and the CSS
+     loops pause (`data-offscreen`, #78); hidden tabs: browsers stop rAF and CSS animations there, and the games pause, the
+     grid sleeps, the cursor engine and BYTE's idle check skip work and play time stops counting (a real hidden tab can't
+     be tested headless — the proctor test fakes it). Fonts: next/font self-hosts latin subsets (woff2); Unbounded, Tiny5
+     and DM Sans are preloaded (all three are above the fold), JetBrains Mono isn't (no "preloaded but not used" warning).
+     Images: there are no raster images yet (art is SVG, CSS and canvas); `npm run images` makes AVIF/WebP once photos
+     arrive. **No `:has()` on the root:** `html:has(.vault[data-sheet]) .pad` (the pad stepping aside for the Vault's
+     sheet) made every style recalculation check the whole page — 1.9s of style work per 8 idle seconds on a 4×-throttled
+     phone (PART 16: 0.04s; Lighthouse mobile main thread 3.1s → 5.6s). The Vault sets `html[data-vault-sheet]` instead:
+     0.04s again, main thread 3.5s. The other `:has()` rules are scoped to a component's own subtree.
+198. **Lighthouse** (13.6, system Chrome, both exports behind the same preview server — PART 16 built from 59366ff in a
+     worktree; Performance · Accessibility · Best Practices · SEO):
+
+     | Page | PART 16 desktop | PART 17 desktop | PART 16 mobile | PART 17 mobile |
+     |---|---|---|---|---|
+     | `/` | 76 · 100 · 100 · 100 (LCP 0.4s, CLS 0.92) | **100** · 100 · 100 · 100 (LCP 0.4s, CLS 0, TBT 0) | 93 · 100 · 100 · 100 (LCP 2.1s, CLS 0.122, TBT 60ms) | **96–97** · 100 · 100 · 100 (LCP 2.1s, CLS 0, TBT 70ms) |
+     | `/?boot=0` | — | 100 · 100 · 100 · 100 | — | 97 · 100 · 100 · 100 (TBT 50ms) |
+     | `/?theme=day` | — | — | — | 97 · 100 · 100 · 100 |
+     | `/404.html` | — | 100 · 100 · 100 · 63 | — | 97 · 100 · 100 · 63 (CLS 0.003) |
+
+     §10 targets met: Performance ≥ 85 / ≥ 70, Accessibility ≥ 95, Best Practices ≥ 95, SEO 100, LCP < 2.5s, CLS < 0.05.
+     The 404's SEO 63 is its noindex (by design, #168); Lighthouse refuses a document served with status 404, so it audits
+     the file. Against the old uncompressed preview server the PART 16 numbers were 61 desktop / 52 mobile (LCP 9.3s).
+     What's left in the reports: "unused JavaScript" (the lazy runtime's chunks are fetched right after hydration), a
+     "legacy JavaScript" insight on Next.js's framework chunk (its built-in polyfills — not ours), and TTI 5.3s on
+     simulated slow 4G (TBT stays ≤ 80ms).

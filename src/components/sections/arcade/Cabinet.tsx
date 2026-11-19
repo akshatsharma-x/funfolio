@@ -111,7 +111,7 @@ export function Cabinet({ game }: { game: ArcadeGame }) {
           <span className="cab__sticker">{live ? "Free play" : "Soon"}</span>
         </div>
         {live ? (
-          <button type="button" className="cab__play" data-play-game={game.id} data-needs-js="" data-cursor-label="PLAY">
+          <button type="button" className="cab__play" data-play-game={game.id} data-needs-js="" data-cursor-label="PLAY" data-primary="">
             <span className="sr-only">Play {game.name}</span>
           </button>
         ) : null}

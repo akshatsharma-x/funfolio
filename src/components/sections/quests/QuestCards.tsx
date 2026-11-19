@@ -38,7 +38,7 @@ function SideQuestButton({ q }: { q: Quest }) {
   const sq = sideQuest(q);
   if (!sq) return null;
   return (
-    <ArcadeButton size="sm" icon="cartridge" command={{ type: "openGame", id: sq.id }} data-fx-skip="" data-needs-js="">
+    <ArcadeButton size="sm" icon="cartridge" command={{ type: "openGame", id: sq.id }} data-fx-skip="" data-needs-js="" data-primary="">
       Side quest: {sq.name}
     </ArcadeButton>
   );

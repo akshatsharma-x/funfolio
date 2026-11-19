@@ -49,6 +49,7 @@ export function TitleSection({ resumeAvailable }: { resumeAvailable: boolean }) 
                 size="lg"
                 icon="controller"
                 cursorLabel="PLAY"
+                data-primary=""
                 command={[
                   { type: "cta", id: "press-start" },
                   { type: "achievement", id: "player-one" },

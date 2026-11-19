@@ -44,6 +44,22 @@ export function TitleIsland({ spots, ratio, children }: { spots: Spots; ratio: n
   const [Canvas3D, setCanvas3D] = useState<ComponentType<IslandCanvasProps> | null>(null);
   const [armed, setArmed] = useState(false); // phones: armed by the first tap/scroll
   const live = useSyncExternalStore(island.subscribe, () => island.get().live, () => false);
+  const tilt = useSyncExternalStore(island.subscribe, () => island.get().tilt, () => false);
+  const tiltable = useSyncExternalStore(
+    () => () => {},
+    () => "DeviceOrientationEvent" in window,
+    () => false,
+  );
+  const toggleTilt = async () => {
+    if (island.get().tilt) return island.set({ tilt: false });
+    const D = window.DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> };
+    try {
+      if (typeof D.requestPermission === "function" && (await D.requestPermission()) !== "granted") return;
+    } catch {
+      return;
+    }
+    island.set({ tilt: true });
+  };
   const [near, setNear] = useState(true);
   const [visible, setVisible] = useState(true);
   const [spun, setSpun] = useState(false);
@@ -283,6 +299,13 @@ export function TitleIsland({ spots, ratio, children }: { spots: Spots; ratio: n
         <PixelIcon name="map" mono />
         {spun ? "Turn back" : "Peek behind the tower"}
       </button>
+      {/* PART 17 · phones: the island leans with the device — only after this tap (iOS asks for permission) */}
+      {live && !fine && !reduced && tiltable ? (
+        <button type="button" className="island__tilt" data-fx-skip="" aria-pressed={tilt} onClick={() => void toggleTilt()}>
+          <PixelIcon name="sparkle" mono />
+          {tilt ? "Tilt on" : "Enable tilt"}
+        </button>
+      ) : null}
     </div>
   );
 }

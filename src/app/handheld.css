@@ -1,0 +1,184 @@
+/* PART 17 · Handheld Mode (a coarse pointer or a narrow screen; never in Speedrun Mode): the HUD becomes a top strip
+   (LV, XP, coins — everything else is one START away), and a 56px controller bar sits at the bottom. The page keeps
+   room for the bar (padding and scroll-padding, so focus is never hidden behind it — WCAG 2.4.11). */
+
+@layer theme, base, components, utilities;
+
+@layer components {
+  .pad {
+    display: none;
+  }
+  .pad__dpad,
+  .pad__ab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pad__btn,
+  .pad__start {
+    display: inline-grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 3px solid var(--ink);
+    background: var(--surface-2);
+    color: var(--text);
+    box-shadow: 0 3px 0 var(--ink);
+    font-family: var(--font-pixel);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pad__btn {
+    border-radius: 50%;
+    font-size: 1rem;
+  }
+  .pad__btn--dir {
+    border-radius: 12px;
+  }
+  .pad__btn--b {
+    background: #ff4d4d;
+    color: #07060f;
+  }
+  .pad__btn--a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 44px;
+    padding: 0 12px 0 14px;
+    border-radius: 999px;
+    background: #2ee59d;
+    color: #07060f;
+  }
+  /* the A label gives way first on a narrow phone (ellipsis; the button's name keeps the whole label) */
+  .pad__ab {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+  .pad__btn--a {
+    flex: 0 1 auto;
+    overflow: hidden;
+  }
+  .pad__a-label {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 7.5rem;
+    overflow: hidden;
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pad__start {
+    min-width: 72px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+  }
+  .pad__btn:active,
+  .pad__start:active {
+    translate: 0 2px;
+    box-shadow: 0 1px 0 var(--ink);
+  }
+  .pad__btn:focus-visible,
+  .pad__start:focus-visible {
+    outline: 3px dashed var(--world-fg);
+    outline-offset: 2px;
+  }
+}
+
+@media (pointer: coarse), (max-width: 47.99rem) {
+  html:not([data-mode="speedrun"]) {
+    --pad-space: calc(70px + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(var(--pad-space) + 12px);
+  }
+  html:not([data-mode="speedrun"]) body {
+    padding-bottom: var(--pad-space);
+  }
+  html:not([data-mode="speedrun"]) .pad {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    z-index: 61;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 56px;
+    padding: 0 8px;
+    border: 1px solid color-mix(in srgb, var(--text) 16%, transparent);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    box-shadow: 0 6px 18px rgb(0 0 0 / 0.35);
+    transition: translate calc(var(--motion) * 220ms) ease;
+  }
+  /* scrolling down tucks it away; up brings it back — never while one of its buttons has focus. The Vault's sheet sets
+     html[data-vault-sheet]: an `html:has(.vault[data-sheet])` made every style recalc check the whole page (~45× the
+     idle style work on a phone, PART 17) */
+  html:not([data-mode="speedrun"]) .pad[data-tucked]:not(:focus-within),
+  html[data-vault-sheet] .pad:not(:focus-within) {
+    translate: 0 calc(100% + 20px);
+  }
+  /* phones up to 420px: tighter gaps and a narrower START leave A room for its label; under 340px A shows just "A" */
+  @media (max-width: 26.25rem) {
+    html:not([data-mode="speedrun"]) .pad {
+      gap: 6px;
+      padding-inline: 6px;
+    }
+    .pad__start {
+      min-width: 56px;
+      padding-inline: 8px;
+    }
+    .pad__btn--a {
+      padding-inline: 12px 10px;
+    }
+  }
+  @media (max-width: 21.25rem) {
+    .pad__a-label {
+      display: none;
+    }
+  }
+  /* the top strip: LV, XP, coins */
+  html:not([data-mode="speedrun"]) .hud :is(.hud-btn, .hud-world, .hud-chip--optional) {
+    display: none;
+  }
+  html:not([data-mode="speedrun"]) .hud {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  /* things docked bottom-left sit above the bar */
+  html:not([data-mode="speedrun"]) :is(.egg-bored, .egg-patch) {
+    bottom: calc(var(--pad-space) + 8px);
+  }
+}
+
+/* Tap targets ≥ 44px on touch (PART 17 — WCAG 2.5.5). Controls whose box can simply grow get a 44px minimum; those that
+   sit inside a number or a moving lane keep their look and get an invisible hit area around them (the UI kit's small
+   arcade buttons already do: `.arcade-btn[data-size="sm"]::after`). Unlayered, so it wins over the component layers. */
+@media (pointer: coarse) {
+  :is(.title-scroll, .island__spin, .lp__btn, .loot__link, .globe-btn, .purify-btn, .vault-tab, .prize__btn, .portal__copy, .credits__pause, .quest-chip span) {
+    min-height: 44px;
+  }
+  .vault-tab {
+    min-width: 44px;
+  }
+  .coin-egg {
+    position: relative;
+  }
+  .coin-egg::after,
+  .credits__coin::after,
+  .hud :is(.hud-chip, .hud-btn)::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+  }
+  .credits__coin::after {
+    inset: min(0px, calc((var(--coin) - 44px) / 2));
+    border-radius: 50%;
+  }
+}

@@ -1,5 +1,6 @@
 import { arcadeGames } from "@/content/arcade";
 import { PlayOnView } from "@/components/ui/PlayOnView";
+import { SkipLink } from "@/components/ui/SkipLink";
 import { WorldHeader } from "@/components/ui/WorldHeader";
 import { ArcadeFx } from "./arcade/ArcadeFx";
 import { Cabinet } from "./arcade/Cabinet";
@@ -25,7 +26,8 @@ export function ArcadeSection() {
           Every game here is based on real work. <span>Just more fun.</span>
         </p>
       </PlayOnView>
-      <div className="arcade-floor">
+      <div className="arcade-floor relative">
+        <SkipLink to="prize-booth">Skip mini-games</SkipLink>
         <ul className="arcade-row" aria-label="Arcade cabinets">
           {games.map((g) => (
             <Cabinet key={g.id} game={g} />

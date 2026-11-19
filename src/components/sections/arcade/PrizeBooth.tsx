@@ -9,7 +9,7 @@ import { PixelIcon } from "@/components/ui/PixelIcon";
 export function PrizeBooth() {
   const forSale = PRIZES.filter((p) => p.price > 0 || "grantedBy" in p);
   return (
-    <div className="prize-booth">
+    <div className="prize-booth" id="prize-booth">
       <div className="prize-booth__sign">
         <PixelIcon name="chest" size={32} />
         <div>

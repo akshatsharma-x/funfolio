@@ -913,8 +913,11 @@
     --world-fg: color-mix(in srgb, var(--w-fg-n) calc(var(--night) * 100%), var(--w-fg-d));
     display: grid;
     min-height: 100svh;
-    place-items: center;
-    padding: 6rem 0 4rem;
+    /* anchored near the top, not centred: a centred block re-centres when its height changes — a web font arriving
+       late (slow mobile) re-wraps the pixel-font buttons, and everything above them moved too (CLS 0.07, PART 17) */
+    justify-items: center;
+    align-content: start;
+    padding: clamp(6rem, 18svh, 11rem) 0 4rem;
     overflow-x: clip;
   }
   .gameover__shell {
@@ -933,7 +936,9 @@
   .gameover__title {
     margin: 0;
     font-family: var(--font-display);
-    font-size: clamp(3rem, 12vw, 8rem);
+    /* one line in Unbounded *and* in its fallback at every width (the fallback is ~4% wider): at 12vw the title filled
+       its box exactly, so a late web font changed it from two lines to one and moved the page (PART 17) */
+    font-size: min(11vw, 7.25rem);
     font-weight: 900;
     line-height: 0.95;
     text-transform: uppercase;

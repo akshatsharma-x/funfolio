@@ -28,6 +28,10 @@ export function Tooltip({ title, typeLine, body, children }: TooltipProps) {
   const hideTimer = useRef<number | undefined>(undefined);
   /** Opened by keyboard focus (Tab) rather than hover / a mouse click — decides whether Esc is consumed. */
   const viaKeyboard = useRef(false);
+  // PART 17 · touch: a long-press shows the tooltip (no hover-only information), and the tap that ends it is eaten
+  const press = useRef<{ timer: number; x: number; y: number; fired: boolean } | null>(null);
+  /** The last press was a finger: the focus it gives the trigger opens nothing (the long-press does). */
+  const touched = useRef(false);
   const [open, setOpen] = useState(false);
 
   const show = useCallback(() => {
@@ -116,10 +120,58 @@ export function Tooltip({ title, typeLine, body, children }: TooltipProps) {
     <span
       ref={anchorRef}
       className="inline-flex max-w-full"
-      onPointerEnter={show}
-      onPointerLeave={() => hide()}
+      onPointerEnter={(e) => {
+        if (e.pointerType !== "touch") show();
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType !== "touch") hide();
+      }}
+      onPointerDown={(e) => {
+        touched.current = e.pointerType === "touch";
+        if (e.pointerType !== "touch") return;
+        window.clearTimeout(press.current?.timer);
+        press.current = {
+          x: e.clientX,
+          y: e.clientY,
+          fired: false,
+          timer: window.setTimeout(() => {
+            if (!press.current) return;
+            press.current.fired = true;
+            show();
+            hide(2600);
+          }, 500),
+        };
+      }}
+      onPointerMove={(e) => {
+        const p = press.current;
+        if (p && !p.fired && Math.hypot(e.clientX - p.x, e.clientY - p.y) > 10) {
+          window.clearTimeout(p.timer);
+          press.current = null;
+        }
+      }}
+      onPointerUp={() => {
+        if (press.current && !press.current.fired) {
+          window.clearTimeout(press.current.timer);
+          press.current = null;
+        }
+      }}
+      onPointerCancel={() => {
+        window.clearTimeout(press.current?.timer);
+        press.current = null;
+      }}
+      onClickCapture={(e) => {
+        if (press.current?.fired) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        press.current = null;
+      }}
+      onContextMenu={(e) => {
+        if (press.current?.fired) e.preventDefault(); // Android's long-press menu would cover it
+      }}
       onFocus={(e) => {
         viaKeyboard.current = e.target instanceof HTMLElement && e.target.matches(":focus-visible");
+        if (touched.current && !viaKeyboard.current) return; // a tap's focus: no sticky tooltip, the long-press decides
         show();
       }}
       onBlur={() => {

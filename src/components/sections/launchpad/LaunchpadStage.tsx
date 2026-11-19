@@ -122,6 +122,8 @@ export function LaunchpadStage({ poster }: { poster: ReactNode }) {
         aria-describedby={live ? "lp-help" : undefined}
         data-fx-skip=""
         data-game-screen=""
+        data-primary={live ? "" : undefined}
+        data-primary-keys="ArrowUp Enter"
       >
         {poster}
         <div ref={handle} className="lp__handle" data-cursor="grab" aria-hidden="true" style={{ left: `${(ANCHOR.x / WORLD.w) * 100}%`, top: `${(ANCHOR.y / WORLD.h) * 100}%` } as CSSProperties} />

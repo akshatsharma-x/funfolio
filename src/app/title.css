@@ -283,8 +283,7 @@
     position: absolute;
     inset: 0;
     z-index: 2;
-    /* live, this layer spans the whole stage: only the buttons take the pointer, so the name, the CTAs and
-       island drags underneath stay reachable */
+    /* only the buttons take the pointer, so the name, the CTAs and island drags underneath stay reachable */
     pointer-events: none;
   }
   .island__gl {
@@ -305,8 +304,10 @@
       position: absolute;
       inset: 0;
     }
+    /* the spots keep the art's box live too: the 3D scene only translates the buttons from their resting places,
+       so going live is a transform — not a layout shift (it was 0.86 CLS, PART 17) */
     .island__art,
-    .island:not([data-live]) .island__spots {
+    .island__spots {
       position: absolute;
       inset: auto;
       top: 50%;
@@ -365,10 +366,6 @@
     border-radius: 50%;
     background: transparent;
     pointer-events: auto;
-  }
-  .island[data-live] .hotspot {
-    left: 0 !important; /* the 3D scene moves them with translate */
-    top: 0 !important;
   }
   .hotspot[data-off],
   .hotspot--coin[data-collected] {
@@ -446,6 +443,25 @@
   .island:not([data-live]) .hotspot[data-edge]:is(:hover, :focus-visible) .hotspot__label,
   .island[data-live] .hotspot[data-edge-live]:is(:hover, :focus-visible) .hotspot__label {
     translate: 0 0;
+  }
+  .island__tilt {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0.3rem 0.8rem;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--text);
+    font: 600 0.9rem var(--font-body);
+  }
+  .island__tilt[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--world) 30%, var(--surface-2));
   }
   .island__spin {
     position: absolute;

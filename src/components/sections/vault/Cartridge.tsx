@@ -14,7 +14,7 @@ export function CartridgeItem({ cart, secret, first }: { cart: Cartridge; secret
       <div className="cart" data-flip-id={`cart-${cart.id}`}>
         {/* The name is the label's own words (WCAG 2.5.3, visible title first): "Cognivault AI — insert cartridge.
             Genre: Multi-Agent RAG". The monogram, foil and dots are decoration. */}
-        <button type="button" className="cart__btn" data-cart-btn={cart.id} tabIndex={first ? 0 : -1} data-cursor-label="INSERT">
+        <button type="button" className="cart__btn" data-cart-btn={cart.id} tabIndex={first ? 0 : -1} data-cursor-label="INSERT" data-primary="">
           <span className="cart__shell">
             <span className="cart__ridge" aria-hidden="true" />
             <span className="cart__label" data-pattern={cart.pattern}>

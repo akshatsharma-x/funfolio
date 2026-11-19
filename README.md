@@ -9,7 +9,7 @@ no server, no API keys, no runtime third-party requests.
 |---|---|
 | `npm run dev` | Dev server at http://localhost:3000 |
 | `npm run build` | Static export to `out/`, then R1/R10/budget checks (`scripts/check-export.mjs`) |
-| `npm run preview` | Serves `out/` at http://localhost:4173 |
+| `npm run preview` | Serves `out/` at http://localhost:4173 like a static host (brotli/gzip, immutable `/_next/static`, 404 page) |
 | `npm run check` | ESLint + TypeScript |
 | `npm run images` | Pre-builds AVIF/WebP variants from `assets/images/` into `public/img/` |
 | `npm run cursors` | Rebuilds the pixel cursors (6 skins × 3 sizes × 7 variants) and their CSS |
@@ -124,6 +124,19 @@ button each. Recruiter Speedrun Mode keeps only the terminal and the right-click
 BYTE, the robot mascot, lives in the bottom-right corner: click for a quip, drag or throw it, rub it for hearts,
 minimize it with the `–` button (or turn it off in Pause → Settings). `/playground` has a Juice kit & BYTE panel.
 
+On phones and tablets (a touch screen, or any window under 768px) the page is in Handheld Mode. The HUD becomes a slim
+strip (level, XP, coins; everything else is under START) and a controller bar sits at the bottom: ◀ ▶ previous / next
+world · A = the world's main action (named on the button: Launch, Read the scroll, Insert cartridge, Turn the crank…) ·
+B = back (closes whatever is open, else the top of the world, else the previous one) · START = the pause menu. It tucks
+away while you scroll down and comes back when you scroll up. Long-press anything with a tooltip to read it; "Enable
+tilt" lets the island follow your phone; the Lab's globe loads when you tap "Spin the 3D globe"; coins, level-ups and
+achievements give a short buzz (never with reduced motion, in CHILL or in Speedrun Mode). Every touch target is at
+least 44px. Speedrun Mode has no controller.
+
+Keyboard: "Skip to content" is the first Tab stop, and "Skip mini-game" links (shown when focused) jump past the
+Launchpad to the Quest Log and past the Arcade's cabinets to the Prize Counter. Every in-page jump moves focus to where
+it lands.
+
 ## Editing content
 
 All facts live in `src/content/content.ts`. Anything set to `"TODO"` renders as "Coming soon"; counts (internships,
@@ -137,6 +150,11 @@ phone portal only with `showPhone: true` and a number (it's revealed on click �
 While `player.bio` is `"TODO"`, the Profile shows a DRAFT bio assembled only from these facts — write your own in
 `player.bio` to replace it. Until `player.photo` is set, the Character Card shows a pixel avatar; its colors are in
 `src/content/avatar.ts`. Perk names and the Focus Radar's domain buckets live in `src/content/profile.ts`.
+
+Search and sharing: the page title, description and the JSON-LD `Person` (name, school, current role, LinkedIn,
+GitHub) are built from content.ts; the share card (`/og.png`, a game character card), the Apple icon and the pixel
+BYTE favicon are generated at build time. Set `site.url` in `src/content/site.ts` once the domain exists — the canonical
+link, `og:url` / `og:image` and the sitemap's entry need an absolute address, so they're left out until then.
 
 Skills come from `skills` in content.ts (each listed once — the build checks). A skill's "Used in" is computed from the
 roles' and projects' `stack`s through the alias map in `src/lib/skills-index.ts` ("GPT-4.1" counts for LLMs, "Django

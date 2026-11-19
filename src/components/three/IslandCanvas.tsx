@@ -632,7 +632,7 @@ function HiddenCoin({ model, toon, still, anchors }: { model: IslandModel; toon:
 
 // ── camera rig: framing, parallax, spin, swoop, dive, hotspot projection ────────────────────────────────────────
 function Rig({ offsetX, still, rotate, hotspots, world, diveGroup, onFirstFrame }: { offsetX: number; still: boolean; rotate: boolean; hotspots: HTMLElement | null; world: RefObject<THREE.Group | null>; diveGroup: RefObject<THREE.Group | null>; onFirstFrame: () => void }) {
-  const { camera, size, scene, invalidate } = useThree();
+  const { camera, size, scene, invalidate, gl } = useThree();
   const controls = useRef<OrbitControlsImpl>(null);
   const anchorsRef = useAnchors();
   const pointer = useRef({ x: 0, y: 0 });
@@ -672,7 +672,26 @@ function Rig({ offsetX, still, rotate, hotspots, world, diveGroup, onFirstFrame 
       if (still) invalidate();
     };
     window.addEventListener("pointermove", onMove, { passive: true });
-    const offIsland = island.subscribe(() => invalidate());
+    // PART 17 · tilt (phones, after an explicit "Enable tilt"): the device's lean drives the same ≤ 3° parallax. The
+    // sensor is only listened to once tilt is on (Firefox logs a deprecation warning for any deviceorientation listener)
+    const onTilt = (e: DeviceOrientationEvent) => {
+      if (still || e.gamma === null || e.beta === null) return;
+      pointer.current = { x: Math.max(-1, Math.min(1, e.gamma / 30)), y: Math.max(-1, Math.min(1, (e.beta - 45) / 30)) };
+      invalidate();
+    };
+    let tilting = false;
+    const syncTilt = () => {
+      const want = island.get().tilt && !still;
+      if (want === tilting) return;
+      tilting = want;
+      if (want) window.addEventListener("deviceorientation", onTilt, { passive: true });
+      else window.removeEventListener("deviceorientation", onTilt);
+    };
+    syncTilt();
+    const offIsland = island.subscribe(() => {
+      syncTilt();
+      invalidate();
+    });
     // swoop toward a landmark (GSAP — its ticker sleeps again when the tween is done)
     island.onGo(async (id) => {
       const anchor = anchorsRef.get(id);
@@ -716,6 +735,7 @@ function Rig({ offsetX, still, rotate, hotspots, world, diveGroup, onFirstFrame 
     });
     return () => {
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("deviceorientation", onTilt);
       offIsland();
       island.onGo(null);
     };
@@ -732,6 +752,27 @@ function Rig({ offsetX, still, rotate, hotspots, world, diveGroup, onFirstFrame 
     },
     [hotspots],
   );
+
+  // Where each button rests in the spots layer (its SVG-island place) and where that layer sits on the canvas: the
+  // projection moves buttons by `translate` from those resting places, so going live never moves a layout box
+  // (layout shift, PART 17). Re-measured when the layer or the canvas resizes.
+  const rest = useRef<{ x: number; y: number; at: Map<HTMLElement, [number, number]> }>({ x: 0, y: 0, at: new Map() });
+  useEffect(() => {
+    if (!hotspots) return;
+    const canvasEl = gl.domElement;
+    const measure = () => {
+      const c = canvasEl.getBoundingClientRect();
+      const box = hotspots.getBoundingClientRect();
+      const at = new Map<HTMLElement, [number, number]>();
+      for (const el of hotspots.querySelectorAll<HTMLElement>("[data-hotspot]")) at.set(el, [el.offsetLeft + el.offsetWidth / 2, el.offsetTop + el.offsetHeight / 2]);
+      rest.current = { x: box.left - c.left, y: box.top - c.top, at };
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(hotspots);
+    ro.observe(canvasEl);
+    return () => ro.disconnect();
+  }, [hotspots, gl]);
 
   const v = useMemo(() => new THREE.Vector3(), []);
   useFrame((state, dt) => {
@@ -786,7 +827,9 @@ function Rig({ offsetX, still, rotate, hotspots, world, diveGroup, onFirstFrame 
         if (el.dataset.hotspot === "plane" && x < island.get().textRight + 28) hidden = true;
         const off = hidden || v.z > 1 || x < -40 || y < -40 || x > size.width + 40 || y > size.height + 40 || dive > 0.35;
         el.toggleAttribute("data-off", off);
-        el.style.translate = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
+        const r = rest.current;
+        const [bx, by] = r.at.get(el) ?? [0, 0];
+        el.style.translate = `${(x - r.x - bx).toFixed(1)}px ${(y - r.y - by).toFixed(1)}px`;
         // labels near the canvas edges anchor to that side (they'd spill off the page otherwise)
         const edge = x > size.width - 190 ? "end" : x < 190 ? "start" : "";
         if ((el.dataset.edgeLive ?? "") !== edge) {

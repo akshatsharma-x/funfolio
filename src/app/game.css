@@ -257,9 +257,19 @@
     box-shadow: 0 0 0 2px var(--ink);
   }
   .hud-world > span[aria-hidden] {
+    position: relative;
     overflow: hidden;
     text-overflow: ellipsis;
     min-height: 1.2em;
+  }
+  .hud-world__ghost {
+    visibility: hidden;
+  }
+  .hud-world__typed {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Chips (wallet, trophies) and square buttons */

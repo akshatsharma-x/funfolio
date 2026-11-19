@@ -67,7 +67,7 @@ export function CapsuleMachine({ items }: { items: number }) {
         </div>
         <div className="capsules__side">
           <div className="capsules__controls">
-            <ArcadeButton type="button" icon="coin" sfx={false} data-capsule-turn="">
+            <ArcadeButton type="button" icon="coin" sfx={false} data-capsule-turn="" data-primary="">
               Turn the crank
             </ArcadeButton>
             <p className="capsules__hint">…or grab the crank and wind it around.</p>

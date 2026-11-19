@@ -21,6 +21,7 @@ import { getLenis, scrollToElement } from "@/lib/scroll";
 import { sfx } from "@/lib/sfx";
 import { useSave, type Settings } from "@/lib/store";
 import { sweepTheme } from "@/lib/theme";
+import { haptic } from "@/lib/haptics";
 import { isPauseTab, useUi } from "@/lib/ui";
 import { fx } from "@/lib/juice";
 import { byte } from "@/lib/byte";
@@ -281,8 +282,9 @@ export function useKeyboardShortcuts() {
       const exclusive = !!active?.closest('[data-keyboard="exclusive"]');
 
       if (e.key === "Escape") {
-        // Never steal Esc from a field; open dialogs close themselves (native <dialog> cancel).
-        if (typing || dialogOpen) return;
+        // Never steal Esc from a field; open dialogs close themselves (native <dialog> cancel). The handheld pad's B
+        // sends a synthetic Escape to close cards and menus — it must never open the pause menu (that's START).
+        if (typing || dialogOpen || (e as KeyboardEvent & { padB?: boolean }).padB) return;
         e.preventDefault();
         useUi.getState().openPause();
         return;
@@ -414,8 +416,15 @@ export function useBusWiring() {
     const offs = [
       bus.on("cursor:shake", () => useSave.getState().unlock("shaky-hands")),
       bus.on("achievement:unlocked", () => sfx.play("achievement")),
-      bus.on("coin:collected", () => sfx.play("coin")),
-      bus.on("level:up", () => sfx.play("levelUp")),
+      bus.on("coin:collected", () => {
+        sfx.play("coin");
+        haptic(20); // PART 17 · handheld haptics
+      }),
+      bus.on("level:up", () => {
+        sfx.play("levelUp");
+        haptic(20);
+      }),
+      bus.on("achievement:unlocked", () => haptic(15)),
       bus.on("xp:gained", ({ reason }) => {
         if (!reason.startsWith("achievement:") && !reason.startsWith("coin:")) sfx.play("xp");
       }),

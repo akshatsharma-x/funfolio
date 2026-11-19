@@ -18,6 +18,7 @@ import "./skills.css";
 import "./trophies.css";
 import "./lobby.css";
 import "./eggs.css";
+import "./handheld.css";
 import "./boot.css";
 import { CursorLayer } from "@/components/cursor/CursorLayer";
 import { GameRuntimeLoader } from "@/components/hud/GameRuntimeLoader";
@@ -47,8 +48,20 @@ export const metadata: Metadata = {
   authors: [{ name: player.name }],
   creator: player.name,
   alternates: siteUrl ? { canonical: "/" } : undefined,
-  openGraph: { type: "website", siteName: site.name, title: site.title, description: site.description },
+  // the share card is built at build time (src/app/og.png); og:url / og:image need absolute URLs, so they're emitted
+  // once site.url is known (src/content/site.ts) — never a localhost guess
+  openGraph: {
+    type: "website",
+    siteName: site.name,
+    title: site.title,
+    description: site.description,
+    ...(siteUrl ? { url: "/", images: [{ url: "/og.png", width: 1200, height: 630, alt: `${player.name} — a game character card: ${player.classes.slice(0, 3).join(", ")}` }] } : {}),
+  },
+  twitter: siteUrl ? { card: "summary_large_image", title: site.title, description: site.description, images: ["/og.png"] } : { card: "summary", title: site.title, description: site.description },
   robots: { index: true, follow: true },
+  // BYTE's head: src/app/icon.svg (exported as /icon.svg) and the home-screen PNG (a static route, a real .png file).
+  // Declared here, because a metadata `icons` field replaces the file convention's own link.
+  icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml", sizes: "any" }], apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }] },
 };
 
 export const viewport: Viewport = {

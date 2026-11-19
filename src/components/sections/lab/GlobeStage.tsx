@@ -34,7 +34,9 @@ export function GlobeStage({ route, caption, children }: { route: { from: Place;
   const [lost, setLost] = useState(false);
   const [spin, setSpin] = useState(true);
   const [recenter, setRecenter] = useState(0);
-  const want = mode !== "speedrun" && tier === "high" && fine && !lost;
+  // PART 17 · touch screens: the flat map stays until a tap asks for the 3D globe (lighter by default)
+  const [tapped, setTapped] = useState(false);
+  const want = mode !== "speedrun" && ((tier === "high" && fine) || (tapped && tier !== "none")) && !lost;
 
   useEffect(() => {
     const el = root.current;
@@ -101,6 +103,12 @@ export function GlobeStage({ route, caption, children }: { route: { from: Place;
           ) : null}
             <button type="button" className="globe-btn" onClick={() => setRecenter((n) => n + 1)}>
               Show the route
+            </button>
+          </div>
+        ) : !fine && tier !== "none" && mode !== "speedrun" && !tapped ? (
+          <div className="globe-stage__controls" data-needs-js="">
+            <button type="button" className="globe-btn" onClick={() => setTapped(true)}>
+              Spin the 3D globe
             </button>
           </div>
         ) : null}

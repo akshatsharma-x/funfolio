@@ -123,6 +123,23 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   content.ts, with the chest's facts, the proctor line and the content hash). Speedrun Mode keeps only the terminal and
   the right-click menu. `/playground/eggs` lists every egg with a Trigger button; tests can shorten idle / force chests
   with an opt-in `window.__QA_EGGS`. A page without worlds names itself for the HUD with `data-hud-label` on its main.
+- Handheld Mode (PART 17): `(pointer: coarse), (max-width: 47.99rem)` (`HANDHELD_QUERY` in `src/lib/haptics.ts`), never
+  in Speedrun Mode; styles in `src/app/handheld.css`. The pad is `src/components/hud/HandheldPad.tsx`: A clicks (or
+  focuses, for a field) the current world's first visible `data-primary` control, or sends it `data-primary-keys`; add
+  its label to `A_LABEL`. B sends a synthetic Escape (flagged `padB`, which the keyboard manager ignores) on pointerdown
+  — anything that opens should close on Escape and call `preventDefault()`, or B falls through to "top of the world".
+  Touch targets are ≥ 44px on coarse pointers (a min-height, or an invisible `::after` hit area for controls inside a
+  number or a moving lane). Buzz with `haptic(ms)` (coarse pointers only; never with reduced motion, CHILL or Speedrun).
+- SEO & sharing (PART 17): metadata in `src/app/layout.tsx`, the JSON-LD Person in `src/content/seo.ts`; the OG card and
+  the Apple icon are build-time route handlers (`src/app/og.png/route.tsx`, `src/app/apple-icon.png/route.tsx`,
+  `force-static` — the file conventions exported extension-less files); the favicon `src/app/icon.svg` is BYTE's head
+  from `src/content/brand.ts`. Canonical, og:url, og:image and the sitemap entry appear only once `site.url` is set.
+  `meta[name=theme-color]` follows the theme (`applyToDocument`).
+- Layout shift (CLS 0 is measured on load and while scrolling, PART 17): reserve space with `visibility: hidden` (not
+  `display: none`) or a ghost copy of the text, move things with transforms only, never insert an in-flow chip taller
+  than its line, don't reorder live lists under the reader (the trophy shelf keeps its order for the visit), and leave
+  ~5% headroom on text sized to fill its box (a late web font's fallback is wider and re-wraps it). Never put `:has()`
+  on `html` / `body` / `:root` — it makes every style recalc check the whole page (#197); set an attribute instead.
 - Content that changes in place (a form that becomes something smaller) can leave its replacement off screen: call
   `revealElement(el)` from `src/lib/scroll.ts` (the least scroll that shows it under the HUD, through Lenis).
 - Cascade layers: a continuous loop declared outside `@layer` (it needs `#world:not([data-offscreen])`) beats every

@@ -56,6 +56,9 @@ type Dissolve = {
 };
 
 const fxLevel = () => document.documentElement.getAttribute("data-fx") ?? "normal";
+// PART 17 · Handheld Mode is lighter: fewer particles per burst and in the confetti
+const handheld = typeof window !== "undefined" ? window.matchMedia("(pointer: coarse), (max-width: 47.99rem)") : null;
+const lighter = (n: number) => (handheld?.matches ? Math.max(1, Math.round(n * 0.6)) : n);
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
 const pick = <T,>(list: readonly T[]) => list[Math.floor(Math.random() * list.length)];
 
@@ -315,7 +318,7 @@ export function createFxEngine(canvas: HTMLCanvasElement, opts: { shakeTargets?:
   const engine: FxEngine & { destroy(): void } = {
     burst(x, y, o: BurstOptions = {}) {
       const level = fxLevel();
-      const count = Math.max(1, Math.round(o.count ?? BURST_COUNT[level] ?? 10));
+      const count = lighter(Math.max(1, Math.round(o.count ?? BURST_COUNT[level] ?? 10)));
       const colors = o.colors?.length ? o.colors : RAINBOW;
       const shape = o.shape ?? "pixel";
       const power = o.power ?? 1;
@@ -355,7 +358,7 @@ export function createFxEngine(canvas: HTMLCanvasElement, opts: { shakeTargets?:
 
     confetti(o: { style?: ConfettiStyle } = {}) {
       const style = o.style ?? "pixels";
-      const count = CONFETTI_COUNT[fxLevel()] ?? 110;
+      const count = lighter(CONFETTI_COUNT[fxLevel()] ?? 110);
       canvas.setAttribute("data-last-confetti", `${count} ${style}`);
       const shape: BurstShape = style === "stars" ? "star" : style === "hearts" ? "heart" : style === "coins" ? "coin" : "pixel";
       const colors = style === "hearts" ? ["#FF3D8B", "#FF4D4D", "#FFF4E0"] : style === "coins" ? [GOLD.g] : RAINBOW;

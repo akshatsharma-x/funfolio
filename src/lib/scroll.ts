@@ -45,6 +45,8 @@ function focusTarget(el: HTMLElement) {
   el.focus({ preventScroll: true });
 }
 
+const expoOut = (t: number) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+
 /** Space kept clear for the fixed HUD (56px) when jumping to a target. */
 export const HUD_OFFSET = 64;
 
@@ -61,7 +63,10 @@ export function scrollToElement(el: HTMLElement, opts: { focus?: boolean; onComp
     // link at load, find-in-page, scrollIntoView) that's stale and the flight lands short — measured: 582px. So resync
     // an idle Lenis to the real position first, and aim at a number from the real geometry.
     if (!instance.isScrolling && Math.abs(instance.animatedScroll - window.scrollY) > 1) instance.scrollTo(window.scrollY, { immediate: true });
-    instance.scrollTo(window.scrollY + el.getBoundingClientRect().top + offset, { onComplete: done });
+    // a timed flight (expo out, 0.6–1.6s by distance) ends on time, so focus lands as the page arrives — the lerp's long
+    // tail of sub-pixel steps held it back ~1.2s on a short hop and 2–3s for Back to top (PART 17)
+    const to = window.scrollY + el.getBoundingClientRect().top + offset;
+    instance.scrollTo(to, { duration: Math.min(1.6, 0.6 + Math.abs(to - window.scrollY) / 6000), easing: expoOut, onComplete: done });
     wakeLoop();
   } else {
     el.scrollIntoView({ block: opts.block ?? "start" });

@@ -15,9 +15,11 @@ type State = {
   /** Right edge of the Title's text column (viewport px; 0 when the island isn't beside it): the moving plane's
    * button hides while it crosses the text, so it never steals a click or a hover from the name and the CTAs. */
   textRight: number;
+  /** PART 17 · phones: the visitor tapped "Enable tilt" — device orientation drives the ≤ 3° parallax. */
+  tilt: boolean;
 };
 
-const state: State = { hovered: null, live: false, spun: false, dive: 0, textRight: 0 };
+const state: State = { hovered: null, live: false, spun: false, dive: 0, textRight: 0, tilt: false };
 const listeners = new Set<() => void>();
 let goHandler: ((id: LandmarkId) => Promise<void>) | null = null;
 let planeHandler: (() => void) | null = null;

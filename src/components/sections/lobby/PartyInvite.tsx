@@ -46,7 +46,7 @@ export function PartyInvite({ email }: { email: string }) {
             <label htmlFor="invite-name" className="invite__label">
               Player name
             </label>
-            <input id="invite-name" name="name" type="text" className="invite__input" autoComplete="name" maxLength={NAME_MAX + 40} required aria-describedby="invite-name-err" />
+            <input id="invite-name" name="name" type="text" data-primary="" className="invite__input" autoComplete="name" maxLength={NAME_MAX + 40} required aria-describedby="invite-name-err" />
             <p id="invite-name-err" className="invite__err" data-err="name" />
           </div>
           <fieldset className="invite__field invite__quests" aria-describedby="invite-quest-err">

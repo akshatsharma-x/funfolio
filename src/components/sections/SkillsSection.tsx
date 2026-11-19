@@ -51,6 +51,7 @@ export function SkillsSection() {
               aria-selected={i === 0}
               tabIndex={i === 0 ? 0 : -1}
               data-skills-tab={t.id}
+              data-primary={t.id === "jd" ? "" : undefined}
             >
               {t.label} <span className="skills-tab__plain">· {t.plain}</span>
             </button>

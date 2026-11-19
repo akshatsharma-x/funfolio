@@ -4,6 +4,17 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.17.0",
+    date: "2026-11-19",
+    title: "Handheld mode",
+    notes: [
+      "On a phone? A controller now sits at the bottom: ◀ ▶ hop between worlds, A does each world's main thing, B goes back, START pauses. It tucks away while you scroll down.",
+      "Long-press anything with a tooltip to read it, and tilt your phone to look around the island (tap Enable tilt first). Little buzzes on coins and level-ups.",
+      "Keyboard players can skip straight past the mini-games, and every jump lands — and focuses — as soon as it arrives.",
+      "Nothing on the page jumps around any more while it loads or as you scroll.",
+    ],
+  },
+  {
     version: "0.16.0",
     date: "2026-11-19",
     title: "Secrets & surprises",

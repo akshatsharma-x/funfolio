@@ -429,7 +429,9 @@ html[data-theme="retro"]::after {
   font-family: var(--font-pixel);
   letter-spacing: 0;
 }
-[data-theme="retro"] :is(h1, h2, h3):not(.text-rainbow) {
+/* headings with ink text on a coloured fill (the Skill Tree's hubs) keep the pixel face but not the split: the pink / cyan
+   fringe is blended into a dark fill (violet) and drops the ink below 4.5:1 (axe, PART 17) */
+[data-theme="retro"] :is(h1, h2, h3):not(.text-rainbow, .sk-hub) {
   text-shadow:
     -1px 0 rgb(255 61 139 / 0.55),
     1px 0 rgb(34 211 238 / 0.55),
@@ -550,6 +552,21 @@ html[data-theme="retro"]::after {
   .arcade-btn.skip-link:focus,
   .arcade-btn.skip-link:focus-visible {
     translate: 0 0;
+  }
+  /* "Skip mini-game" (PART 17): in its container's corner, shown only while focused */
+  .arcade-btn.skip-link--local {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    z-index: 6;
+    translate: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .arcade-btn.skip-link--local:focus,
+  .arcade-btn.skip-link--local:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   /* ── StickerCard ── */
@@ -775,10 +792,11 @@ html[data-theme="retro"]::after {
     font-size: var(--text-sm);
   }
   .arcade-btn[data-size="sm"]::after {
-    /* keeps the touch target ≥ 44px */
+    /* keeps the touch target ≥ 44px: the inset is measured from the padding box (36px − 2 × 3px border = 30px), so
+       −7px makes 44 (−5px made 40 — PART 17's audit) */
     content: "";
     position: absolute;
-    inset: -5px;
+    inset: -7px;
   }
   .arcade-btn[data-size="lg"] {
     --btn-h: 56px;

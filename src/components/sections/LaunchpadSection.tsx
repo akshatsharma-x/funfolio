@@ -1,3 +1,4 @@
+import { SkipLink } from "@/components/ui/SkipLink";
 import { WorldHeader } from "@/components/ui/WorldHeader";
 import { LaunchpadPoster } from "./launchpad/LaunchpadPoster";
 import { LaunchpadStage } from "./launchpad/LaunchpadStage";
@@ -16,7 +17,10 @@ export function LaunchpadSection() {
           press Skip: the whole experience list is right below.
         </p>
       </WorldHeader>
-      <LaunchpadStage poster={<LaunchpadPoster />} />
+      <div className="relative">
+        <SkipLink to="quests">Skip mini-game</SkipLink>
+        <LaunchpadStage poster={<LaunchpadPoster />} />
+      </div>
     </WorldSection>
   );
 }

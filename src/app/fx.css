@@ -60,24 +60,21 @@
     translate: 0 6px;
   }
 }
+/* the READY? GO! chip pops by scale only: a half-faded chip is low-contrast text for a moment (axe, day theme, PART 17) */
 @keyframes wh-pop {
   0% {
     scale: 0;
-    opacity: 0;
   }
   70% {
     scale: 1.15;
-    opacity: 1;
   }
   100% {
     scale: 1;
-    opacity: 1;
   }
 }
 @keyframes wh-out {
   to {
-    opacity: 0;
-    scale: 0.8;
+    scale: 0;
   }
 }
 @keyframes peel-reveal {
@@ -279,7 +276,9 @@
   .wh-ready {
     display: inline-flex;
     align-items: center;
-    padding: 0.25em 0.65em;
+    /* no taller than the kicker's badge (20px): a 25px chip grew the line and pushed the whole world down 5px (CLS) */
+    padding: 0.3em 0.65em;
+    line-height: 1;
     clip-path: var(--px-sm);
     background: var(--world);
     color: var(--ink);

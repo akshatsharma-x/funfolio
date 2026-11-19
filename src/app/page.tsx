@@ -12,6 +12,7 @@ import { VaultSection } from "@/components/sections/VaultSection";
 import { TickerDivider } from "@/components/fx/TickerDivider";
 import { player } from "@/content/content";
 import { assertContent } from "@/content/schema";
+import { jsonLd, personJsonLd } from "@/content/seo";
 import { publicFileExists } from "@/lib/files";
 
 // Fails `next build` on malformed content (R1). Server-only: zod never reaches the client bundle.
@@ -25,6 +26,8 @@ export default function Home() {
   const resumeAvailable = publicFileExists(player.resumeUrl);
   return (
     <>
+      {/* PART 17 · structured data: who this is (schema.org Person, from content.ts) */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(personJsonLd()) }} />
       <main id="main">
         <TitleSection resumeAvailable={resumeAvailable} />
         <TickerDivider set="start" world="profile" />

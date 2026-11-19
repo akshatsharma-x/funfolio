@@ -13,6 +13,7 @@ import { useHtmlAttribute } from "@/lib/hooks/useHtmlAttribute";
 import { useSave } from "@/lib/store";
 import { useUi } from "@/lib/ui";
 import { ToastHost, LevelUpBanner, SpeedrunPill, XpGhosts } from "./Feedback";
+import { HandheldPad } from "./HandheldPad";
 import { Hud } from "./Hud";
 import { LevelRail } from "./LevelRail";
 import {
@@ -94,6 +95,7 @@ export default function GameRuntime({ resumeHref, byteScript, bootScript, arcade
   return (
     <>
       <Hud />
+      <HandheldPad />
       {home ? <LevelRail /> : null}
       <ToastHost />
       <LevelUpBanner />

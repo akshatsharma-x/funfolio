@@ -84,6 +84,7 @@ export function VaultFx() {
 
     const openSheet = (open: boolean) => {
       vault.toggleAttribute("data-sheet", open);
+      document.documentElement.toggleAttribute("data-vault-sheet", open); // the pad steps aside (handheld.css)
       if (narrow.matches && open && !sheetLocked) {
         lockScroll();
         sheetLocked = true;
@@ -463,6 +464,7 @@ export function VaultFx() {
       abort.abort();
       timers.forEach((t) => window.clearTimeout(t));
       if (sheetLocked) unlockScroll();
+      document.documentElement.removeAttribute("data-vault-sheet");
       funsole.removeAttribute("data-live");
     };
   }, []);

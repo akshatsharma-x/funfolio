@@ -16,6 +16,7 @@ export function AvatarButton({ label, children }: { label: string; children: Rea
       type="button"
       className="avatar-btn"
       data-avatar=""
+      data-primary=""
       data-fx-skip=""
       data-cursor-label="HI!"
       aria-label={label}

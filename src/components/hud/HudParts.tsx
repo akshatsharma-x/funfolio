@@ -108,7 +108,11 @@ export function WorldLabel() {
 
   return (
     <p className="hud-world">
-      <span ref={ref} aria-hidden="true" />
+      {/* the whole label, invisible, holds the width while the typed copy fills in (no layout shift, PART 17) */}
+      <span className="hud-world__text" aria-hidden="true">
+        <span className="hud-world__ghost">{visual}</span>
+        <span ref={ref} className="hud-world__typed" />
+      </span>
       <span className="sr-only">{page ? `Page: ${spoken}` : `Current world: ${spoken}`}</span>
     </p>
   );

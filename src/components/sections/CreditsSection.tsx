@@ -70,7 +70,7 @@ export function CreditsSection() {
           <p className="run__static">Your run shows up here as you play.</p>
         </section>
         <p className="credits__top-wrap">
-          <a href="#title" className="credits__top" data-back-to-top="">
+          <a href="#title" className="credits__top" data-back-to-top="" data-primary="">
             ▲ Back to top
           </a>
         </p>

@@ -151,6 +151,8 @@ html[data-boot="fast"] .boot-curtain {
   .boot__screen {
     position: relative;
     display: grid;
+    /* one column, never wider than the screen: a nowrap log line can't stretch the bar (it did — CLS, PART 17) */
+    grid-template-columns: minmax(0, 1fr);
     align-content: center;
     gap: 1.1rem;
     width: min(760px, calc(100vw - 40px));
@@ -183,14 +185,17 @@ html[data-boot="fast"] .boot-curtain {
     list-style: none;
     font-size: clamp(0.78rem, 0.7rem + 0.35vw, 0.95rem);
   }
+  /* every line holds its place from the start and only shows when it types (the screen is centred: lines that
+     appeared from display: none pushed the title up — layout shift, PART 17) */
   .boot__log li {
-    display: none;
+    display: flex;
     align-items: baseline;
     gap: 0.5ch;
     white-space: nowrap;
+    visibility: hidden;
   }
   .boot__log li[data-on] {
-    display: flex;
+    visibility: visible;
   }
   .boot__prompt {
     color: #22d3ee;
@@ -216,14 +221,17 @@ html[data-boot="fast"] .boot-curtain {
   .boot[data-mode="fast"] .boot__log li[data-line] {
     display: none;
   }
-  .boot[data-mode="fast"] .boot__fast-line,
   .boot:not([data-mode="fast"]) .boot__fast-line {
     display: none;
+  }
+  .boot[data-mode="fast"] .boot__fast-line {
+    display: flex;
+    visibility: hidden;
   }
   .boot[data-mode="fast"][data-phase="fast"] .boot__fast-line,
   .boot[data-mode="fast"][data-phase="continue"] .boot__fast-line,
   .boot[data-mode="fast"][data-phase="exit"] .boot__fast-line {
-    display: flex;
+    visibility: visible;
   }
 
   /* segmented progress bar */
@@ -245,6 +253,8 @@ html[data-boot="fast"] .boot-curtain {
   }
 
   /* INSERT COIN */
+  /* the mode's next step holds its place from the start too (INSERT COIN appearing moved the whole screen up by
+     200px — the boot's biggest layout shift, PART 17) */
   .boot__coin-stage,
   .boot__continue {
     display: none;
@@ -253,14 +263,19 @@ html[data-boot="fast"] .boot-curtain {
     padding-top: 0.5rem;
     text-align: center;
   }
+  .boot:not([data-mode="fast"]) .boot__coin-stage,
+  .boot[data-mode="fast"] .boot__continue {
+    display: grid;
+    visibility: hidden;
+  }
   .boot[data-phase="coin"] .boot__coin-stage,
   .boot[data-phase="exit"]:not([data-mode="fast"]) .boot__coin-stage {
-    display: grid;
+    visibility: visible;
     animation: boot-fade-in 220ms ease-out both;
   }
   .boot[data-phase="continue"] .boot__continue,
   .boot[data-phase="exit"][data-mode="fast"] .boot__continue {
-    display: grid;
+    visibility: visible;
     animation: boot-fade-in 220ms ease-out both;
   }
   .boot[data-phase="coin"] .boot__log,
