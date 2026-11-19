@@ -105,6 +105,21 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   the one island (pedestals, cards, the capsule machine). The live trophy shelf is
   `src/components/trophies/TrophyShelf.tsx`, portaled by the runtime into `#trophy-shelf-live`. Coin #11 sits on the
   machine (`data-coin-id="capsule-machine"`); tests can force a capsule with an opt-in `window.__QA_CAPSULE`.
+- Co-op Lobby, credits, 404 (PART 15): the invite's pure half — quest types, BYTE's line, the zod/mini schema with the
+  in-character errors, the mailto/subject/copy text — is `src/lib/invite.ts` (client-safe; server components import its
+  constants). Server components in `src/components/sections/lobby/` (`PartyInvite` is a real `mailto:` form that works
+  without JS; `DirectPortals`); `LobbyFx` is a loader that `import()`s `lobbyRun.ts` after hydration (zod stays off the
+  initial bundle — keep it that way). Tests record the mailto with an opt-in `window.__QA_INVITE = { mailto: [] }`
+  instead of opening a mail app. The footer is `CreditsSection` + `CreditsFx` (roll takeover, coin #12, Back to top →
+  `byte.jetpack()`); YOUR RUN is `src/components/credits/CreditsRun.tsx`, portaled by the runtime into
+  `#credits-run-live`; NEW GAME+ is `newGamePlus()` in the store (keeps inventory + settings). The 404 is
+  `src/app/not-found.tsx` (→ `out/404.html`): the root not-found boundary's client code ships with every page, so it is
+  plain markup plus `GameOverFx`, a loader for `gameOverRun.ts`. Styles: `src/app/lobby.css`.
+- Content that changes in place (a form that becomes something smaller) can leave its replacement off screen: call
+  `revealElement(el)` from `src/lib/scroll.ts` (the least scroll that shows it under the HUD, through Lenis).
+- Cascade layers: a continuous loop declared outside `@layer` (it needs `#world:not([data-offscreen])`) beats every
+  layered rule, whatever the specificity — its overrides (manual mode, Speedrun, reduced motion) must be unlayered too,
+  or `!important` (#164).
 - `@keyframes` names are global across every stylesheet: prefix new ones by feature (`funsole-on`, `quest-pop`); the
   build fails on a name defined twice with different bodies (#120).
 - Keep the page idle (docs/DECISIONS.md #40–41): no always-on rAF loops, continuous CSS animations only on HTML elements' transform/opacity (never on SVG elements), no style writes inside scroll events (use `onScrollMotion`), and get GSAP/ScrollTrigger via `loadScrollTrigger()` only where needed.

@@ -38,6 +38,8 @@ const GameHost = dynamic(() => import("@/components/games/GameHost"), { ssr: fal
 const PrizeCounter = dynamic(() => import("@/components/prizes/PrizeCounter"), { ssr: false });
 // PART 14 — the visitor's trophy shelf in the Trophy Room (live from the save file)
 const TrophyShelf = dynamic(() => import("@/components/trophies/TrophyShelf"), { ssr: false });
+// PART 15 — YOUR RUN in the credits (live from the save file)
+const CreditsRun = dynamic(() => import("@/components/credits/CreditsRun"), { ssr: false });
 
 /** The booth beside the cabinets is server-rendered (a static price list); the live counter is portaled into it. */
 function PrizeBooth({ pathname }: { pathname: string }) {
@@ -49,6 +51,12 @@ function PrizeBooth({ pathname }: { pathname: string }) {
 function TrophyShelfMount({ pathname }: { pathname: string }) {
   const el = useMemo(() => (pathname && typeof document !== "undefined" ? document.getElementById("trophy-shelf-live") : null), [pathname]);
   return el ? createPortal(<TrophyShelf />, el) : null;
+}
+
+/** The credits' YOUR RUN is a server-rendered placeholder; the live panel is portaled into it. */
+function CreditsRunMount({ pathname }: { pathname: string }) {
+  const el = useMemo(() => (pathname && typeof document !== "undefined" ? document.getElementById("credits-run-live") : null), [pathname]);
+  return el ? createPortal(<CreditsRun shareName={el.dataset.shareName ?? ""} />, el) : null;
 }
 
 /**
@@ -91,6 +99,7 @@ export default function GameRuntime({ resumeHref, byteScript, bootScript, arcade
       {gameEverOpened ? <GameHost data={arcade} /> : null}
       <PrizeBooth pathname={pathname} />
       <TrophyShelfMount pathname={pathname} />
+      <CreditsRunMount pathname={pathname} />
     </>
   );
 }

@@ -133,7 +133,8 @@ export function useIdleNap() {
  */
 export function useOffscreenPause() {
   useEffect(() => {
-    const sections = [...document.querySelectorAll<HTMLElement>("main section[data-world]")];
+    // the worlds, and the credits footer (its roll is a loop too — PART 15)
+    const sections = [...document.querySelectorAll<HTMLElement>("main section[data-world], footer[data-world]")];
     const io = new IntersectionObserver(
       (entries) => entries.forEach((e) => (e.target as HTMLElement).toggleAttribute("data-offscreen", !e.isIntersecting)),
       { rootMargin: "64px 0px" },
@@ -223,7 +224,7 @@ export function useCommandHandler(resumeHref: string | null) {
           setCursorSkin(c.id); // playground preview only — not saved
           break;
         case "item":
-          bus.emit("item:acquired", { title: c.title, detail: c.detail });
+          bus.emit("item:acquired", { title: c.title, detail: c.detail, kicker: c.kicker });
           break;
         case "openGame": {
           // PART 13: the JD Scanner is a Skill Tree tool, not a cabinet — its side quest opens the scanner tab

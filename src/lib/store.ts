@@ -74,6 +74,8 @@ export type SaveActions = {
   equip: (slot: PrizeSlot, itemId: string | null) => boolean;
   setSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => boolean;
   resetSave: () => void;
+  /** NEW GAME+ (PART 15): progress starts over; cosmetics (owned + equipped), settings and BYTE's spot carry over. */
+  newGamePlus: () => void;
   /** Bookkeeping */
   startSession: () => number | null;
   addStats: (clicks: number, playedMs: number) => void;
@@ -411,6 +413,20 @@ export const useSave = create<SaveStore>()(
         set({
           ...fresh,
           settings: { ...s.settings, theme: s.settings.theme === "retro" ? "night" : s.settings.theme },
+          meta: { ...fresh.meta, lastVisit: Date.now() },
+          byte: { ...fresh.byte, fx: s.byte.fx, fy: s.byte.fy, minimized: s.byte.minimized },
+        });
+        bus.emit("save:reset", {});
+      },
+
+      newGamePlus() {
+        const s = get();
+        const fresh = freshData();
+        sessionGameXp = 0;
+        set({
+          ...fresh,
+          inventory: s.inventory,
+          settings: s.settings,
           meta: { ...fresh.meta, lastVisit: Date.now() },
           byte: { ...fresh.byte, fx: s.byte.fx, fy: s.byte.fy, minimized: s.byte.minimized },
         });

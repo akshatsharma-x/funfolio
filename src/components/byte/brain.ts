@@ -716,6 +716,12 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     bus.on("byte:visit", ({ selector, text }) => visit(selector, text)),
     // a pop-in or a card: wait until it shows (cards have a 140ms hover intent), then measure
     bus.on("byte:recheck", () => avoidSoon(220)),
+    // "Back to top" (PART 15): a jetpack flame under BYTE while the page flies up
+    bus.on("byte:jetpack", () => {
+      root.setAttribute("data-jetpack", "");
+      react("happy", 1800);
+      later(() => root.removeAttribute("data-jetpack"), 1900);
+    }),
     bus.on("achievement:unlocked", () => react("happy", 1400)),
     bus.on("coin:collected", () => react("love", 1400)),
     bus.on("level:up", () => react("cool", 2200)),

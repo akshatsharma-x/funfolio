@@ -97,6 +97,23 @@ there are certificates, three sealed packs wait for them. The capsule machine de
 wind the crank (or press TURN) and a capsule rolls out and pops open — one in five holds something extra. "Your
 trophies" is a shelf of the achievements you've unlocked on this browser.
 
+World 8 (the Co-op Lobby) is the contact page: "PLAYER 2, PRESS START". The party invite is an RPG dialog — BYTE asks
+for your player name, a quest type (Full-time · Internship · Freelance · Collab · Just saying hi) and a message, and
+answers in character when something's missing. SEND folds the form into a paper plane: pull it back and let go, press
+Enter, or click Auto-launch, and it flies into the mailbox portal — then your own email app opens with the subject and
+message filled in ("Copy message" for people without one). Nothing is sent anywhere by the site: it's a `mailto:` link,
+and it works offline. The direct portals are Email (with "Copy address"), LinkedIn, GitHub and the Save File (the
+résumé PDF). Speedrun Mode skips the plane; without JavaScript the form is a plain `mailto:` form.
+
+The credits (the footer) roll by themselves — hover or focus pauses them, "Pause the roll" stops them, and the wheel
+or the arrow keys take over. A coin drifts through. YOUR RUN shows this browser's run (time played, coins, achievements,
+best scores, level) with "Share my run" (copies a line and the site's address) and NEW GAME+ (a fresh run that keeps the
+cosmetics you bought). "▲ Back to top" sends BYTE up with a jetpack. Without JavaScript, in Speedrun Mode and with
+reduced motion the credits are a plain list.
+
+Any unknown address shows GAME OVER (`out/404.html`, served with status 404): "CONTINUE?" counts down from 10 and goes
+home — any key or click stops it — with a quick round of Bug Whack on offer.
+
 BYTE, the robot mascot, lives in the bottom-right corner: click for a quip, drag or throw it, rub it for hearts,
 minimize it with the `–` button (or turn it off in Pause → Settings). `/playground` has a Juice kit & BYTE panel.
 
@@ -105,6 +122,10 @@ minimize it with the `–` button (or turn it off in Pause → Settings). `/play
 All facts live in `src/content/content.ts`. Anything set to `"TODO"` renders as "Coming soon"; counts (internships,
 projects, papers, skills, honors) are computed. Rules: [`docs/FUNFOLIO_BIBLE.md`](docs/FUNFOLIO_BIBLE.md) ·
 choices: [`docs/DECISIONS.md`](docs/DECISIONS.md). Design check: `/playground`.
+
+The Lobby's Save File portal stays "Coming soon" until the PDF named by `player.resumeUrl` is in `public/` (checked at
+build time — rebuild after adding it); the availability card appears once `player.availability` is filled in, and the
+phone portal only with `showPhone: true` and a number (it's revealed on click — and a number in content.ts is in git).
 
 While `player.bio` is `"TODO"`, the Profile shows a DRAFT bio assembled only from these facts — write your own in
 `player.bio` to replace it. Until `player.photo` is set, the Character Card shows a pixel avatar; its colors are in

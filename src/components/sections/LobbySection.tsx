@@ -1,69 +1,43 @@
 import { player } from "@/content/content";
 import { known } from "@/content/derived";
-import { Fact } from "@/components/ui/ComingSoon";
-import { PixelIcon } from "@/components/ui/PixelIcon";
 import { StickerCard } from "@/components/ui/StickerCard";
 import { WorldHeader } from "@/components/ui/WorldHeader";
-import { SaveFileButton, WorldSection } from "./parts";
+import { WorldSection } from "./parts";
+import { DirectPortals } from "./lobby/DirectPortals";
+import { LobbyFx } from "./lobby/LobbyFx";
+import { PartyInvite } from "./lobby/PartyInvite";
 
-/** "https://linkedin.com/in/x" → "linkedin.com/in/x" for display. */
-const display = (url: string) => url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
-
-/** World 8 · CO-OP LOBBY · Contact (mailto only — R10). PART 15 adds the paper-plane form and copy-to-clipboard. */
+/**
+ * World 8 · CO-OP LOBBY · Contact (PART 15): "PLAYER 2, PRESS START", the availability card (only once content has
+ * it), the party invite (a form that folds into a paper plane and lands as a mailto:) and the direct portals. Static
+ * forever — mailto: and the clipboard, no backend, no API, no keys (R10). One island (LobbyFx) plays it.
+ */
 export function LobbySection({ resumeAvailable }: { resumeAvailable: boolean }) {
-  const showPhone = player.showPhone && known(player.phone);
+  const phone = player.showPhone && known(player.phone) ? player.phone : null;
   return (
-    <WorldSection id="lobby" world="lobby" labelledBy="lobby-title">
+    <WorldSection id="lobby" world="lobby" labelledBy="lobby-title" className="lobby-world">
       <WorldHeader world="lobby" id="lobby-title" />
-      <div className="grid gap-5 lg:grid-cols-12">
-        <StickerCard as="article" className="lg:col-span-7" aria-labelledby="lobby-channels" bodyClassName="grid gap-5 sm:p-7">
-          <h3 id="lobby-channels" className="text-xl">
-            Send a co-op invite
+      <div className="lobby">
+        <div className="lobby__hero">
+          <h3 className="lobby__press" data-lobby-press="">
+            Player 2, press start
           </h3>
-          <ul className="grid gap-4">
-            <li className="flex flex-wrap items-center gap-3">
-              <PixelIcon name="mail" size={32} />
-              <span className="font-pixel text-sm uppercase tracking-wider text-muted">Email</span>
-              <a href={`mailto:${player.email}`} data-cursor-label="OPEN" className="break-all font-semibold underline">
-                {player.email}
-              </a>
-            </li>
-            <li className="flex flex-wrap items-center gap-3">
-              <PixelIcon name="map" size={32} />
-              <span className="font-pixel text-sm uppercase tracking-wider text-muted">LinkedIn</span>
-              <a href={player.links.linkedin} rel="me noreferrer" data-cursor-label="OPEN" className="break-all font-semibold underline">
-                {display(player.links.linkedin)}
-              </a>
-            </li>
-            <li className="flex flex-wrap items-center gap-3">
-              <PixelIcon name="gear" size={32} />
-              <span className="font-pixel text-sm uppercase tracking-wider text-muted">GitHub</span>
-              <a href={player.links.github} rel="me noreferrer" data-cursor-label="OPEN" className="break-all font-semibold underline">
-                {display(player.links.github)}
-              </a>
-            </li>
-            {showPhone ? (
-              <li className="flex flex-wrap items-center gap-3">
-                <span className="font-pixel text-sm uppercase tracking-wider text-muted">Phone</span>
-                <a href={`tel:${player.phone.replace(/\s+/g, "")}`} className="font-semibold underline">
-                  {player.phone}
-                </a>
-              </li>
-            ) : null}
-          </ul>
-          <div>
-            <SaveFileButton href={player.resumeUrl} available={resumeAvailable} size="md" />
-          </div>
-        </StickerCard>
-        <StickerCard as="article" variant="world" className="lg:col-span-5" aria-labelledby="lobby-availability">
-          <h3 id="lobby-availability" className="mb-3 text-xl">
-            Availability
-          </h3>
-          <p className="read">
-            <Fact value={player.availability} />
-          </p>
-        </StickerCard>
+          <p className="lobby__sub">Looking for a teammate? Let&apos;s build something fun.</p>
+        </div>
+        {known(player.availability) ? (
+          <StickerCard as="article" variant="world" className="lobby__availability" aria-labelledby="lobby-availability">
+            <h3 id="lobby-availability" className="lobby-h">
+              Availability
+            </h3>
+            <p className="read">{player.availability}</p>
+          </StickerCard>
+        ) : null}
+        <div className="lobby__grid">
+          <PartyInvite email={player.email} />
+          <DirectPortals email={player.email} linkedin={player.links.linkedin} github={player.links.github} resume={resumeAvailable ? player.resumeUrl : null} phone={phone} />
+        </div>
       </div>
+      <LobbyFx />
     </WorldSection>
   );
 }

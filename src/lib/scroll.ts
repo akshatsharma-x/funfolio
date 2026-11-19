@@ -69,6 +69,24 @@ export function scrollToElement(el: HTMLElement, opts: { focus?: boolean; onComp
   }
 }
 
+/** Scrolls just enough to bring `el` fully into view under the HUD (like `block: "nearest"`) — through Lenis when it
+ *  runs (smooth, resynced first like scrollToElement), instantly without it. For content that changes in place (a
+ *  form folding into a smaller launcher) where whatever replaced it may now sit off screen. */
+export function revealElement(el: HTMLElement, margin = 16) {
+  const r = el.getBoundingClientRect();
+  const top = HUD_OFFSET + margin;
+  const bottom = window.innerHeight - margin;
+  let dy = 0;
+  if (r.top < top) dy = r.top - top;
+  else if (r.bottom > bottom) dy = Math.min(r.bottom - bottom, r.top - top); // never push its top under the HUD
+  if (Math.abs(dy) < 1) return;
+  if (instance) {
+    if (!instance.isScrolling && Math.abs(instance.animatedScroll - window.scrollY) > 1) instance.scrollTo(window.scrollY, { immediate: true });
+    instance.scrollTo(window.scrollY + dy);
+    wakeLoop();
+  } else window.scrollBy(0, dy);
+}
+
 function onAnchorClick(event: MouseEvent) {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   const link = (event.target as Element | null)?.closest?.("a[href^='#']");

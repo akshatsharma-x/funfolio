@@ -44,6 +44,7 @@ export default function Byte({ script }: { script: ByteScript }) {
         <span className="byte__squash" data-byte-squash="">
           <span className="byte__float">
             <span className="byte__halo" aria-hidden="true" />
+            <span className="byte__jet" aria-hidden="true" />
             <svg className="byte__svg" viewBox="0 0 64 72" width="64" height="72" aria-hidden="true" focusable="false">
               {/* PART 11: the hat from the Prize Counter (its back part sits behind the antenna and the head's top edge) */}
               {hat ? <ByteHatArt hat={hat} layer="back" /> : null}

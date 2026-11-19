@@ -820,3 +820,78 @@ change an entry only when the decision itself changes.
      `scrollIntoView`) that position is stale and the flight landed short — measured 582px, the Vault's JD Scanner side
      quest stopping above the scanner. `scrollToElement` now resyncs an idle Lenis to `window.scrollY` and aims at a
      number from the real geometry (every world's jumps go through it).
+
+## PART 15 — World 8: Co-op Lobby, Credits, 404
+
+161. **The contact flow is static forever (R10).** The party invite is a real `<form action="mailto:…" method="post"
+     enctype="text/plain">` with native `required` checks — that is what visitors without JavaScript (and anyone in the
+     moment before the island loads) get. With JS, `src/lib/invite.ts` validates with zod/mini: one in-character error
+     per field ("That message looks empty — even BYTE needs words."), names and messages are trimmed and capped (80 /
+     2,000 characters), focus goes to the first bad field, BYTE says the error and it is announced. A valid send opens
+     `mailto:<email>?subject=[Funfolio] <Quest type> from <name>&body=<message>` (both `encodeURIComponent`ed — tested
+     with `&`, `?`, `#`, `%`, `+`, new lines, accents and emoji) by clicking a generated link inside the send gesture's
+     user activation; the done panel repeats it as "Open my email app" and offers [Copy message] ("To / Subject / Body")
+     for visitors without a mail app. Measured: zero network requests from the first keystroke to the mailto, and the
+     whole flow works offline once the page has loaded. "+200 XP" shows only while Co-op Invite is still locked (it is
+     the achievement's own XP).
+162. **The paper plane.** SEND folds the form (Web Animations) and morphs the sheet's four points into the plane's
+     (`SHEET` → `PLANE`, 460ms of rAF — bounded, the island's only rAF). Nothing needs a drag (R5): Enter / Space on the
+     focused plane or "Auto-launch ▶" fly it with a little wind-up; the pull-and-release (≥ 24px, clamped to the room
+     behind the gate) is the optional extra. The arc's top stays inside the stage (30% of its height from the top, up
+     to 18% for a full pull — the first version sailed out of the box). The launcher is a launch gate — two pylons and
+     an energy beam — not a wooden slingshot (R4). On landing the flag pops, the mailbox gulps and flashes, confetti
+     falls (kept off the words, #62) and the done panel opens *under* the launcher, so the landing stays visible. No
+     floating "MESSAGE READY" text: the panel says it, and floating text would sit on the panel's words (R6). Reduced
+     motion: no typing, folding or flight — the same steps, at once. Speedrun Mode: no typing or blinking, and Send goes
+     straight to the mailto (the plane is play, not contact).
+163. **Content that shrinks in place is revealed** (found by engines-p15 in Firefox, a real bug in every engine): the
+     launcher is shorter than the form it replaces, so from down at the Send button it landed above the screen —
+     focused, unseen (WCAG 2.4.11). `revealElement()` (new in `src/lib/scroll.ts`) scrolls the least amount that shows an
+     element under the HUD, through Lenis; the launcher and the done panel use it.
+164. **The credits roll.** Two copies of the list in a track that a compositor CSS loop moves by −50% (42s), declared
+     only for an on-screen `#credits` with JS. Hover, focus and "Pause the roll" (aria-pressed — WCAG 2.2.2 wants a real
+     control; the brief asked for hover) pause it. A wheel, a touch or a scrolling key inside hands it to the visitor as
+     a real scroller at exactly the spot the loop had reached (progress → `scrollTop`; the wheel tick that switches is
+     swallowed) and opts it out of Lenis (`data-lenis-prevent`, only while manual); "Pause the roll" then rolls on from
+     where they scrolled; leaving the screen resets it. A plain list (no clip, echo or mask) without JS, in Speedrun
+     Mode and under reduced motion. Cascade-layer finding: the loop is unlayered (it needs `#credits:not([data-offscreen])`),
+     and an unlayered rule beats every layered one whatever its specificity — the layered `animation: none` for manual
+     mode silently lost, so the roll kept moving under the visitor's scroll (part15-qa G2, a 138px jump), and a layered
+     reduced-motion rule would have shown the coin in Speedrun Mode. Overrides of such loops are unlayered or
+     `!important` now (CLAUDE.md).
+165. **Coin #12 keeps beside the names (R6).** It drifts up the left gutter, over the masked top edge and down the
+     right; the lanes are the list's side padding (`--gutter`, in the roll's own container units) and the coin's size
+     (`--coin`) scales with it, so it never crosses the text — sampled over its whole loop at 1440 and 390px. Hover,
+     focus and the Pause button stop it, so it can be caught; under reduced motion it sits still under the list. The
+     hint stays "Stay until the very end."
+166. **YOUR RUN** (a runtime portal like the trophy shelf, #159): time played, hidden coins x/12, achievements x/total,
+     level and title, best scores ("—" until played). Share copies "I reached LV n and found x/12 coins in Akshat's
+     Funfolio → <origin + path>" — no query or hash, or a shared `?boot=0` / `?speedrun` would follow the link. NEW GAME+
+     asks first, then `newGamePlus()`: a fresh save that keeps the inventory (owned and equipped cosmetics), the settings
+     and BYTE's corner; XP, coins, wallet, achievements, high scores, gates and BYTE's said lines start over (like Reset,
+     #25, minus the cosmetics).
+167. **▲ Back to top**: BYTE lights a jetpack — a flame that wobbles in scale (no flashing) and a lift, none under reduced
+     motion — while the page flies to the Title Screen; focus lands there when the flight completes (Lenis's last pixel,
+     ~2–3s for the full page). Reaching the credits unlocks Completionist (the world tracker, since PART 3).
+168. **404 = GAME OVER** (`src/app/not-found.tsx` → `out/404.html`, which static hosts serve with status 404; noindex):
+     "CONTINUE? 10…" counts down (dots go out one by one) and returns home with a full load (the home page's pre-paint
+     script must run); "Stop the countdown", any key or any click stops it (WCAG 2.2.1); it is announced once at the
+     start and once when it stops. "Play a quick round of Bug Whack" opens the game host and stops it too; Game Over
+     unlocks. The title grows in from 0.7× (from 1.4× it widened phones for a moment). No JS: GAME OVER and CONTINUE ▶ (a
+     link home).
+169. **Page weight.** The root not-found boundary's client code ships with every page, and the Lobby's validation brings
+     zod/mini's core (~20 KB gzip): together they took initial JS from 179.9 to 204.4 KB. Both islands are now loaders
+     that `import()` their logic after hydration, and the 404's buttons are plain markup (ArcadeButton had been copied
+     into that chunk): 181.0 KB (budget 250). The Lobby's chunk lands long before anyone can type, so the flow itself
+     makes no requests (measured, and offline).
+170. **PLAYER 2, PRESS START blinks between two colours** (mint ↔ cream / ink), five times at 1Hz, the first time it's
+     seen: an opacity blink dropped the heading below 4.5:1 mid-blink (axe). Not in Speedrun Mode or under reduced
+     motion. BYTE types its invite line when the dialog comes into view (a ghost line reserves the space), says the first
+     error, "Folded!", "Delivered to the mailbox!" and "Take your time"; the floating BYTE's Lobby world line plays now
+     that `[data-contact-form]` exists (#45).
+171. **Direct portals**: conic rings that swirl only while the Lobby is on screen (`rotate` on an HTML span, `--play`)
+     and pull eight particles in on hover or keyboard focus (compositor, none under reduced motion). Email = `mailto:`
+     plus "Copy address" (Copycat, "Item acquired · Email"); LinkedIn and GitHub open in a new tab (`rel="me noopener
+     noreferrer"`, announced); the Save File portal stays "Coming soon" until the PDF exists in `public/` (a build-time
+     check) and downloads it otherwise (Save File); the phone portal exists only with `showPhone` and a number, revealed
+     on click (#1). The availability card appears once `player.availability` is filled in (R1).

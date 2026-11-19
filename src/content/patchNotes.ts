@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "0.15.0",
+    date: "2026-11-19",
+    title: "Co-op Lobby & credits",
+    notes: [
+      "World 8 is open: PLAYER 2, PRESS START. BYTE takes your party invite — name, quest type, message.",
+      "Send folds it into a paper plane: pull it back and let go (or press Enter) to fly it into the mailbox. Your own email app takes it from there — nothing goes through a server.",
+      "Direct portals for email (copy it in one click), LinkedIn, GitHub and the save file.",
+      "The credits roll at the bottom, with your run's stats, Share my run and NEW GAME+. Something shiny drifts through them.",
+      "Lost? Unknown pages now end in GAME OVER — with a continue countdown and a quick game.",
+    ],
+  },
+  {
     version: "0.14.0",
     date: "2026-11-18",
     title: "Trophy Room",

@@ -37,6 +37,8 @@ export type BusEvents = {
   "byte:visit": { selector: string; text?: string };
   /** Something clickable appeared without a scroll or a layout change (a pop-in, a card) — BYTE re-checks its spot. */
   "byte:recheck": Record<string, never>;
+  /** PART 15 · "Back to top": BYTE lights a jetpack while the page flies up. */
+  "byte:jetpack": Record<string, never>;
   /** A WorldHeader intro started (PART 4). */
   "world:intro": { id: string };
   /** The boot screen is gone and the Title Screen is revealed (PART 5) — typewriters, blinks and BYTE's tips start. */

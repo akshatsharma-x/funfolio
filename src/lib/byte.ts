@@ -40,4 +40,8 @@ export const byte = {
   recheck(): void {
     bus.emit("byte:recheck", {});
   },
+  /** A jetpack flame and a happy hop while the page scrolls back to the top (the credits' ▲ Back to top). */
+  jetpack(): void {
+    bus.emit("byte:jetpack", {});
+  },
 };
