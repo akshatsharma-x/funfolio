@@ -444,7 +444,7 @@
     margin: 0 0 0.5rem;
     color: color-mix(in srgb, var(--tone), white 30%);
     font-family: var(--font-pixel);
-    font-size: 0.72rem;
+    font-size: var(--text-xs); /* the type scale's floor (PART 18) */
     letter-spacing: 0.07em;
     text-transform: uppercase;
   }
@@ -452,7 +452,7 @@
     margin: 0 0 0.3rem;
     color: #b9b2d9;
     font-family: var(--font-pixel);
-    font-size: 0.72rem;
+    font-size: var(--text-xs);
     letter-spacing: 0.07em;
     text-transform: uppercase;
   }
@@ -491,7 +491,7 @@
     margin: 0.5rem 0 0;
     color: var(--world);
     font-family: var(--font-pixel);
-    font-size: 0.72rem;
+    font-size: var(--text-xs);
     letter-spacing: 0.07em;
     text-transform: uppercase;
   }

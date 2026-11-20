@@ -9,6 +9,7 @@ import type { BootScript } from "@/content/boot";
 import type { ByteScript } from "@/content/quips";
 import type { EggData } from "@/content/eggs";
 import { bus } from "@/lib/bus";
+import { orNothing } from "@/lib/chunks";
 import { useHtmlAttribute } from "@/lib/hooks/useHtmlAttribute";
 import { useSave } from "@/lib/store";
 import { useUi } from "@/lib/ui";
@@ -18,6 +19,7 @@ import { Hud } from "./Hud";
 import { LevelRail } from "./LevelRail";
 import {
   useBusWiring,
+  useClickSound,
   useCommandHandler,
   useDocumentSync,
   useIdleNap,
@@ -28,23 +30,29 @@ import {
   useWorldTracker,
 } from "./useGameRuntime";
 
-const PauseMenu = dynamic(() => import("./PauseMenu"), { ssr: false });
+// PART 18 — a chunk that fails (offline, a stale tab after a redeploy) renders nothing instead of unmounting the runtime
+// The pause menu, the games' host and the terminal share their loader with the idle warm-up below — Turbopack gives each
+// import() call site its own little loader chunk, so warming a second call site left the menu's own loader unfetched.
+const loadPauseMenu = () => import("./PauseMenu");
+const loadGameHost = () => import("@/components/games/GameHost");
+const loadTerminal = () => import("@/components/terminal/Terminal");
+const PauseMenu = dynamic(() => loadPauseMenu().catch(orNothing("the pause menu")), { ssr: false });
 // PART 4 — each its own lazy chunk, so the HUD is never waiting for the effects or the mascot
-const FxLayer = dynamic(() => import("@/components/fx/FxLayer"), { ssr: false });
-const Byte = dynamic(() => import("@/components/byte/Byte"), { ssr: false });
+const FxLayer = dynamic(() => import("@/components/fx/FxLayer").catch(orNothing(null)), { ssr: false });
+const Byte = dynamic(() => import("@/components/byte/Byte").catch(orNothing(null)), { ssr: false });
 // PART 5 — the boot screen (its chunk is prefetched by GameRuntimeLoader when the pre-paint script asked for a boot)
-const Boot = dynamic(() => import("@/components/boot/Boot"), { ssr: false });
+const Boot = dynamic(() => import("@/components/boot/Boot").catch(orNothing(null)), { ssr: false });
 const BOOT_MODE = typeof document === "undefined" ? null : document.documentElement.getAttribute("data-boot");
 // PART 11 — the arcade's game host (any page) and the live Prize Counter for the Arcade's booth
-const GameHost = dynamic(() => import("@/components/games/GameHost"), { ssr: false });
-const PrizeCounter = dynamic(() => import("@/components/prizes/PrizeCounter"), { ssr: false });
+const GameHost = dynamic(() => loadGameHost().catch(orNothing("the arcade")), { ssr: false });
+const PrizeCounter = dynamic(() => import("@/components/prizes/PrizeCounter").catch(orNothing(null)), { ssr: false });
 // PART 14 — the visitor's trophy shelf in the Trophy Room (live from the save file)
-const TrophyShelf = dynamic(() => import("@/components/trophies/TrophyShelf"), { ssr: false });
+const TrophyShelf = dynamic(() => import("@/components/trophies/TrophyShelf").catch(orNothing(null)), { ssr: false });
 // PART 15 — YOUR RUN in the credits (live from the save file)
-const CreditsRun = dynamic(() => import("@/components/credits/CreditsRun"), { ssr: false });
+const CreditsRun = dynamic(() => import("@/components/credits/CreditsRun").catch(orNothing(null)), { ssr: false });
 // PART 16 — the eggs (one provider, every listener once; effects load on first use) and the AKSHAT-OS terminal
-const EggProvider = dynamic(() => import("@/components/eggs/EggProvider"), { ssr: false });
-const Terminal = dynamic(() => import("@/components/terminal/Terminal"), { ssr: false });
+const EggProvider = dynamic(() => import("@/components/eggs/EggProvider").catch(orNothing(null)), { ssr: false });
+const Terminal = dynamic(() => loadTerminal().catch(orNothing("the terminal")), { ssr: false });
 
 /** The booth beside the cabinets is server-rendered (a static price list); the live counter is portaled into it. */
 function PrizeBooth({ pathname }: { pathname: string }) {
@@ -80,6 +88,7 @@ export default function GameRuntime({ resumeHref, byteScript, bootScript, arcade
   useStatsTracker();
   useBusWiring();
   useIdleNap();
+  useClickSound();
   useOffscreenPause();
   const pauseOpen = useUi((s) => s.pauseOpen);
   const pauseEverOpened = useUi((s) => s.pauseEverOpened);
@@ -91,6 +100,25 @@ export default function GameRuntime({ resumeHref, byteScript, bootScript, arcade
   const terminalOpen = useUi((s) => s.terminalOpen);
   const terminalEverOpened = useUi((s) => s.terminalEverOpened);
   useEffect(() => bus.on("terminal:toggle", () => useUi.getState().setTerminal("toggle")), []);
+  // PART 18 — right after the runtime starts (with its own lazy parts, before a visitor is doing anything), fetch the
+  // core parts a visitor opens on demand — the pause menu, the games' host, the terminal (~tens of KB) — so they still
+  // open after the connection drops. Not offline (it would only log errors), not with Save-Data, and never later on:
+  // the contact flow stays free of requests (PART 15).
+  useEffect(() => {
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
+    if (!nav.onLine || nav.connection?.saveData) return;
+    const warm = () => {
+      for (const load of [loadPauseMenu, loadGameHost, loadTerminal]) void load().catch(() => {});
+    };
+    // Safari has no requestIdleCallback
+    const w = window as Window & { requestIdleCallback?: Window["requestIdleCallback"]; cancelIdleCallback?: Window["cancelIdleCallback"] };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(warm, { timeout: 1500 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = window.setTimeout(warm, 300);
+    return () => window.clearTimeout(t);
+  }, []);
 
   return (
     <>

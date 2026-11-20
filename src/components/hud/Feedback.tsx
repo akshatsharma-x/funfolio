@@ -227,7 +227,9 @@ export function XpGhosts() {
         if (!root || !origin || !bar || prefersReducedMotion()) return;
         const ghost = document.createElement("span");
         ghost.className = "xp-ghost";
-        ghost.textContent = `+${amount} XP`;
+        // generated content, not a text node: a decorative (aria-hidden) flourish that fades as it flies — the real
+        // value is the HUD's XP bar; axe read the half-faded text as low contrast (PART 18)
+        ghost.dataset.text = `+${amount} XP`;
         ghost.style.left = `${origin.x}px`;
         ghost.style.top = `${origin.y}px`;
         root.append(ghost);

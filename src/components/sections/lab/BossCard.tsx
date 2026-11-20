@@ -47,7 +47,7 @@ export function BossCard({ boss, all, index }: { boss: Boss; all: string[]; inde
       data-boss-card={p.id}
       data-damage={boss.hits?.join("|")}
       aria-labelledby={titleId}
-      peelLabel={`Peek under the ${p.boss.name} card`}
+      peelLabel={`Peek under ${/^the /i.test(p.boss.name) ? "" : "the "}${p.boss.name} card`}
       peel={<PeelDoodle name="coffee" caption="Fuel for boss fights." />}
     >
       <div className="boss-arena" data-arena="" data-sky={smog ? "smog" : undefined}>

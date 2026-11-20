@@ -9,6 +9,7 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
 - `npm run build` — static export to `out/`, then `scripts/check-export.mjs` (R1 raw-TODO check, R10 third-party check, §10 JS budget)
 - `npm run preview` — serve `out/` locally (http://localhost:4173)
 - `npm run check` — ESLint + TypeScript
+- `npm run test:smoke` — Playwright smoke test against `out/` (installed Chrome)
 - `npm run images` — pre-build AVIF/WebP variants from `assets/images/` into `public/img/`
 - `npm run cursors` — rebuild the pixel cursors (`src/components/cursor/{skins,cursor-art}.ts` → `public/cursors/`, `src/app/cursors.generated.css`)
 
@@ -140,6 +141,17 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   than its line, don't reorder live lists under the reader (the trophy shelf keeps its order for the visit), and leave
   ~5% headroom on text sized to fill its box (a late web font's fallback is wider and re-wraps it). Never put `:has()`
   on `html` / `body` / `:root` — it makes every style recalc check the whole page (#197); set an attribute instead.
+- Lazy parts (PART 18): every `next/dynamic` import ends in `.catch(orNothing(label))` (`src/lib/chunks.ts`) — a chunk
+  that fails (offline, a stale tab after a redeploy) must render nothing, never throw (it unmounted the whole runtime);
+  bare `import()`s get a `.catch` that takes the plain path (no flight, the 2D view, native scrolling). A part shared
+  with the idle warm-up uses the same loader function (Turbopack makes a loader chunk per `import()` call site).
+- Sound floor (PART 18): `useClickSound()` gives any control click that asked for no sound within 150ms a soft blip —
+  add `data-sfx-skip` to opt a control out; play a control's own sound synchronously in its handler.
+- Response headers live in `public/_headers` (Netlify, Cloudflare Pages, `npm run preview`) and `vercel.json` (Vercel)
+  — change both together. The CSP allows only the site itself (R10): nothing may load from another origin; `eval`
+  exists only for axe-core. Never hand-write `-webkit-backdrop-filter` (the minifier then drops the standard property
+  and Chrome / Firefox lose the blur — the build adds prefixes).
+- `npm run test:smoke` (after a build) is the in-repo Playwright smoke test; CI runs check, build and the smoke test.
 - Content that changes in place (a form that becomes something smaller) can leave its replacement off screen: call
   `revealElement(el)` from `src/lib/scroll.ts` (the least scroll that shows it under the HUD, through Lenis).
 - Cascade layers: a continuous loop declared outside `@layer` (it needs `#world:not([data-offscreen])`) beats every

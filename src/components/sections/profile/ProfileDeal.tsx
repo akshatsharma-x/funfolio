@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { prefersReducedMotion } from "@/lib/hooks/useReducedMotion";
+import { revealElement } from "@/lib/scroll";
 
 const STAGGER = 50;
 const DURATION = 640;
@@ -22,10 +23,26 @@ export function ProfileDeal({ children, className }: { children: ReactNode; clas
     const reduced = prefersReducedMotion();
     grid.dataset.deal = "armed";
     const tiles = [...grid.children] as HTMLElement[];
+    const clear = () => tiles.forEach((el) => ["--deal-i", "--deal-dx", "--deal-dy", "--deal-rot"].forEach((p) => el.style.removeProperty(p)));
     let timer = 0;
+    let skipped = false;
+    // PART 18 · a keyboard visitor tabbing in gets no deal: an armed tile is invisible but focusable, and one flying in
+    // moves the focus with it — the tiles are simply there, and the focused one is shown whole under the HUD (2.4.11)
+    const onFocusIn = (e: FocusEvent) => {
+      if (grid.dataset.deal !== "done") {
+        skipped = true;
+        io.disconnect();
+        window.clearTimeout(timer);
+        grid.dataset.deal = "done";
+        clear();
+      }
+      const t = e.target;
+      if (t instanceof HTMLElement) requestAnimationFrame(() => revealElement(t));
+    };
+    grid.addEventListener("focusin", onFocusIn);
     const io = new IntersectionObserver(
       (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
+        if (skipped || !entries.some((e) => e.isIntersecting)) return;
         io.disconnect();
         // the deck sits in the middle of the grid's visible part
         const g = grid.getBoundingClientRect();
@@ -42,7 +59,7 @@ export function ProfileDeal({ children, className }: { children: ReactNode; clas
         grid.dataset.deal = reduced ? "fade" : "play";
         timer = window.setTimeout(() => {
           grid.dataset.deal = "done";
-          tiles.forEach((el) => ["--deal-i", "--deal-dx", "--deal-dy", "--deal-rot"].forEach((p) => el.style.removeProperty(p)));
+          clear();
         }, tiles.length * STAGGER + DURATION + 80);
       },
       { threshold: 0.08 },
@@ -51,6 +68,7 @@ export function ProfileDeal({ children, className }: { children: ReactNode; clas
     return () => {
       io.disconnect();
       window.clearTimeout(timer);
+      grid.removeEventListener("focusin", onFocusIn);
       delete grid.dataset.deal;
     };
   }, []);

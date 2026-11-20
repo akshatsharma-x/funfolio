@@ -62,7 +62,7 @@ export function scrollToElement(el: HTMLElement, opts: { focus?: boolean; onComp
     // Lenis adds an element's offset to where it *thinks* the page is. After a native jump it didn't register (a hash
     // link at load, find-in-page, scrollIntoView) that's stale and the flight lands short — measured: 582px. So resync
     // an idle Lenis to the real position first, and aim at a number from the real geometry.
-    if (!instance.isScrolling && Math.abs(instance.animatedScroll - window.scrollY) > 1) instance.scrollTo(window.scrollY, { immediate: true });
+    if (instance.isScrolling !== "smooth" && Math.abs(instance.animatedScroll - window.scrollY) > 1) instance.scrollTo(window.scrollY, { immediate: true });
     // a timed flight (expo out, 0.6–1.6s by distance) ends on time, so focus lands as the page arrives — the lerp's long
     // tail of sub-pixel steps held it back ~1.2s on a short hop and 2–3s for Back to top (PART 17)
     const to = window.scrollY + el.getBoundingClientRect().top + offset;
@@ -86,7 +86,7 @@ export function revealElement(el: HTMLElement, margin = 16) {
   else if (r.bottom > bottom) dy = Math.min(r.bottom - bottom, r.top - top); // never push its top under the HUD
   if (Math.abs(dy) < 1) return;
   if (instance) {
-    if (!instance.isScrolling && Math.abs(instance.animatedScroll - window.scrollY) > 1) instance.scrollTo(window.scrollY, { immediate: true });
+    if (instance.isScrolling !== "smooth" && Math.abs(instance.animatedScroll - window.scrollY) > 1) instance.scrollTo(window.scrollY, { immediate: true });
     instance.scrollTo(window.scrollY + dy);
     wakeLoop();
   } else window.scrollBy(0, dy);
@@ -111,8 +111,9 @@ export function startSmoothScroll(): () => void {
   let teardown = () => {};
 
   void (async () => {
-    const { default: LenisCtor } = await import("lenis");
-    if (disposed) return;
+    const mod = await import("lenis").catch(() => null); // offline (PART 18): native scrolling, same page
+    if (disposed || !mod) return;
+    const LenisCtor = mod.default;
 
     const lenis = new LenisCtor({ autoRaf: false, lerp: 0.12, smoothWheel: true });
     // Motion listeners (decor, tickers) run on the next animation frame, never inside a native scroll event:
@@ -145,7 +146,10 @@ export function startSmoothScroll(): () => void {
       lastT = t;
       virtual += dt;
       lenis.raf(virtual);
-      if (lenis.isScrolling || performance.now() < awakeUntil) raf = requestAnimationFrame(loop);
+      // only Lenis's own animations need frames ("smooth": the wheel, scrollTo). A native scroll ("native") runs without
+      // them — and Lenis leaves isScrolling at "native" for good after a scroll event that didn't move the page (its
+      // reset waits on a non-zero velocity), which kept this loop running at rest (PART 18: part8 G5, part16 R1)
+      if (lenis.isScrolling === "smooth" || performance.now() < awakeUntil) raf = requestAnimationFrame(loop);
       else {
         raf = 0;
         lastT = 0;

@@ -1,0 +1,19 @@
+# Checks every push and pull request: lint + types, the static build (with its R1 / R10 / budget checks) and the
+# Playwright smoke test against the export. Deploys nothing.
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: npm run test:smoke

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import dynamic from "next/dynamic";
+import { orNothing } from "@/lib/chunks";
 import { Modal } from "@/components/ui/Modal";
 import { Tabs, type TabItem } from "@/components/ui/Tabs";
 import { bus } from "@/lib/bus";
@@ -18,7 +19,7 @@ import {
 } from "./PausePanels";
 
 // PART 11 — the same Prize Counter as the Arcade's booth (its own lazy chunk)
-const PrizeCounter = dynamic(() => import("@/components/prizes/PrizeCounter"), { ssr: false });
+const PrizeCounter = dynamic(() => import("@/components/prizes/PrizeCounter").catch(orNothing("the Prize Counter")), { ssr: false });
 
 /**
  * Pause menu (PART 3 #8). Native <dialog> (focus trap, Esc, blurred backdrop, scroll lock) + a vertical tab menu.

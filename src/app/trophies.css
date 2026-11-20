@@ -912,7 +912,7 @@
     margin-bottom: 0.4rem;
     color: var(--muted);
     font-family: var(--font-pixel);
-    font-size: 0.68rem;
+    font-size: var(--text-xs); /* the type scale's floor (PART 18) */
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }

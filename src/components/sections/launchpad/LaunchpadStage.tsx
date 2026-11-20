@@ -58,7 +58,7 @@ export function LaunchpadStage({ poster }: { poster: ReactNode }) {
         },
       });
       setLive(true);
-    });
+    }).catch(() => {}); // offline (PART 18): the poster stays and Skip ▶▶ still opens the Quest Log
     return () => {
       cancelled = true;
     };

@@ -132,8 +132,7 @@
     border-radius: 14px;
     /* glass, but opaque enough that HUD text keeps ≥ 4.5:1 over anything scrolling underneath */
     background: color-mix(in srgb, var(--surface) 84%, transparent);
-    backdrop-filter: blur(14px) saturate(1.3);
-    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    backdrop-filter: blur(14px) saturate(1.3);  /* the build adds -webkit- for Safari; a hand-written one after it made the minifier drop this line, so Chrome and Firefox had no blur (PART 18) */
     color: var(--text);
     box-shadow: 0 4px 0 color-mix(in srgb, var(--ink) 55%, transparent);
     font-family: var(--font-pixel);
@@ -413,8 +412,7 @@
     border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
     border-radius: 14px;
     background: color-mix(in srgb, var(--surface) 84%, transparent);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);  /* the build adds -webkit- for Safari; a hand-written one after it made the minifier drop this line, so Chrome and Firefox had no blur (PART 18) */
     box-shadow: 0 4px 0 color-mix(in srgb, var(--ink) 50%, transparent);
   }
   .rail__item {
@@ -671,6 +669,9 @@
     z-index: 70;
     overflow: hidden;
     pointer-events: none;
+  }
+  .xp-ghost::before {
+    content: attr(data-text);
   }
   .xp-ghost {
     position: absolute;
@@ -1113,29 +1114,45 @@ html[data-mode="speedrun"] .levelup {
   html[data-mode="speedrun"] #title .title-kicker {
     display: none; /* the HUD already names the world */
   }
-  html[data-mode="speedrun"] .toast-host {
+  /* PART 18 · consistency: the slim one-line toast on every phone, in every mode (in Play Mode a full card over the
+     Title's name plus the level-up banner covered the first screen) */
+  html[data-theme] .toast-host {
     inset: 4px 4px auto;
+    translate: none;
   }
-  html[data-mode="speedrun"] .toast {
+  html[data-theme] .toast {
     width: calc(100vw - 8px);
     min-height: 56px;
     gap: 10px;
     padding: 4px 12px 4px 6px;
     border-radius: 14px;
   }
-  html[data-mode="speedrun"] .toast .toast__badge {
+  html[data-theme] .toast .toast__badge {
     width: 40px;
     height: 36px;
   }
-  html[data-mode="speedrun"] .toast .toast__badge > .pixel-icon {
+  html[data-theme] .toast .toast__badge > .pixel-icon {
     width: 24px;
     height: 24px;
   }
-  html[data-mode="speedrun"] .toast .toast__detail {
+  html[data-theme] .toast .toast__detail {
     display: none;
   }
   html[data-mode="speedrun"] .levelup {
     display: none; /* still announced to screen readers; no banner over the summary on a phone */
+  }
+  /* Play Mode: the level-up is a compact ribbon above the controller, clear of the content */
+  html:not([data-mode="speedrun"]) .levelup {
+    inset: auto 8px calc(var(--pad-space, 12px) + 10px);
+    translate: none;
+  }
+  html:not([data-mode="speedrun"]) .levelup__card {
+    gap: 0.2rem;
+    margin-inline: auto; /* centred (the popover keeps its own display) */
+    padding: 0.6rem 1rem 0.7rem;
+  }
+  html:not([data-mode="speedrun"]) .levelup__title {
+    font-size: 1.6rem;
   }
   html[data-mode="speedrun"] #title-heading {
     font-size: 1.75rem;

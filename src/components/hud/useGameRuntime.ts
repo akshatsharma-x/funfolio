@@ -99,6 +99,30 @@ export function jumpToWorld(n: number) {
  * (they all run on --play), so a page left open stops costing main-thread time; any input resumes them at once.
  */
 const IDLE_NAP_MS = 30_000;
+/**
+ * PART 18 · juice audit: every click answers with a sound too (when sound is on — it's off by default, R5). A control
+ * that played nothing of its own within 150ms (a landmark, a perk, a tab, Pause the roll…) gets a soft blip; one that
+ * did is left alone. Keyboard activation (Enter / Space) fires the same click. Fields, BYTE and game screens have
+ * their own voices.
+ */
+export function useClickSound() {
+  useEffect(() => {
+    const CONTROL = 'button, a[href], [role="button"], [role="tab"], [role="menuitem"], [role="switch"], summary, label';
+    const QUIET = 'input:not([type="radio"]):not([type="checkbox"]), textarea, select, [data-byte], [data-keyboard="exclusive"], [data-game-screen], [data-sfx-skip]';
+    const onClick = (e: MouseEvent) => {
+      const t = e.target instanceof Element ? e.target : null;
+      if (!t?.closest(CONTROL) || t.closest(QUIET)) return;
+      // heard in the capture phase (some handlers stop the click — the Skill Tree's links), decided in a task after
+      // every handler has run and asked for its own sound
+      window.setTimeout(() => {
+        if (!sfx.askedWithin(150)) sfx.play("click", { volume: 0.6 });
+      }, 0);
+    };
+    window.addEventListener("click", onClick, true);
+    return () => window.removeEventListener("click", onClick, true);
+  }, []);
+}
+
 export function useIdleNap() {
   useEffect(() => {
     const root = document.documentElement;

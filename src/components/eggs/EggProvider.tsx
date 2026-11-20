@@ -88,7 +88,7 @@ export default function EggProvider({ data, resumeHref }: { data: EggData; resum
     };
 
     // ── the dispatcher ──────────────────────────────────────────────────────────────────────────────────────────
-    const run = async (id: EggId, how: "found" | "trigger" = "found") => {
+    const play = async (id: EggId, how: "found" | "trigger") => {
       const egg = EGG_BY_ID[id];
       if (!egg) return;
       if (speedrun() && !egg.speedrun) return; // Speedrun Mode: only the terminal and the menu
@@ -191,6 +191,12 @@ export default function EggProvider({ data, resumeHref }: { data: EggData; resum
           return;
       }
     };
+    // an effect whose chunk can't load (offline, PART 18) still counts as found, and says so
+    const run = (id: EggId, how: "found" | "trigger" = "found") =>
+      play(id, how).catch(() => {
+        const egg = EGG_BY_ID[id];
+        if (egg) command({ type: "item", kicker: "Egg found", title: egg.name, detail: "Its effect didn't load — check your connection" });
+      });
 
     // ── typed words + the cheat code (the keyboard manager forwards keys it didn't use) ────────────────────────────
     let letters = "";
@@ -442,7 +448,7 @@ export default function EggProvider({ data, resumeHref }: { data: EggData; resum
     });
 
     // ── hidden coins: spin-in, sparkle, a flight to the HUD, the chip bumps ──────────────────────────────────────
-    const offCoin = bus.on("coin:collected", ({ origin }) => void effects().then((E) => E.coinCeremony(origin, reduced())));
+    const offCoin = bus.on("coin:collected", ({ origin }) => void effects().then((E) => E.coinCeremony(origin, reduced()), () => {}));
 
     // ── the right-click menu (Shift keeps the browser's; links, fields, media, dialogs and selections keep theirs) ─
     window.addEventListener(

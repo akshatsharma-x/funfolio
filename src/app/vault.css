@@ -249,7 +249,7 @@
   .cart__genre {
     position: relative;
     font-family: var(--font-pixel);
-    font-size: 11px;
+    font-size: var(--text-xs);
     letter-spacing: 0.04em;
     line-height: 1.2;
     text-transform: uppercase;

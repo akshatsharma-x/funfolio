@@ -130,7 +130,8 @@ function Pits() {
   );
 }
 
-export default function Scene3D({ view, paused, low, reduced }: { view: RefObject<DescentView>; paused: boolean; low: boolean; reduced: boolean }) {
+// `onLost` is the fallback's (GradientDescent's NoScene): the real scene never calls it
+export default function Scene3D({ view, paused, low, reduced }: { view: RefObject<DescentView>; paused: boolean; low: boolean; reduced: boolean; onLost?: () => void }) {
   return (
     <Canvas
       dpr={[1, low ? 1 : 1.5]}

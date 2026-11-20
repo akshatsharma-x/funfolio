@@ -11,9 +11,31 @@ no server, no API keys, no runtime third-party requests.
 | `npm run build` | Static export to `out/`, then R1/R10/budget checks (`scripts/check-export.mjs`) |
 | `npm run preview` | Serves `out/` at http://localhost:4173 like a static host (brotli/gzip, immutable `/_next/static`, 404 page) |
 | `npm run check` | ESLint + TypeScript |
+| `npm run test:smoke` | Playwright smoke test against the built `out/` (run `npm run build` first) |
 | `npm run images` | Pre-builds AVIF/WebP variants from `assets/images/` into `public/img/` |
 | `npm run cursors` | Rebuilds the pixel cursors (6 skins × 3 sizes × 7 variants) and their CSS |
 | `npm run globe` | Rebuilds the Lab globe's land dots (`public/data/land-dots.json`) from the bundled Natural Earth land file |
+
+Requirements: Node 22+ (`.nvmrc`), `npm ci` once. Nothing else — no environment variables, no API keys, no database.
+
+## Deploy
+
+`npm run build` writes a pure static site to `out/` (HTML, JS, CSS, fonts, SVG/PNG — no server code). Any static host
+serves it as-is; there is nothing to configure, renew or keep running.
+
+| Host | How |
+|---|---|
+| Netlify | Connect the repository (`netlify.toml` sets the build command and `out`), or drop the `out/` folder on Netlify Drop. |
+| Cloudflare Pages | Build command `npm run build`, output directory `out`. |
+| Vercel | Import the repository — it detects Next.js and serves the static export (`vercel.json` adds the headers). |
+| GitHub Pages | Settings → Pages → Source: GitHub Actions, then run **Deploy to GitHub Pages** (Actions tab). Serve it from a domain's root: the `<user>.github.io` repository or a custom domain (`public/CNAME`). |
+
+Response headers (a Content-Security-Policy that only allows the site itself — R10, enforced by the browser — plus
+caching for the hashed `/_next/static` files) live in `public/_headers` for Netlify and Cloudflare Pages and in
+`vercel.json` for Vercel; GitHub Pages can't set headers. `npm run preview` applies the same file locally.
+
+Custom domain: TODO. Once there is one, set `site.url` in `src/content/site.ts` and rebuild — the canonical link,
+`og:url` / `og:image` (the share card) and the sitemap's entry need an absolute address and appear only then.
 
 ## Playing
 
@@ -156,7 +178,41 @@ GitHub) are built from content.ts; the share card (`/og.png`, a game character c
 BYTE favicon are generated at build time. Set `site.url` in `src/content/site.ts` once the domain exists — the canonical
 link, `og:url` / `og:image` and the sitemap's entry need an absolute address, so they're left out until then.
 
+### Adding things
+
+Every fact goes in `src/content/content.ts`; everything else (counts, tickers, the Speedrun summary, BYTE's lines,
+the terminal, "Used in" evidence) follows on the next build. `npm run build` fails with a readable message when an
+entry is incomplete (`src/content/schema.ts`).
+
+- **A certificate** — add `{ id, name, issuer, date, credentialId?, credentialUrl?, skills? }` to `certificates`. The
+  Trophy Room deals it as a trading card (the sealed packs disappear) and the capsule machine can roll it.
+- **A project** — add an entry to `projects` (`id`, `title`, `subtitle`, `genre`, `category`: `ai` · `fullstack` ·
+  `tools`, `bullets`, `stats`, `stack`, `links: { demo, repo }`, `media`, `sideQuest` or `null`). It becomes a
+  cartridge in the Vault, a line in Speedrun Mode and evidence for every skill its `stack` names. Links stay "Coming
+  soon" while they're `"TODO"`.
+- **A paper** — add an entry to `research` (`status` `"Presented"` or `"Published"` — Published needs the DOI). It
+  becomes a boss card in the Lab; give it a sprite under the same id in `src/content/bossArt.ts` (optional) and its
+  three damage words in `BOSS_HITS`.
+- **An achievement** — add `{ id, title, description, icon, xp, secret? }` to `src/content/achievements.ts`, then
+  unlock it where it happens: `command({ type: "achievement", id })` from a server component's island, or
+  `useSave.getState().unlock(id)` inside the runtime. Counts ("x/35") update by themselves.
+- **A hidden coin** — add `{ id, number, name, location, hint }` to `src/content/coins.ts`, pay it out with
+  `command({ type: "coin", id })`, and put `data-coin-id="<id>"` on the coin's element — the runtime marks it
+  `data-collected` once it's found (style that state to hide it). "x/12" becomes "x/13".
+- **An easter egg** — add it to the registry in `src/lib/eggs.ts` (id, name, trigger, effect, achievement, `minFx`,
+  `speedrun`, hint), its effect to `src/components/eggs/effects.ts` and its trigger to `EggProvider.tsx`;
+  `/playground/eggs` lists it with a Trigger button.
+
 Skills come from `skills` in content.ts (each listed once — the build checks). A skill's "Used in" is computed from the
 roles' and projects' `stack`s through the alias map in `src/lib/skills-index.ts` ("GPT-4.1" counts for LLMs, "Django
 REST Framework" for Django); a skill no stack names says "On the skills list". Pick 5–8 `skills.signature` items for
 the holo-foil. The JD scanner's "not on the save file yet" vocabulary is in the same file.
+
+## Testing
+
+`npm run test:smoke` (after `npm run build`) serves `out/` like a static host and checks, in the installed Chrome: the
+home page loads with no console errors and every world id exists, Speedrun Mode shows every fact, the contact form
+validates and builds the right `mailto:` link, an unknown address renders GAME OVER with status 404, and nothing is
+requested from anywhere but the site itself. On a machine without Chrome: `npx playwright install chromium` and remove
+the `channel` line in `playwright.config.ts`. CI (`.github/workflows/ci.yml`) runs `check`, `build` and the smoke test
+on every push.

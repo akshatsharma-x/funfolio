@@ -88,8 +88,12 @@ function listenForGesture(): void {
   window.addEventListener("keydown", onFirstGesture, true);
 }
 
+/** When anything last asked for a sound (played, rate-limited or queued) — the click floor's "did it speak?" */
+let lastAsked = -Infinity;
+
 function play(name: SfxName, opts?: SfxOptions): void {
   if (!enabled) return;
+  if (name !== "hover") lastAsked = performance.now(); // a hover blip isn't the click's answer
   if (!engine) {
     if (pending.length < PENDING_MAX) pending.push({ name, opts, at: performance.now() });
     load();
@@ -121,6 +125,10 @@ listenForGesture();
 
 export const sfx = {
   play,
+  /** true when some sound was asked for in the last `ms` (PART 18 · the click floor stays quiet then) */
+  askedWithin(ms: number): boolean {
+    return performance.now() - lastAsked < ms;
+  },
   configure(next: { enabled: boolean; volume: number }): void {
     enabled = next.enabled;
     volume = Math.max(0, Math.min(1, next.volume));

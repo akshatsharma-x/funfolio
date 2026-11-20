@@ -11,12 +11,15 @@ import { fx } from "@/lib/juice";
 import { sfx } from "@/lib/sfx";
 
 type Flipper = { gsap: typeof import("gsap").gsap; Flip: typeof import("gsap/Flip").Flip };
-let flipper: Promise<Flipper> | null = null;
+let flipper: Promise<Flipper | null> | null = null;
+// null when GSAP can't load (offline, PART 18): the callers then take their reduced-motion path — the same steps at once
 const loadFlip = () =>
-  (flipper ??= Promise.all([import("gsap"), import("gsap/Flip")]).then(([g, f]) => {
-    g.gsap.registerPlugin(f.Flip);
-    return { gsap: g.gsap, Flip: f.Flip };
-  }));
+  (flipper ??= Promise.all([import("gsap"), import("gsap/Flip")])
+    .then(([g, f]) => {
+      g.gsap.registerPlugin(f.Flip);
+      return { gsap: g.gsap, Flip: f.Flip };
+    })
+    .catch(() => null));
 
 const TURN = Math.PI * 2;
 const COIN_ODDS = 0.2; // one capsule in five…
@@ -217,10 +220,14 @@ export function TrophiesFx() {
       enlarged = null;
       front(c)?.setAttribute("aria-expanded", "false");
       c.removeAttribute("data-flipped");
-      if (reduced()) c.removeAttribute("data-enlarged");
+      let F: Flipper | null = null;
+      if (!reduced()) {
+        await wait(380); // the card turns back first
+        F = await loadFlip();
+      }
+      if (!F) c.removeAttribute("data-enlarged");
       else {
-        await wait(380);
-        const { gsap, Flip } = await loadFlip();
+        const { gsap, Flip } = F;
         const state = Flip.getState(c);
         c.removeAttribute("data-enlarged");
         await Flip.from(state, { duration: 0.45, ease: "power3.inOut", zIndex: 95, onComplete: () => void gsap.set(c, { clearProps: "transform,zIndex" }) });
@@ -237,11 +244,12 @@ export function TrophiesFx() {
       sfx.play("whoosh");
       front(c)?.setAttribute("aria-expanded", "true");
       if (backdrop) backdrop.hidden = false;
-      if (reduced()) {
+      const F = reduced() ? null : await loadFlip();
+      if (!F) {
         c.setAttribute("data-enlarged", "");
         c.setAttribute("data-flipped", "");
       } else {
-        const { gsap, Flip } = await loadFlip();
+        const { gsap, Flip } = F;
         const state = Flip.getState(c);
         c.setAttribute("data-enlarged", "");
         // the flight uses an inline transform; hand the transform back to CSS (the flip's perspective) when it lands

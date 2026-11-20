@@ -14,9 +14,11 @@ export function LobbyFx() {
     if (!section) return;
     let off: (() => void) | null = null;
     let gone = false;
-    void import("./lobbyRun").then((m) => {
-      if (!gone) off = m.mountLobby(section);
-    });
+    void import("./lobbyRun")
+      .then((m) => {
+        if (!gone) off = m.mountLobby(section);
+      })
+      .catch(() => {}); // offline (PART 18): the plain mailto: form still works
     return () => {
       gone = true;
       off?.();

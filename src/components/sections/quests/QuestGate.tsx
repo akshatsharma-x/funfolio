@@ -112,11 +112,12 @@ export function QuestGate() {
             },
           });
         });
-      if (reduced || crates.length === 0) {
+      const gsapMod = reduced || crates.length === 0 ? null : await import("gsap").catch(() => null); // offline: no flourish
+      if (!gsapMod) {
         await toQuests();
         return;
       }
-      const { gsap } = await import("gsap");
+      const { gsap } = gsapMod;
       const layer = document.createElement("div");
       layer.className = "crate-fly";
       layer.setAttribute("aria-hidden", "true");

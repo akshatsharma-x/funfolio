@@ -62,7 +62,7 @@ const QUIPS = build([
     mood: "cool",
     values: [jobStat("ey", "Engagement")],
     uses: ["regulated environment"],
-    say: (v) => `At EY, Akshat shipped features for the ${v} engagement — a regulated environment. I'm regulated too. By naps.`,
+    say: (v) => `At EY, Akshat built features for the ${v} engagement — a regulated environment. I'm regulated too. By naps.`,
   },
   {
     mood: "surprised",

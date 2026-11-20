@@ -29,7 +29,12 @@ import {
 } from "./landscape";
 import type { DescentView } from "./Scene3D";
 
-const Scene3D = dynamic(() => import("./Scene3D"), { ssr: false });
+// PART 18 — if the 3D chunk can't load (offline), the game falls back to its 2D heatmap instead of an empty playfield
+function NoScene({ onLost }: { onLost?: () => void }) {
+  useEffect(() => onLost?.(), [onLost]);
+  return null;
+}
+const Scene3D = dynamic(() => import("./Scene3D").catch(() => ({ default: NoScene as never })), { ssr: false });
 const TOTAL = DESCENT_SECONDS * 1000;
 const TRAIL = 14;
 const DEAD = 0.12;
@@ -45,7 +50,7 @@ const dead = (v: number) => (Math.abs(v) < DEAD ? 0 : (v - Math.sign(v) * DEAD) 
  * and diverges. Local-minimum pits hold the ball for 2s. 3D (R3F) with WebGL; a 2D top-down heatmap without it.
  */
 export default function GradientDescent({ api, reduced, paused }: GameProps) {
-  const [mode] = useState<"3d" | "2d">(() => {
+  const [mode, setMode] = useState<"3d" | "2d">(() => {
     const forced = (window as unknown as { __QA_ARCADE?: QaHook }).__QA_ARCADE?.gdMode;
     return forced ?? (getQualityTier() === "none" ? "2d" : "3d");
   });
@@ -364,7 +369,7 @@ export default function GradientDescent({ api, reduced, paused }: GameProps) {
           st.current.pointer = { x: 0, y: 0 };
         }}
       >
-        {mode === "3d" ? <Scene3D view={view} paused={paused} low={low} reduced={reduced} /> : <canvas ref={canvasRef} className="gd-canvas" aria-hidden="true" />}
+        {mode === "3d" ? <Scene3D view={view} paused={paused} low={low} reduced={reduced} onLost={() => setMode("2d")} /> : <canvas ref={canvasRef} className="gd-canvas" aria-hidden="true" />}
         {toast ? (
           <p className="gd-toast" aria-hidden="true">
             Diverged! <span>The learning rate is too high.</span>

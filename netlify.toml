@@ -1,0 +1,4 @@
+# Netlify: a static site — no functions, no environment variables. Headers: public/_headers.
+[build]
+  command = "npm run build"
+  publish = "out"

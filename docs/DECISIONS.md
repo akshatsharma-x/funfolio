@@ -1081,3 +1081,113 @@ change an entry only when the decision itself changes.
      What's left in the reports: "unused JavaScript" (the lazy runtime's chunks are fetched right after hydration), a
      "legacy JavaScript" insight on Next.js's framework chunk (its built-in polyfills — not ours), and TTI 5.3s on
      simulated slow 4G (TBT stays ≤ 80ms).
+
+## PART 18 — Final polish, QA & deploy
+
+199. **A lazy part that can't load never takes the page down** (found by the offline audit: going offline after the
+     first load and pressing Esc unmounted the whole runtime — the HUD vanished — because the pause menu's chunk threw
+     inside React). Every `next/dynamic` part is `import(...).catch(orNothing(label))` (`src/lib/chunks.ts`): it renders
+     nothing instead of throwing, and a part the visitor asked for says so once — "Oops — that's a glitch · The pause
+     menu didn't load · You're offline — reconnect, then reload the page." Turbopack caches a failed chunk for the
+     page's lifetime, so there is no retry, only the plain path: no GSAP → the Quest Log opens and cartridges / cards
+     move without the flight, the island skips its swoop; no Lenis → native scrolling; no 3D for Gradient Descent → its
+     2D heatmap; an egg whose effect fails still counts and says so; the Lobby's and the 404's islands fall back to
+     their plain markup. Right after the runtime starts (in the same burst as its own lazy parts, before a visitor is
+     doing anything) it also fetches the three parts a visitor opens on demand — the pause menu, the games' host, the
+     terminal — through the *same* loader functions as `dynamic()` (Turbopack gives each `import()` call site its own
+     small loader chunk, so warming a second call site left the menu's loader unfetched). Never offline (it would only
+     log errors), never with Save-Data, never later on: a first version waited 6s and landed in the middle of the contact
+     flow, which PART 15 keeps free of requests (part15-qa C5, D4). Measured offline (`static-p18`): everything loaded keeps working — the pause menu, the
+     theme, games already opened, the terminal, the JD scanner, the contact form's mailto, the cartridges; parts not yet
+     loaded fail gracefully. The same protects an open tab after a redeploy replaced the chunk files.
+200. **Static audit (R10).** The source has one `fetch` (the globe's own `/data/land-dots.json`), no `process.env`
+     (the preview tool's optional `PORT` went too), no API routes, keys or CDN URLs; the export is HTML, JS, CSS, fonts
+     and SVG/PNG. Behind a plain `python3 -m http.server`, every request of `/`, `/playground/`, `/playground/eggs/` and
+     `/404.html` is the site's own file. (`public/data/ne_110m_land.geojson` is a build-time input that gets copied but
+     is never requested.)
+201. **Fact audit (R1)** (`facts-p18`: 10,603 strings — the page in Play and Speedrun Mode with every hidden alternate,
+     every pause-menu tab, every terminal command, every BYTE line, the 404 — numbers, tech names and organisations
+     checked against content.ts and the counts). Nothing invented; two overstatements fixed: the perk the PART 6 brief
+     named "Published" said so over two papers content.ts lists as "Presented" — its name now follows the status
+     ("Presenter", "Published" once a DOI arrives); BYTE's EY line said "shipped" where content says "building" →
+     "built". Kept as the briefs wrote them: "Hackathon Veteran", "Not on the save file yet — Akshat learns fast.", and the
+     share card's "LV 10" (game flavour, the top level). The Lab's peel said "Peek under the The Spoilage Specter card".
+202. **Originality audit (R4).** The coin sound was a famous platformer's coin — two square notes, B5 → E6 after
+     60ms; it is a single bell "ting" with a shimmer and a short echo now. The handheld pad's green A and red B were a
+     console's colour code: A wears the current world's lead colour (R8, ink on the bright fill) and B is neutral like
+     START. Kept: the FUNSOLE (the generic portrait-handheld archetype, with its own button layout — the candy buttons
+     beside the d-pad, EJECT / FULLSCREEN pills — a dot-grid speaker and its own body and name), the cartridges (plain
+     ridged cards), the pixel sword and robo-glove cursors (original art), the names (generic or original), the cheat
+     code's key sequence (the PART 16 brief's, under the generic name "Cheat code", no brand assets).
+203. **Juice audit** (`juice-p18`: one of every kind of control in every world and the HUD, pressed like a person —
+     pointer down, 60ms, up — with sound on). Every control answers within 100ms: a press animation or transition
+     starts in ≤ 6ms everywhere, the action's own change lands around 70ms (the click fires on release). Sound had gaps
+     (landmarks, perks, peels, tabs, Pause the roll, the root, Back to top…): `useClickSound()` (the runtime) gives any
+     click on a control that asked for no sound of its own within 150ms a soft blip — heard in the capture phase (the
+     Skill Tree's links stop the click), decided in a task after every handler, hover blips don't count, fields / BYTE
+     / game screens / `[data-sfx-skip]` keep their own voices. Sound stays off by default (R5).
+204. **Cursor audit (R2)** (`cursor-p18`, 22 checks): ~8,200 elements in each theme and in Speedrun Mode — none has
+     `cursor: none`, every custom cursor is a url() with a keyword fallback and every file it names exists; a custom
+     cursor over text, links, buttons, drag handles and 3D canvases in every world; the follower stays in the top layer
+     over the pause menu, the scroll, the terminal, each of the six games while playing (Bug Whack's crosshair) and the
+     boot.
+205. **Consistency.** Outlines and hard shadows come in size tiers — 2px outline with a 2–3px shadow (chips, small
+     controls), 3px with 4–6px (cards, buttons), 4–5px (big tokens) — and every component class has one look apart
+     from its states (pressed, current, owned). Informational labels under the type scale's 12px floor moved to
+     `--text-xs`: skill cards' type / "Used in" / evidence lines, the trophy plaques' state, the cartridges' genre,
+     YOUR RUN's labels. The radial Skill Tree keeps its container-unit labels (10.5–12px) — its collision-free layout
+     is computed for them; the same names are ≥ 12px in the cards and the vertical tree. Phones get the slim one-line
+     toast in every mode (in Play Mode a full card plus the level-up banner covered the Title's name) and the level-up
+     is a compact ribbon above the controller.
+206. **Cross-browser** (`browsers-p18`: Chrome 141, Edge 141, Firefox 159, Safari / WebKit 27.2, iOS Safari and Android
+     Chrome emulated — 46 checks: world ids, the native cursor, the HUD glass, the WebGL tier, Handheld Mode, the
+     contact form's mailto, Speedrun Mode, no console errors, no third parties). Found: Chrome, Edge and Firefox had no
+     HUD / rail / pad blur — the minifier keeps one of `backdrop-filter` and a hand-written `-webkit-backdrop-filter`
+     that follows it, and kept the prefixed one, which only Safari reads. The source now writes the standard property
+     only (the build adds the prefix). Never hand-write `-webkit-backdrop-filter`.
+207. **Response headers** (`public/_headers` for Netlify and Cloudflare Pages, the same set in `vercel.json`):
+     `Content-Security-Policy: default-src 'self'` with `'self'` for every origin — R10 enforced by the browser — plus
+     `'unsafe-inline'` (Next's inline page data, the pre-paint script, style attributes), `'unsafe-eval'` (axe-core
+     compiles its message templates — the Vault's "Scan this page"), `img-src data: blob:`, `form-action 'self'
+     mailto:`, `frame-ancestors 'none'`; `nosniff`, `X-Frame-Options: DENY`, a strict referrer policy, a permissions
+     policy that turns off camera / microphone / geolocation / payment / USB (not the motion sensors — tilt needs
+     them), and a year of immutable caching for `/_next/static`. (No `Cross-Origin-Opener-Policy`: without COEP,
+     WebKit logs a cross-origin-isolation warning on every page — engines-qa — and the site opens no popups.)
+     `scripts/serve-out.mjs` applies the file, so the preview, the smoke test and every QA suite run under it — no
+     violation in Chrome, Firefox or WebKit (the scan, the games, the 3D, the contact form, the eggs, the proctor's
+     data: favicon). GitHub Pages can't set headers.
+208. **Deploy.** `out/` on any static host, nothing to configure: `netlify.toml` (build + publish), `vercel.json`
+     (headers), Cloudflare Pages by its dashboard settings, GitHub Pages through `.github/workflows/deploy-pages.yml`
+     (run by hand — no surprise deploys; root hosting only: the `<user>.github.io` repository or a custom domain, as the
+     site uses root paths). Node 22 comes from `.nvmrc` / `engines` — no environment variables anywhere. `public/.nojekyll`
+     for branch-based Pages. CI (`.github/workflows/ci.yml`) runs check, build and the smoke test on every push and
+     deploys nothing. Custom domain: TODO → `site.url`.
+209. **The smoke test lives in the repo** (`tests/smoke.spec.ts`, `npm run test:smoke`; `@playwright/test` 1.65.1 as a
+     dev dependency — the brief asked for Playwright; it runs in the installed Chrome, no browser download): no console
+     errors and every world id, every fact visible in Speedrun Mode (from content.ts), the contact form's validation and
+     its exact `mailto:` (the site's own `mailtoHref()`), the 404's status and GAME OVER, no third-party requests.
+210. **Haptics wait for the first tap.** Chrome blocks `navigator.vibrate` before the page has had a user activation and
+     logs a console error — an achievement at load (Night Owl) or one earned by scrolling alone (Explorer) did that on
+     touch devices (found by the overnight regression). `haptic()` checks `navigator.userActivation.hasBeenActive`.
+211. **The smooth-scroll loop sleeps again after a native scroll.** Lenis sets `isScrolling = "native"` on a native
+     scroll and clears it from a timer it starts only when the velocity isn't zero — so a scroll event that didn't move
+     the page (a deep link's jump) left it "native" for good, and our sleep-when-idle loop (#40) kept requesting frames
+     at rest (found by the overnight regression: part8 G5, part16 R1 — 60 frames per 2s; part6 H1's idle style
+     recalcs). The loop now runs only for Lenis's own animations (`isScrolling === "smooth"`) or 250ms after input, and
+     the resync before a flight (#160) also runs unless Lenis is smooth-scrolling. Measured: 0 frames at rest.
+212. **The "+XP" ghost's text is generated content** (`::before { content: attr(data-text) }`): an aria-hidden
+     flourish that fades as it flies to the XP bar — axe caught it half-faded (part5 H4); the value itself is the HUD's.
+213. **No deal for keyboard visitors.** The Profile's deal (#75) armed its tiles at `opacity: 0` — invisible but
+     focusable — and Chrome leaves a focused element alone when a sliver of it is on screen, so a first Tab into the
+     character sheet could focus a perk that stayed almost entirely below the fold (part17-qa D7). Focus arriving in
+     the bento now skips the deal (the tiles are simply there) and reveals the focused tile whole under the HUD.
+214. **Final measurements** (the v1.0.0 export behind the preview server, which now sends the production headers).
+     Lighthouse desktop `/`: 100 · 100 · 100 · 100 (LCP 0.4s, CLS 0, TBT 0). Mobile `/`: 96–97 · 100 · 100 · 100 in
+     most runs (LCP 2.1s, CLS 0, TBT 60–80ms); about one run in four reads 87–88 with LCP 3.6s (the Title's class line,
+     which types itself in) — the same with the idle warm-up switched off (A/B), so it's the simulation's variance on
+     this machine, not the build. `/404.html`: 97 mobile / 100 desktop (SEO 63 = its noindex). Initial JS 182.7 KB.
+     The overnight regression's remaining failures were environmental: every 60fps check read a steady 33ms because
+     the display had gone to sleep (a blank page did too; with vsync off the site's frames take 1–2ms, glass included),
+     and Night Owl (00:00–04:59) fired in every fresh save — the suites pass on a daytime clock (`TZ=…`), except in
+     WebKit, which ignores `TZ`.
+215. **v1.0.0.** PART 18 closes the core build; PART 19 (Ask BYTE) is optional.

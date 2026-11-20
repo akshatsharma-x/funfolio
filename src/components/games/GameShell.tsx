@@ -318,7 +318,7 @@ export function GameShell({ id, data, active, ref }: { id: string; data: ArcadeD
             {Game ? (
               <Game key={round} api={api} reduced={reduced} game={game} data={data} seed={seed} paused={phase === "paused"} />
             ) : (
-              <p className="gshell__msg">{failed ? "Oops — that's a glitch. The game didn't load. Try again?" : "Loading the cartridge…"}</p>
+              <p className="gshell__msg">{failed ? "Oops — that's a glitch. The game didn't load — check your connection, then reload the page." : "Loading the cartridge…"}</p>
             )}
           </div>
         ) : null}

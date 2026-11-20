@@ -696,9 +696,11 @@ function Rig({ offsetX, still, rotate, hotspots, world, diveGroup, onFirstFrame 
     island.onGo(async (id) => {
       const anchor = anchorsRef.get(id);
       if (!anchor || still) return;
+      const gsapMod = await import("gsap").catch(() => null); // offline (PART 18): skip the swoop, the page still flies there
+      if (!gsapMod) return;
+      const { gsap } = gsapMod;
       swooping.current = true;
       if (controls.current) controls.current.enabled = false;
-      const { gsap } = await import("gsap");
       const to = new THREE.Vector3();
       anchor.getWorldPosition(to);
       const fromPos = camera.position.clone();

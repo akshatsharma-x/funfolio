@@ -15,12 +15,15 @@ const TITLE_MS = 1250;
 const LOCK_BLOWS = 5;
 const DUST = ["#E4E1EC", "#B9B2D9", "#FFF4E0"];
 type Flipper = { gsap: typeof import("gsap").gsap; Flip: typeof import("gsap/Flip").Flip };
-let flipper: Promise<Flipper> | null = null;
+let flipper: Promise<Flipper | null> | null = null;
+// null when GSAP can't load (offline, PART 18): the callers then take their reduced-motion path — the same steps at once
 const loadFlip = () =>
-  (flipper ??= Promise.all([import("gsap"), import("gsap/Flip")]).then(([g, f]) => {
-    g.gsap.registerPlugin(f.Flip);
-    return { gsap: g.gsap, Flip: f.Flip };
-  }));
+  (flipper ??= Promise.all([import("gsap"), import("gsap/Flip")])
+    .then(([g, f]) => {
+      g.gsap.registerPlugin(f.Flip);
+      return { gsap: g.gsap, Flip: f.Flip };
+    })
+    .catch(() => null));
 
 /**
  * The Cartridge Vault's play (PART 10), attached to the server-rendered shelf and Funsole:
@@ -131,11 +134,12 @@ export function VaultFx() {
     };
 
     const fly = async (from: HTMLElement, to: HTMLElement, show: () => void) => {
-      if (reduced() || narrow.matches) {
+      const F = reduced() || narrow.matches ? null : await loadFlip();
+      if (!F) {
         show();
         return;
       }
-      const { gsap, Flip } = await loadFlip();
+      const { gsap, Flip } = F;
       to.dataset.flipId = from.dataset.flipId;
       const state = Flip.getState(from);
       show();
@@ -261,10 +265,11 @@ export function VaultFx() {
       tabs.forEach((t) => t.setAttribute("aria-pressed", String(t.dataset.filterTab === id)));
       const slots = [...shelf.querySelectorAll<HTMLElement>("[data-cart-slot]")];
       const show = (s: HTMLElement) => id === "all" || s.dataset.category === id;
-      if (reduced()) {
+      const F = reduced() ? null : await loadFlip();
+      if (!F) {
         slots.forEach((s) => s.toggleAttribute("data-hidden", !show(s)));
       } else {
-        const { gsap, Flip } = await loadFlip();
+        const { gsap, Flip } = F;
         const state = Flip.getState(slots);
         slots.forEach((s) => s.toggleAttribute("data-hidden", !show(s)));
         Flip.from(state, {

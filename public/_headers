@@ -1,0 +1,14 @@
+# Response headers for Netlify and Cloudflare Pages (both read this file from the published folder; Vercel gets the same
+# set from vercel.json; GitHub Pages can't set headers). scripts/serve-out.mjs applies it too, so `npm run preview` and
+# the tests run under the same policy. R10, enforced by the browser: every origin below is the site itself.
+# 'unsafe-inline' — Next's inline page data, the pre-paint script, style attributes; 'unsafe-eval' — axe-core's message
+# templates (the Vault's "Scan this page"). form-action allows mailto: — the contact form is a mailto: form.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable

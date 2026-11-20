@@ -7,7 +7,9 @@ import type { SfxName } from "./sfx";
 export const SOUNDS: Readonly<Record<SfxName, readonly number[]>> = {
   click: [0.45, 0, 520, 0, 0.01, 0.04, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.6, 0.01],
   hover: [0.15, 0, 900, 0, 0.004, 0.02, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.5],
-  coin: [0.55, 0, 988, 0, 0.04, 0.22, 1, 1.5, 0, 0, 330, 0.06, 0, 0, 0, 0, 0, 0.7, 0.03],
+  // PART 18 (R4): a single bell "ting" with a shimmer and a short echo — the old two-note jump (B5 → E6 after 60ms)
+  // was a famous platformer's coin sound
+  coin: [0.5, 0, 1320, 0, 0.02, 0.3, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0.05, 0.6, 0.02, 0.25],
   xp: [0.35, 0, 660, 0, 0.03, 0.12, 1, 1.4, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0.6, 0.02],
   levelUp: [0.55, 0, 440, 0.02, 0.18, 0.35, 1, 1, 0, 0, 220, 0.08, 0.08, 0, 0, 0, 0, 0.8, 0.06],
   achievement: [0.55, 0, 587, 0.01, 0.2, 0.4, 2, 1.2, 0, 0, 293, 0.1, 0.1, 0, 0, 0, 0.05, 0.7, 0.05],

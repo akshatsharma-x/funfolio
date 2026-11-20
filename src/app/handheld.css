@@ -37,9 +37,11 @@
   .pad__btn--dir {
     border-radius: 12px;
   }
+  /* R4 (PART 18): no console's colour code (a green A and a red B is one) — A wears the current world's lead colour
+     (R8, ink on the bright fill), B is a neutral button like START */
   .pad__btn--b {
-    background: #ff4d4d;
-    color: #07060f;
+    background: var(--surface-2);
+    color: var(--text);
   }
   .pad__btn--a {
     display: inline-flex;
@@ -48,8 +50,8 @@
     min-width: 44px;
     padding: 0 12px 0 14px;
     border-radius: 999px;
-    background: #2ee59d;
-    color: #07060f;
+    background: var(--world);
+    color: var(--ink);
   }
   /* the A label gives way first on a narrow phone (ellipsis; the button's name keeps the whole label) */
   .pad__ab {
@@ -113,8 +115,7 @@
     border: 1px solid color-mix(in srgb, var(--text) 16%, transparent);
     border-radius: 16px;
     background: color-mix(in srgb, var(--surface) 88%, transparent);
-    backdrop-filter: blur(14px) saturate(1.3);
-    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    backdrop-filter: blur(14px) saturate(1.3);  /* the build adds -webkit- for Safari; a hand-written one after it made the minifier drop this line, so Chrome and Firefox had no blur (PART 18) */
     box-shadow: 0 6px 18px rgb(0 0 0 / 0.35);
     transition: translate calc(var(--motion) * 220ms) ease;
   }

@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "1.0.0",
+    date: "2026-11-20",
+    title: "Launch",
+    notes: [
+      "Version 1.0: every world polished and checked in every browser, on phones and with the keyboard alone.",
+      "Every click answers right away — and with a little sound, when sound is on.",
+      "Lost your connection? Everything you've opened keeps working, and anything that can't load says so instead of breaking.",
+      "On phones, notifications stay slim and out of the way, and the level-up banner sits above the controller.",
+      "A fresh coin sound, and the controller's A button wears each world's colour.",
+    ],
+  },
+  {
     version: "0.17.0",
     date: "2026-11-19",
     title: "Handheld mode",

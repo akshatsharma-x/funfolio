@@ -125,7 +125,9 @@ export const PERK_DEFS: readonly PerkDef[] = [
   },
   {
     id: "published",
-    name: "Published",
+    // R1 (PART 18 fact audit): the brief's "Published", but both papers are "Presented" in content.ts — the name follows
+    // the status and becomes "Published" by itself once content says so (with the DOI)
+    name: research.length > 0 && research.every((r) => r.status === "Published") ? "Published" : "Presenter",
     icon: "scroll",
     build: () => {
       const h = honorOf("sci-2026");

@@ -835,7 +835,7 @@
   .run__stat dt {
     color: var(--muted);
     font-family: var(--font-pixel);
-    font-size: 0.72rem;
+    font-size: var(--text-xs);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }

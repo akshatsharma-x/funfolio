@@ -10,7 +10,7 @@ import { extname, join, normalize } from "node:path";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 
 const ROOT = join(process.cwd(), "out");
-const PORT = Number(process.argv[2] ?? process.env.PORT ?? 4173);
+const PORT = Number(process.argv[2] ?? 4173);
 const TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -29,6 +29,30 @@ const TYPES = {
   ".webmanifest": "application/manifest+json",
 };
 const TEXT = new Set([".html", ".js", ".css", ".json", ".txt", ".xml", ".svg", ".webmanifest"]);
+
+// PART 18 · out/_headers (public/_headers), applied the way Netlify and Cloudflare Pages do: every block whose path
+// pattern matches (`*` = anything) adds its headers — so the preview and the tests run under the production CSP.
+async function loadHeaderRules() {
+  try {
+    const rules = [];
+    let cur = null;
+    for (const line of (await readFile(join(ROOT, "_headers"), "utf8")).split("\n")) {
+      if (!line.trim() || line.trimStart().startsWith("#")) continue;
+      if (!/^\s/.test(line)) {
+        cur = { re: new RegExp(`^${line.trim().replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`), headers: [] };
+        rules.push(cur);
+      } else if (cur) {
+        const i = line.indexOf(":");
+        if (i > 0) cur.headers.push([line.slice(0, i).trim(), line.slice(i + 1).trim()]);
+      }
+    }
+    return rules;
+  } catch {
+    return [];
+  }
+}
+let headerRules = await loadHeaderRules();
+let headerRulesAt = Date.now();
 const packed = new Map(); // file|encoding → compressed bytes (the export doesn't change while serving)
 
 async function resolveFile(urlPath) {
@@ -52,6 +76,11 @@ createServer(async (req, res) => {
     const ext = extname(target);
     const headers = { "Content-Type": TYPES[ext] ?? "application/octet-stream", Vary: "Accept-Encoding" };
     headers["Cache-Control"] = pathname.startsWith("/_next/static/") ? "public, max-age=31536000, immutable" : "public, max-age=0, must-revalidate";
+    if (Date.now() - headerRulesAt > 2000) {
+      headerRules = await loadHeaderRules(); // a rebuild may have changed them
+      headerRulesAt = Date.now();
+    }
+    for (const rule of headerRules) if (rule.re.test(pathname)) for (const [k, v] of rule.headers) headers[k] = v;
     let body = await readFile(target);
     const accept = String(req.headers["accept-encoding"] ?? "");
     if (TEXT.has(ext) && body.length > 1024) {

@@ -12,9 +12,11 @@ export function GameOverFx() {
     if (!root) return;
     let off: (() => void) | null = null;
     let gone = false;
-    void import("./gameOverRun").then((m) => {
-      if (!gone) off = m.runGameOver(root);
-    });
+    void import("./gameOverRun")
+      .then((m) => {
+        if (!gone) off = m.runGameOver(root);
+      })
+      .catch(() => {}); // offline (PART 18): CONTINUE ▶ is a plain link home
     return () => {
       gone = true;
       off?.();
