@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import type { ByteScript } from "@/content/quips";
 import { useSave } from "@/lib/store";
 import { PixelFrame } from "@/components/ui/PixelFrame";
+import { PixelIcon } from "@/components/ui/PixelIcon";
 import { startByte } from "./brain";
 import { FACE_COLS, FACE_ROWS } from "./faces";
 import { useUi } from "@/lib/ui";
@@ -23,6 +24,7 @@ export default function Byte({ script }: { script: ByteScript }) {
   const hat = useSave((s) => s.inventory.equipped.byteHat);
   // PART 16 · session-only looks: the night owl's nightcap (instead of the hat) and the cheat code's shades
   const look = useUi((s) => s.byteLook);
+  const chatOpen = useUi((s) => s.chatOpen);
 
   useEffect(() => {
     const root = ref.current;
@@ -100,6 +102,22 @@ export default function Byte({ script }: { script: ByteScript }) {
 
       <button type="button" className="byte__min" data-byte-min="" aria-label="Minimize BYTE">
         <span aria-hidden="true">–</span>
+      </button>
+
+      {/* PART 19 · Ask BYTE: the speech bubble grows into the offline chat */}
+      <button
+        type="button"
+        className="byte__ask"
+        data-byte-ask=""
+        aria-label="Ask BYTE — an offline chat about Akshat's save file"
+        aria-haspopup="dialog"
+        aria-expanded={chatOpen}
+        onClick={(e) => {
+          e.currentTarget.focus(); // Safari doesn't focus a clicked button — the chat returns focus here (#132)
+          useUi.getState().setChat("toggle");
+        }}
+      >
+        <PixelIcon name="chat" size={16} />
       </button>
     </div>,
     document.body,

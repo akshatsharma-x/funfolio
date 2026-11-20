@@ -303,6 +303,28 @@ export const PIXEL_ICONS = {
       "................",
     ],
   },
+  // PART 19 · Ask BYTE: a speech bubble with three dots
+  chat: {
+    palette: { k: INK, a: "#FFF4E0", p: "#FF3D8B", c: "#22D3EE", y: "#FFD23F" },
+    rows: [
+      "................",
+      "..kkkkkkkkkkkk..",
+      ".kaaaaaaaaaaaak.",
+      "kaaaaaaaaaaaaaak",
+      "kaaaaaaaaaaaaaak",
+      "kaappaaccaayyaak",
+      "kaappaaccaayyaak",
+      "kaaaaaaaaaaaaaak",
+      ".kaaaaaaaaaaaak.",
+      "..kkkaakkkkkkk..",
+      "....kaak........",
+      "....kak.........",
+      "....kk..........",
+      "................",
+      "................",
+      "................",
+    ],
+  },
   map: {
     palette: { k: INK, a: "#FFF4E0", b: "#B9B2D9", p: "#FF3D8B", r: "#FF4D4D" },
     rows: [

@@ -234,6 +234,10 @@ export function ControlsPanel() {
         {/* phones have no ` key — the terminal is one tap away here (PART 16) */}
         <ArcadeButton type="button" variant="secondary" icon="terminal" size="sm" onClick={() => useUi.getState().setTerminal(true)}>
           Open the terminal
+        </ArcadeButton>{" "}
+        {/* PART 19 · the chat, one tap away on phones too */}
+        <ArcadeButton type="button" variant="secondary" icon="chat" size="sm" data-speedrun="hide" onClick={() => useUi.getState().setChat(true)}>
+          Ask BYTE
         </ArcadeButton>
       </div>
       <table className="w-full border-separate border-spacing-y-1 text-left">

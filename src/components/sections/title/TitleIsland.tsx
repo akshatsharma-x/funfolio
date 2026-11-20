@@ -159,7 +159,17 @@ export function TitleIsland({ spots, ratio, children }: { spots: Spots; ratio: n
       section.style.setProperty("--dive", p.toFixed(3));
     };
     const decide = () => {
+      // The pin makes the section a viewport taller. A deep link (/#lab) has already jumped by then, so everything below
+      // moves down under the visitor: scroll anchoring usually keeps the view, but not always (it gave up at the Lab —
+      // PART 19: /#lab landed in the Quest Log). When the Title is above the view, keep the view in place ourselves.
+      const y0 = window.scrollY;
+      const h0 = section.offsetHeight;
+      const above = y0 >= section.offsetTop + h0;
       section.toggleAttribute("data-pin", allowPin && overlay.offsetHeight + 88 <= window.innerHeight); // 64px top padding + air
+      if (above) {
+        const missing = section.offsetHeight - h0 - (window.scrollY - y0); // what anchoring didn't already make up
+        if (Math.abs(missing) >= 1) window.scrollTo(0, window.scrollY + missing);
+      }
       // side by side (wide): where the text column ends, for the plane (see island.ts)
       const right = wide ? Math.max(0, ...[...overlay.children].map((el) => el.getBoundingClientRect().right)) : 0;
       island.set({ textRight: Math.round(right) });

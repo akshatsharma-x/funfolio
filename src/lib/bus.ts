@@ -51,6 +51,10 @@ export type BusEvents = {
   "byte:recheck": Record<string, never>;
   /** PART 15 · "Back to top": BYTE lights a jetpack while the page flies up. */
   "byte:jetpack": Record<string, never>;
+  /** PART 19 · Ask BYTE opened / closed: BYTE takes its seat beside the chat panel (or goes home). */
+  "byte:chat": { open: boolean };
+  /** PART 19 · something BYTE says while the chat is open goes into the chat's log instead of the bubble. */
+  "chat:line": { text: string; mood?: ByteMood };
   /** A WorldHeader intro started (PART 4). */
   "world:intro": { id: string };
   /** The boot screen is gone and the Title Screen is revealed (PART 5) — typewriters, blinks and BYTE's tips start. */

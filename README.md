@@ -159,6 +159,14 @@ Keyboard: "Skip to content" is the first Tab stop, and "Skip mini-game" links (s
 Launchpad to the Quest Log and past the Arcade's cabinets to the Prize Counter. Every in-page jump moves focus to where
 it lands.
 
+Ask BYTE: press the speech-bubble button on BYTE (or Pause → Controls → Ask BYTE) and BYTE's bubble grows into an
+offline chat. Pick a topic or type a question — a small keyword map routes it (typos included); anything it doesn't know
+gets "That's not in my save file!" and three suggestions. Every answer is built from content.ts at build time, nothing
+leaves the browser and it works offline. Arrow keys move between topics, Enter picks, Esc closes (on phones it's a
+sheet above the controller, and B closes it). BYTE greets by the time of day, uses the name typed in the Co-op Lobby
+(saved in this browser only — "Forget my name" or Reset save erases it) and notices your achievements. Not in Speedrun
+Mode.
+
 ## Editing content
 
 All facts live in `src/content/content.ts`. Anything set to `"TODO"` renders as "Coming soon"; counts (internships,
@@ -202,6 +210,13 @@ entry is incomplete (`src/content/schema.ts`).
 - **An easter egg** — add it to the registry in `src/lib/eggs.ts` (id, name, trigger, effect, achievement, `minFx`,
   `speedrun`, hint), its effect to `src/components/eggs/effects.ts` and its trigger to `EggProvider.tsx`;
   `/playground/eggs` lists it with a Trigger button.
+
+- **An Ask BYTE answer** — roles, projects and papers get theirs automatically. For anything else, add a node in
+  `src/content/dialogue.ts`: `node(id, mood, line, facts, options)`, where `facts` lists every piece of content.ts the
+  line repeats (the build stops if one isn't there) and each option either goes to another node (`next`) or does
+  something (`action`: a world, a game, a scroll, a cartridge, the JD scanner, a pause tab, the terminal, copy the email,
+  Speedrun Mode). To reach it by typing, add a route to `intents` — specific names before general words, since earlier
+  routes win ties.
 
 Skills come from `skills` in content.ts (each listed once — the build checks). A skill's "Used in" is computed from the
 roles' and projects' `stack`s through the alias map in `src/lib/skills-index.ts` ("GPT-4.1" counts for LLMs, "Django

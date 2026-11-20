@@ -147,6 +147,17 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   with the idle warm-up uses the same loader function (Turbopack makes a loader chunk per `import()` call site).
 - Sound floor (PART 18): `useClickSound()` gives any control click that asked for no sound within 150ms a soft blip —
   add `data-sfx-skip` to opt a control out; play a control's own sound synchronously in its handler.
+- Ask BYTE (PART 19): the dialogue tree is `src/content/dialogue.ts` (server-only, built from content.ts; `node()` lists
+  the exact content fragments a line restates and the build fails when one is missing — R1; roles, projects and papers
+  get their nodes and routes by themselves); type-to-ask is `src/lib/ask.ts` (pure: folding, plurals, typos, phrases;
+  earlier routes win ties, so specific names go before general words). The panel is `src/components/byte/ByteChat.tsx`
+  (lazy, in the runtime and the idle warm-up; opened with `useUi.setChat`), styles in `src/app/chat.css`. While it's
+  open BYTE sits beside it (bus `byte:chat` → brain.ts' chat seat) and anything BYTE says goes into its log
+  (`chat:line`). The visitor's name is `save.visitor.name` (SAVE_VERSION 4), set from the Co-op Lobby's name field.
+- A non-modal panel opened from a modal (the pause menu) takes focus only after that dialog has closed — the Modal hands
+  focus back to its opener when it finishes animating out (`afterDialogs` in ByteChat).
+- Anything that changes height above a deep link's target after load must keep the view in place itself — scroll
+  anchoring doesn't always (the Title's pin: `decide()` in `TitleIsland`, #226).
 - Response headers live in `public/_headers` (Netlify, Cloudflare Pages, `npm run preview`) and `vercel.json` (Vercel)
   — change both together. The CSP allows only the site itself (R10): nothing may load from another origin; `eval`
   exists only for axe-core. Never hand-write `-webkit-backdrop-filter` (the minifier then drops the standard property

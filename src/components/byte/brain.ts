@@ -9,6 +9,8 @@
 //   • never covers a button: when its spot overlaps anything interactive, BYTE glides to the nearest free spot
 //     (and back home once it's free); if nothing is free, it tucks away like minimized.
 //   • never talks over a game unasked: over a `[data-game-screen]` (and on phones) its lines wait behind a "!"
+//   • Ask BYTE (PART 19): while the chat is open BYTE sits beside the panel (on phones, on its top edge) and everything
+//     it says goes into the chat's log; unasked lines wait behind the "!"
 
 import { EGG_TIMING } from "@/lib/eggs";
 import type { ByteScript } from "@/content/quips";
@@ -257,7 +259,15 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     };
     typeTimer = later(step, TYPE_MS);
   };
+  // PART 19 · the chat is BYTE's bubble grown up: while it's open, what BYTE says is a line in its log (announced there)
+  let chatting = false;
+  const toChat = (line: Line): boolean => {
+    bus.emit("chat:line", { text: line.text, mood: line.mood });
+    if (line.mood) react(line.mood, 1800);
+    return true;
+  };
   const say = (line: Line): boolean => {
+    if (chatting) return toChat(line);
     if (minimized || tucked) return false;
     if (queue.length >= 3) queue.shift();
     queue.push(line);
@@ -270,6 +280,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
   };
   /** Interrupts whatever BYTE is saying (a direct answer to the visitor, e.g. the high-five). */
   const sayNow = (line: Line): boolean => {
+    if (chatting) return toChat(line);
     if (minimized || tucked) return false;
     queue.length = 0;
     queue.push(line);
@@ -325,7 +336,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     const q = script.quips[order[qi++ % order.length]];
     say({ text: q.text, mood: q.mood });
     // the bubble is decorative (aria-hidden); a deliberate keyboard press still deserves the words
-    if (viaKeyboard) announce(`BYTE says: ${q.text}`);
+    if (viaKeyboard && !chatting) announce(`BYTE says: ${q.text}`); // the chat's log announces its own lines
   };
 
   // ── minimize ────────────────────────────────────────────────────────────────────────────────────────────────
@@ -369,8 +380,29 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
   let dragging = false;
   let flying = false;
   let visiting = false;
+  /** PART 19 · BYTE's seat while the chat is open: beside the panel, bottom-aligned (desktop), else on its top edge. */
+  const chatSeat = (): Vec | null => {
+    const panel = document.querySelector<HTMLElement>("[data-chat]");
+    const r = panel?.getBoundingClientRect();
+    if (!r || r.width < 2) return null;
+    const b = bounds();
+    if (r.right + 8 <= b.maxX && r.bottom - BYTE_H >= b.minY) return { x: Math.round(r.right + 8), y: Math.round(clamp(r.bottom - BYTE_H, b.minY, b.maxY)) };
+    return { x: Math.round(clamp(r.right - BYTE_W - 16, b.minX, b.maxX)), y: Math.round(Math.max(b.minY, r.top - BYTE_H + 12)) };
+  };
   function avoid(glide: boolean) {
     if (minimized || dragging || flying || visiting) return;
+    const seat = chatting ? chatSeat() : null;
+    if (seat) {
+      // in conversation: next to its panel, whatever is under it (the panel covers more — and closes on any action)
+      const wasTucked = tucked;
+      tucked = false;
+      root.removeAttribute("data-tucked");
+      if (wasTucked || seat.x !== pos.x || seat.y !== pos.y) {
+        pos = seat;
+        render(glide);
+      }
+      return;
+    }
     const b = bounds();
     const target = { x: clamp(home.x, b.minX, b.maxX), y: clamp(home.y, b.minY, b.maxY) };
     const rects = interactiveRects();
@@ -575,7 +607,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     if (waiting) {
       syncPending();
       if (say(waiting.line)) store.getState().markByteSaid(waiting.key);
-      if (e.detail === 0) announce(`BYTE says: ${waiting.line.text}`);
+      if (e.detail === 0 && !chatting) announce(`BYTE says: ${waiting.line.text}`);
       return;
     }
     quip(e.detail === 0);
@@ -649,7 +681,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
     const fromHere = () => {
       if (sayNow({ text, mood: "love", ms: 1500 })) react("love", 1800);
     };
-    if (prefersReducedMotion() || narrow.matches || tucked) return fromHere();
+    if (prefersReducedMotion() || narrow.matches || tucked || chatting) return fromHere();
     const r = el.getBoundingClientRect();
     const b = bounds();
     const rects = interactiveRects();
@@ -680,7 +712,7 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
   const sayOnce = (key: string, line: Line, requires?: string) => {
     if (requires && !document.querySelector(requires)) return; // the feature it talks about isn't on the page yet
     if (store.getState().byte.said.includes(key)) return;
-    if (narrow.matches || bubbleOverGame()) {
+    if (narrow.matches || bubbleOverGame() || chatting) {
       if (minimized || tucked || pending.some((p) => p.key === key)) return;
       pending.push({ key, line });
       if (pending.length > 3) pending.shift();
@@ -744,6 +776,18 @@ export function startByte(root: HTMLElement, script: ByteScript): () => void {
       root.setAttribute("data-blush", "");
       react("love", 1600);
       later(() => root.removeAttribute("data-blush"), 1700);
+    }),
+    // PART 19 · Ask BYTE: take the seat beside the panel (the bubble closes — the chat is the bubble now), or go home
+    bus.on("byte:chat", ({ open }) => {
+      if (chatting === open) return;
+      chatting = open;
+      root.toggleAttribute("data-chatting", open);
+      if (open) {
+        queue.length = 0;
+        nextLine();
+      }
+      if (visiting) endVisit();
+      else avoid(true);
     }),
     bus.on("achievement:unlocked", () => react("happy", 1400)),
     bus.on("coin:collected", () => react("love", 1400)),

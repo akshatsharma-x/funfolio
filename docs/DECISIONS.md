@@ -1191,3 +1191,87 @@ change an entry only when the decision itself changes.
      and Night Owl (00:00–04:59) fired in every fresh save — the suites pass on a daytime clock (`TZ=…`), except in
      WebKit, which ignores `TZ`.
 215. **v1.0.0.** PART 18 closes the core build; PART 19 (Ask BYTE) is optional.
+
+## PART 19 — Ask BYTE: offline NPC dialogue
+
+216. **An offline dialogue tree, not a model** (R10: no LLM, no API, no keys — it works forever). `src/content/dialogue.ts`
+     is server-only and builds the nodes from content.ts at build time: the current role (`now`, `now-built`,
+     `now-stats`), the other roles (`experience`, `job-<id>`), the projects (`projects`, `project-<id>`), the papers
+     (`research`, `paper-<id>`), skills for an AI/ML role (`skills-ai`: the AI/ML & Data skills with their "Used in"
+     receipts — never a self-rating), availability, contact, the résumé, education + coursework, and BYTE's own corner
+     (hub, joke, secret, byte, thanks, fallback) — 28 nodes today; a new role, project or paper gets its node and its
+     type-to-ask route by itself. The runtime gets plain strings as a prop (layout → GameRuntimeLoader → GameRuntime →
+     the lazy `ByteChat`, 5.3 KB gzip; the prop is ~5 KB gzip of HTML), so content.ts never ships to the client. Initial
+     JS 183.0 KB (+0.3: BYTE's Ask button and the chat state).
+217. **R1, checked twice.** `node(id, mood, line, facts, options)` takes the exact content fragments a line restates;
+     the build fails when one isn't in content.ts or is a TODO. "Best project?": the save file doesn't rank projects,
+     so BYTE doesn't either ("The save file doesn't rank them — 5 projects, 5 cartridges in the Vault. Pick one:").
+     Availability is TODO → "That's not on the save file yet…" with the Lobby and the email; the résumé node says
+     "coming soon" until the PDF exists (the Lobby portal's build-time check) and offers Speedrun Mode. The connective
+     words, BYTE's lines and the seven jokes (original, about robots and code — never about Akshat) are game copy.
+     part19-qa checks every number and name in every line against content.ts independently (B1) and walks all 28
+     nodes in the browser (B3): the panel shows exactly the build's line and options for each.
+218. **Type-to-ask** (`src/lib/ask.ts`, pure, no content import). Words are folded (case, accents — "Résumé?" →
+     resume — and punctuation; `.` `+` `#` stay for pm2.5, c++, c#); stop words don't count alone; a word matches its
+     plural; typos land (Damerau–Levenshtein ≤ 1 from 5 letters, ≤ 2 from 9: "experiance", "skils"); phrases ("machine
+     learning", "who are you", "save file") match in order and weigh double; each folded word counts once per route
+     ("résumé" and "resume" are one). Earlier routes win ties, so specific names (the résumé, projects, papers,
+     companies) come before general words: "the resume screening project" → the project, "Résumé?" → the Save File.
+     Generic company words (Solutions, Technologies, Web…) don't become routes. No match → "That's not in my save
+     file! Try one of these:" + three starter topics not asked yet + All topics. Tested: 36 questions in Node, 22 in the
+     browser (the brief's intent words, typos, names, accents).
+219. **The panel is BYTE's bubble grown up.** A non-modal `role="dialog"` (`aria-modal="false"`; the page stays usable)
+     in a PixelFrame, portaled to the body at z-index 86 — above BYTE, below the FX canvas and the top layer, so the
+     cursor stays on top (R2). While it's open BYTE takes a seat beside it: 8px to its right, bottom-aligned, with the
+     tail pointing at BYTE's screen (desktop: the panel sits 100px from the right edge, clear of the level rail); on
+     phones the panel is a sheet above the controller and BYTE perches on its top edge; minimized or switched off, the
+     panel takes the corner. BYTE skips its "never cover a button" glide then — the panel covers more than BYTE does,
+     and closes on any action. Everything BYTE says while it's open (a quip when it's clicked, a high-five, the Lobby's
+     errors) goes into the log (bus `chat:line`), unasked lines (tips, world lines) wait behind the "!", and BYTE's Ask
+     button steps aside (the panel has its own ×). A fixed height — `min(540px, 100svh − 120px)` — so the panel
+     doesn't move as the topics change; older lines fade out under the header. On phones the topics are a two-row strip
+     that scrolls sideways (nine wrapped chips took the log's room).
+220. **Alive.** "BYTE is thinking…" pixel dots for 300–600ms before every answer (measured over 112 answers: 301–598ms),
+     BYTE's "thinking" face meanwhile and the answer's mood after; the reply types itself in (a blip every few letters
+     while sound is on; a click on the log finishes it; whole at once under reduced motion). The greeting follows the
+     time of day (Good morning / afternoon / evening; "Up late? Same." from 22:00 to 04:59), uses the name typed in
+     the Co-op Lobby and reacts to the run — the newest of ten achievements BYTE has a line for ("You found the cheat
+     code?! Respect."); an achievement unlocked while the chat is open gets a line at once. The last 10 lines stay for
+     the page view, across closing and reopening (no second greeting).
+221. **The visitor's name** (SAVE_VERSION 4, `visitor.name`): taken from the Co-op Lobby's name field when it changes
+     (and from a valid invite), tidied (printable characters, collapsed spaces, ≤ 40); this browser only — the save
+     file in localStorage, never sent anywhere. "Forget my name" (a topic while BYTE knows one) erases it at once, Reset
+     save forgets it, NEW GAME+ keeps it (the same player). The v3 → v4 step adds nothing (normalizeSave fills null).
+222. **Actions close the chat and go** — focus lands where they arrive, not back on BYTE: a world or a quest card
+     (`scrollToElement` + focus), a game (`openGame`), a paper's scroll (its `[data-scroll-open]` button, after the
+     flight), a cartridge (`vault:insert`, after the flight), the JD scanner (`skills:open`), a pause-menu tab, the
+     terminal, Speedrun Mode, the résumé (once it exists). "Copy his email" stays in the chat: the clipboard (with an
+     `execCommand` fallback), Copycat, "Copied!".
+223. **Keyboard and screen readers.** Ways in: BYTE's Ask button (`aria-haspopup="dialog"`, `aria-expanded`; it focuses
+     itself on click — Safari doesn't, #132) and Pause → Controls → Ask BYTE (phones, or with BYTE switched off). Focus
+     moves into the panel at once (its name is announced) and to the first topic when it arrives. Topics are one tab
+     stop (roving tabindex): ←/↑ and →/↓ move and wrap, Home/End jump, Enter or Space picks; after a typed question
+     focus stays in the text box. Tab order: × → the log → topics → text box → out (non-modal). The log is a tab stop
+     so the history scrolls by keyboard too (axe: scrollable-region-focusable); a wrapper draws its focus ring, because
+     the log's fade mask would clip one drawn on the log. Esc anywhere in the panel closes it and returns focus to the
+     opener, or to BYTE's Ask button — a handled Esc, which the keyboard manager and the pad's B skip (on phones B
+     closes it). While BYTE thinks the topics stay, dimmed and inactive (`aria-disabled`), so focus — and Esc — never
+     fall out of the chat. Opened from the pause menu, the chat takes focus only once that modal has closed: the Modal
+     hands focus back to its opener when it finishes animating out, and behind a non-modal panel the page isn't inert.
+     `data-keyboard="exclusive"`: no shortcuts or typed eggs inside. The log is `role="log"` with `aria-live="polite"`;
+     each line reaches screen readers once and whole ("BYTE: …" / "You: …" in sr-only text; the typed copy is
+     aria-hidden); the thinking line is aria-hidden; markup typed by a visitor stays text. axe: clean in night, day,
+     retro, a violet world and on a phone. Touch targets ≥ 44px — BYTE's Ask and minimize buttons get an `::after` hit
+     area (PART 17's audit had missed them).
+224. **Speedrun Mode has no chat**: BYTE is hidden there, the pause menu's "Ask BYTE" is `data-speedrun="hide"`, and
+     switching it on closes the chat (the conversation is still there back in Play Mode).
+225. **Zero network** (the acceptance). The chat's chunk is part of the idle warm-up (through the same loader function
+     as its `dynamic()`, #199), so opening and using it makes no request — measured in every part19-qa scenario and in
+     WebKit and Firefox (the only request: the cursor image the browser fetches the first time BYTE's "grabbing" cursor
+     shows, when BYTE itself is pressed). With the network off after the first load, it works fully.
+226. **Deep links no longer land a screen short** (found by PART 19's QA; there since PART 5). On wide screens the Title
+     pins itself after hydration (+100vh), after the browser's hash jump; scroll anchoring kept most worlds in place,
+     but /#lab landed in the Quest Log and /#credits in the Trophy Room. When the pin changes while the Title is above
+     the view, `TitleIsland` now keeps the view in place itself (it adds whatever height anchoring didn't make up).
+     Measured: every world's deep link lands 76–80px from the top, in Chrome, WebKit and Firefox.
+227. **v1.1.0** ("Ask BYTE").

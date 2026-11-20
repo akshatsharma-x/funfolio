@@ -22,7 +22,7 @@ import { bus, type Point } from "./bus";
 import { FX_LEVELS, LEGACY_PREFS_KEY, MODES, readLegacyPrefs, SAVE_KEY, THEMES, type FxLevel, type Mode, type Theme } from "./prefs";
 
 export { SAVE_KEY };
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 /** Soft gates that open once per save (PART 7: the Launchpad in front of the Quest Log). */
 export const GATE_IDS = ["quest-log"] as const;
@@ -60,6 +60,8 @@ export type SaveData = {
   byte: { fx: number | null; fy: number | null; minimized: boolean; said: string[] };
   /** Soft gates already opened (v2). */
   gates: GateId[];
+  /** PART 19 (v4): the name the visitor typed in the Co-op Lobby — so BYTE can greet them. This browser only; Reset forgets it. */
+  visitor: { name: string | null };
 };
 
 export type SaveActions = {
@@ -92,6 +94,8 @@ export type SaveActions = {
   setByteMinimized: (minimized: boolean) => void;
   /** Marks a once-only BYTE line as said; false if it already was. */
   markByteSaid: (key: string) => boolean;
+  /** PART 19: remember (or, with null, forget) the visitor's name — trimmed, ≤ 40 characters. */
+  setVisitorName: (name: string | null) => void;
 };
 
 export type SaveStore = SaveData & SaveActions;
@@ -128,6 +132,7 @@ function freshData(now = Date.now()): SaveData {
     meta: { saveVersion: SAVE_VERSION, lastVisit: null, lastSeenPatch: null, contentHash: null },
     byte: { fx: null, fy: null, minimized: false, said: [] },
     gates: [],
+    visitor: { name: null },
   };
 }
 
@@ -152,7 +157,14 @@ const pick = <T extends string>(v: unknown, allowed: readonly T[], d: T): T => (
 const numMap = (v: unknown) =>
   isObj(v) ? Object.fromEntries(Object.entries(v).filter(([, n]) => typeof n === "number" && Number.isFinite(n))) as Record<string, number> : {};
 
-export function normalizeSave(input: unknown): SaveData {
+/** A visitor's name for BYTE's greetings: printable, trimmed, at most 40 characters — or null. */
+export function cleanName(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const t = v.replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim().slice(0, 40);
+  return t || null;
+}
+
+function normalizeSave(input: unknown): SaveData {
   const d = freshData();
   const s = isObj(input) ? input : {};
   const player = isObj(s.player) ? s.player : {};
@@ -217,6 +229,7 @@ export function normalizeSave(input: unknown): SaveData {
     },
     byte: { fx: frac(byte.fx), fy: frac(byte.fy), minimized: byte.minimized === true, said: strs(byte.said).slice(0, 64) },
     gates: strs(s.gates).filter(isGate),
+    visitor: { name: cleanName(isObj(s.visitor) ? s.visitor.name : null) },
   };
 }
 
@@ -243,6 +256,7 @@ export function migrateSave(persisted: unknown, version: number): SaveData {
   }
   // v3 (PART 16) adds meta.contentHash; normalizeSave fills null, so an older save stores the current hash silently
   // (no patch-notes toast for content it may well have seen).
+  // v4 (PART 19) adds visitor.name (BYTE's chat greets you by it); normalizeSave fills null.
   return normalizeSave(data);
 }
 
@@ -257,6 +271,7 @@ const pickData = (s: SaveStore): SaveData => ({
   meta: s.meta,
   byte: s.byte,
   gates: s.gates,
+  visitor: s.visitor,
 });
 
 export const useSave = create<SaveStore>()(
@@ -433,6 +448,7 @@ export const useSave = create<SaveStore>()(
           ...fresh,
           inventory: s.inventory,
           settings: s.settings,
+          visitor: s.visitor, // the same player — BYTE still knows your name
           meta: { ...fresh.meta, lastVisit: Date.now() },
           byte: { ...fresh.byte, fx: s.byte.fx, fy: s.byte.fy, minimized: s.byte.minimized },
         });
@@ -497,6 +513,10 @@ export const useSave = create<SaveStore>()(
       setByteMinimized(minimized) {
         const s = get();
         if (s.byte.minimized !== minimized) set({ byte: { ...s.byte, minimized } });
+      },
+
+      setVisitorName(name) {
+        set({ visitor: { name: cleanName(name) } });
       },
 
       markByteSaid(key) {

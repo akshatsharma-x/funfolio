@@ -15,6 +15,7 @@ export function ScrollButton({ id, all, title, children }: { id: string; all: st
         icon="scroll"
         data-fx-skip=""
         data-primary=""
+        data-scroll-open={id}
         onClick={() => {
           setOpen(true);
           command({ type: "scroll", id, all });

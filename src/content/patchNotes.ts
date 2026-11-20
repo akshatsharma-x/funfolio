@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "1.1.0",
+    date: "2026-11-20",
+    title: "Ask BYTE",
+    notes: [
+      "BYTE talks back: press the speech bubble beside it (or Pause → Controls → Ask BYTE) and ask about the save file — pick a topic or type your own question.",
+      "It all happens right here in your browser — nothing to sign up for, nothing to wait for, and it works offline.",
+      "BYTE remembers the name you type in the Co-op Lobby (on this browser only — \"Forget my name\" any time), notices your achievements and knows what time it is.",
+      "Arrow keys move between topics, Enter picks one, Esc closes the chat.",
+      "Links straight to a world (like /#lab) now land right on it.",
+    ],
+  },
+  {
     version: "1.0.0",
     date: "2026-11-20",
     title: "Launch",

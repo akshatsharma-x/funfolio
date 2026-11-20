@@ -159,6 +159,15 @@ export function mountLobby(section: HTMLElement): () => void {
       else field(name)?.setAttribute("aria-invalid", String(!!msg));
     }
   };
+  // PART 19 · a name typed (and left) in the field is remembered for BYTE's chat — on this browser only
+  form?.addEventListener(
+    "change",
+    (e) => {
+      const t = e.target as HTMLInputElement;
+      if (t.name === "name" && t.value.trim()) command({ type: "visitor-name", name: t.value });
+    },
+    on,
+  );
   form?.addEventListener(
     "input",
     (e) => {
@@ -238,6 +247,7 @@ export function mountLobby(section: HTMLElement): () => void {
         return;
       }
       showErrors({});
+      command({ type: "visitor-name", name: r.invite.name }); // PART 19 · BYTE greets them by it (save file only)
       invite = r.invite;
       sfx.play("powerUp");
       if (speedrun()) {

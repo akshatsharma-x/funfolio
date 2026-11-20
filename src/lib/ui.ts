@@ -33,6 +33,10 @@ type UiState = {
   terminalOpen: boolean;
   terminalEverOpened: boolean;
   setTerminal: (open: boolean | "toggle") => void;
+  /** PART 19 — Ask BYTE, the offline chat (mounted once it has been opened). */
+  chatOpen: boolean;
+  chatEverOpened: boolean;
+  setChat: (open: boolean | "toggle") => void;
   /** A page without worlds (the 404, the playground) names itself for the HUD: its main's data-hud-label. */
   pageLabel: string | null;
   setPageLabel: (label: string | null) => void;
@@ -67,6 +71,12 @@ export const useUi = create<UiState>()((set) => ({
   setTerminal: (open) => set((s) => {
     const next = open === "toggle" ? !s.terminalOpen : open;
     return { terminalOpen: next, terminalEverOpened: s.terminalEverOpened || next, pauseOpen: next ? false : s.pauseOpen };
+  }),
+  chatOpen: false,
+  chatEverOpened: false,
+  setChat: (open) => set((s) => {
+    const next = open === "toggle" ? !s.chatOpen : open;
+    return { chatOpen: next, chatEverOpened: s.chatEverOpened || next, pauseOpen: next ? false : s.pauseOpen };
   }),
   pageLabel: null,
   setPageLabel: (label) => set({ pageLabel: label }),

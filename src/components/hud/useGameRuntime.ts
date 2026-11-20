@@ -282,6 +282,9 @@ export function useCommandHandler(resumeHref: string | null) {
           if (c.all.length > 0 && c.all.every((id) => claims.includes(`open:cartridge-${id}`))) store.unlock("cartridge-collector");
           break;
         }
+        case "visitor-name":
+          store.setVisitorName(c.name);
+          break;
         case "gate":
           if (c.how === "skipped") store.unlock("skipper");
           // the gate's own island (QuestGate) stages the reveal: chains shatter, then the cards deal in

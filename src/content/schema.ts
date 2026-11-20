@@ -11,6 +11,7 @@ import { TECH_ICONS } from "./techIcons";
 import { vaultIssues } from "./vault";
 import { arcadeIssues } from "./arcade";
 import { skillIssues } from "./skills";
+import { dialogueIssues } from "./dialogue";
 
 const todo = z.literal("TODO");
 const text = z.string().trim().min(1);
@@ -187,6 +188,8 @@ const schema = z
     for (const issue of arcadeIssues()) ctx.addIssue({ code: "custom", message: issue, path: ["experience"] });
     // PART 13 · Skill Tree: every skill once, aliases point at real skills, one term never names two things
     for (const issue of skillIssues()) ctx.addIssue({ code: "custom", message: issue, path: ["skills"] });
+    // PART 19 · Ask BYTE: every option and route points at a real node (each node's facts are checked as it's built)
+    for (const issue of dialogueIssues()) ctx.addIssue({ code: "custom", message: issue, path: ["player"] });
   });
 
 let checked = false;

@@ -8,6 +8,7 @@ import type { ArcadeData } from "@/content/arcade";
 import type { BootScript } from "@/content/boot";
 import type { ByteScript } from "@/content/quips";
 import type { EggData } from "@/content/eggs";
+import type { DialogueData } from "@/content/dialogue";
 import { bus } from "@/lib/bus";
 import { orNothing } from "@/lib/chunks";
 import { useHtmlAttribute } from "@/lib/hooks/useHtmlAttribute";
@@ -36,6 +37,8 @@ import {
 const loadPauseMenu = () => import("./PauseMenu");
 const loadGameHost = () => import("@/components/games/GameHost");
 const loadTerminal = () => import("@/components/terminal/Terminal");
+// PART 19 — Ask BYTE, the offline chat (its own lazy chunk, warmed with the others)
+const loadChat = () => import("@/components/byte/ByteChat");
 const PauseMenu = dynamic(() => loadPauseMenu().catch(orNothing("the pause menu")), { ssr: false });
 // PART 4 — each its own lazy chunk, so the HUD is never waiting for the effects or the mascot
 const FxLayer = dynamic(() => import("@/components/fx/FxLayer").catch(orNothing(null)), { ssr: false });
@@ -53,6 +56,7 @@ const CreditsRun = dynamic(() => import("@/components/credits/CreditsRun").catch
 // PART 16 — the eggs (one provider, every listener once; effects load on first use) and the AKSHAT-OS terminal
 const EggProvider = dynamic(() => import("@/components/eggs/EggProvider").catch(orNothing(null)), { ssr: false });
 const Terminal = dynamic(() => loadTerminal().catch(orNothing("the terminal")), { ssr: false });
+const ByteChat = dynamic(() => loadChat().catch(orNothing("the chat")), { ssr: false });
 
 /** The booth beside the cabinets is server-rendered (a static price list); the live counter is portaled into it. */
 function PrizeBooth({ pathname }: { pathname: string }) {
@@ -76,7 +80,7 @@ function CreditsRunMount({ pathname }: { pathname: string }) {
  * The game layer every world plugs into (PART 3). Client-only and lazy (GameRuntimeLoader), so the store, registries
  * and HUD never block first paint — all real content is already server-rendered underneath.
  */
-export default function GameRuntime({ resumeHref, byteScript, bootScript, arcade, eggs }: { resumeHref: string | null; byteScript: ByteScript; bootScript: BootScript; arcade: ArcadeData; eggs: EggData }) {
+export default function GameRuntime({ resumeHref, byteScript, bootScript, arcade, eggs, dialogue }: { resumeHref: string | null; byteScript: ByteScript; bootScript: BootScript; arcade: ArcadeData; eggs: EggData; dialogue: DialogueData }) {
   // The root layout (and so this runtime) survives client-side navigations — re-scan worlds per route.
   const pathname = usePathname();
   const home = pathname === "/";
@@ -99,6 +103,12 @@ export default function GameRuntime({ resumeHref, byteScript, bootScript, arcade
   useEffect(() => bus.on("boot:done", () => setBooting(false)), []);
   const terminalOpen = useUi((s) => s.terminalOpen);
   const terminalEverOpened = useUi((s) => s.terminalEverOpened);
+  const chatOpen = useUi((s) => s.chatOpen);
+  const chatEverOpened = useUi((s) => s.chatEverOpened);
+  // Speedrun Mode has no BYTE — and no chat (it closes if the mode switches while it's open)
+  useEffect(() => {
+    if (speedrun && useUi.getState().chatOpen) useUi.getState().setChat(false);
+  }, [speedrun]);
   useEffect(() => bus.on("terminal:toggle", () => useUi.getState().setTerminal("toggle")), []);
   // PART 18 — right after the runtime starts (with its own lazy parts, before a visitor is doing anything), fetch the
   // core parts a visitor opens on demand — the pause menu, the games' host, the terminal (~tens of KB) — so they still
@@ -108,7 +118,7 @@ export default function GameRuntime({ resumeHref, byteScript, bootScript, arcade
     const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
     if (!nav.onLine || nav.connection?.saveData) return;
     const warm = () => {
-      for (const load of [loadPauseMenu, loadGameHost, loadTerminal]) void load().catch(() => {});
+      for (const load of [loadPauseMenu, loadGameHost, loadTerminal, loadChat]) void load().catch(() => {});
     };
     // Safari has no requestIdleCallback
     const w = window as Window & { requestIdleCallback?: Window["requestIdleCallback"]; cancelIdleCallback?: Window["cancelIdleCallback"] };
@@ -139,6 +149,7 @@ export default function GameRuntime({ resumeHref, byteScript, bootScript, arcade
       <CreditsRunMount pathname={pathname} />
       <EggProvider data={eggs} resumeHref={resumeHref} />
       {terminalEverOpened ? <Terminal data={eggs.terminal} resumeHref={resumeHref} open={terminalOpen} onClose={() => useUi.getState().setTerminal(false)} /> : null}
+      {chatEverOpened && !speedrun ? <ByteChat data={dialogue} open={chatOpen} resumeHref={resumeHref} onClose={() => useUi.getState().setChat(false)} /> : null}
     </>
   );
 }
