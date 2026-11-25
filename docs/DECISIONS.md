@@ -1308,3 +1308,11 @@ change an entry only when the decision itself changes.
      under the test runner, Playwright's Firefox tab crashes while the page scan runs, every time — while the same
      steps in a plain Playwright script with the same Firefox build finish the scan in ~2s, every time.
 232. **v1.1.1** ("Second shot").
+233. **What the first CI run found** (GitHub's Ubuntu runner, no GPU — two things a Mac can't show). The Launchpad asked
+     `document.fonts.load()` for its crate labels' face without a rejection handler; next/font's fallback faces are
+     `local(Arial)`, and where there is no Arial (Linux, Android) the load rejects — "A network error occurred." as an
+     unhandled rejection in every visitor's console once the Launchpad loaded. It draws again either way now (checked
+     with every `fonts.load()` forced to reject). And the handheld pad held itself up for a fixed 1.5s after ◀ ▶ / A / B:
+     a flight on a slow device outlasted that, and its last downward steps tucked the pad off screen; the hold now lasts
+     until 400ms after the flight lands. The workflows moved to `actions/checkout` and `actions/setup-node` v5 (v4 ran on
+     the deprecated Node 20).

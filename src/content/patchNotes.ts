@@ -11,6 +11,7 @@ export const PATCH_NOTES: readonly PatchNote[] = [
       "The Launchpad: BYTE is back in the launcher and ready to grab — with the mouse or a finger — for every shot, and after Play again.",
       "Reset and Play again keep the page where it is (in Firefox they scrolled BYTE's launcher off the screen).",
       "Scan this page waits for anything still fading in, so it never reports a half-faded word.",
+      "On a slower phone the controller no longer slips away while ◀ ▶ fly you to the next world.",
       "Behind the scenes: every world, game and control now gets played through automatically on every change, the way you'd play it.",
     ],
   },
