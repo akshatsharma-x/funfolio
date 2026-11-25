@@ -1275,3 +1275,36 @@ change an entry only when the decision itself changes.
      the view, `TitleIsland` now keeps the view in place itself (it adds whatever height anchoring didn't make up).
      Measured: every world's deep link lands 76–80px from the top, in Chrome, WebKit and Firefox.
 227. **v1.1.0** ("Ask BYTE").
+
+## After PART 19 — fixes
+
+228. **The Launchpad's second shot** (reported by Akshat: "it can only be played once — it gets stuck at the next
+     shot"). The grab handle shows only while the stage says `data-phase="aim"`, and that attribute came from HUD
+     refreshes the controller made on launches, pops and topples — but not when BYTE came back to the launcher, which
+     happens inside the sim's `step()`. So after the first shot the handle stayed hidden and neither a mouse nor a finger
+     could grab BYTE; the keyboard still worked (its handler reads the sim's own phase), which is why every suite — they
+     all shot with the keys — missed it. The sim now reports every phase change (`setPhase` → a `phase` event → the
+     HUD). `tests/launchpad.spec.ts` plays three shots by mouse, Play again and more, a finger pull (CDP touch events),
+     the keyboard, Reset and Skip; against the old build all four tests fail.
+229. **Reset and Play again keep the page still** (found by the new suite in Firefox). Both focus the stage for the
+     keyboard; Firefox scrolls a focused element that isn't wholly in view, so the 754px stage jumped 403px and BYTE's
+     launcher went below the fold (Chrome and Safari leave a partly visible element alone). The stage is focused with
+     `preventScroll` now — it's on screen whenever those buttons are pressed.
+230. **The page scan waits for one-shot animations** (found the same way). Scanning the moment a cartridge's screen
+     appeared, axe read text mid-fade and reported a contrast failure that was gone a moment later (Firefox, 1 run in
+     4). The scan now lets running one-shot animations and transitions finish first — at most 1.2s, inside the laser's
+     1.5s, endless loops excluded — so it reports the settled page.
+231. **The functional suite lives in the repo** (`npm test`, `tests/*.spec.ts`, `@playwright/test` on the installed
+     Chrome) — the old QA suites lived in /tmp, and macOS's cleaner deleted them (the second time it struck). 35 tests
+     play the site like a visitor, pointer first, every replayable thing twice: the slingshot; all six arcade games
+     (start, real input, pause, restart into a second round, exit; Token Squeeze to its results and Play again); every
+     world's toys and hidden coins (#2, #4, #6, #7, #8, #10), the scrolls, cartridges, the page scan, the Prize Counter,
+     the Skill Tree's tabs and JD scanner, the hall and the capsule machine, two invites in a row, the credits; the
+     boot, the HUD, every pause-menu tab, the map / rail / number keys, the terminal, Ask BYTE, typed eggs and the cheat
+     code; the phone's controller and Ask BYTE's sheet. CI runs it on every push, with one retry there (games and
+     physics run in real time on a slower runner). Measured: green twice in a row with the GPU off (software WebGL, as on
+     GitHub's runners) and with it on. `npm run test:smoke` stays the one-minute smoke test. The same tests also run
+     in WebKit and Firefox (Playwright's builds — a local check; CI stays on Chrome). One thing there isn't explained:
+     under the test runner, Playwright's Firefox tab crashes while the page scan runs, every time — while the same
+     steps in a plain Playwright script with the same Firefox build finish the scan in ~2s, every time.
+232. **v1.1.1** ("Second shot").

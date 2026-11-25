@@ -11,7 +11,8 @@ no server, no API keys, no runtime third-party requests.
 | `npm run build` | Static export to `out/`, then R1/R10/budget checks (`scripts/check-export.mjs`) |
 | `npm run preview` | Serves `out/` at http://localhost:4173 like a static host (brotli/gzip, immutable `/_next/static`, 404 page) |
 | `npm run check` | ESLint + TypeScript |
-| `npm run test:smoke` | Playwright smoke test against the built `out/` (run `npm run build` first) |
+| `npm test` | Every Playwright suite against the built `out/` — the whole site played like a visitor (run `npm run build` first) |
+| `npm run test:smoke` | Just the smoke test (a minute) |
 | `npm run images` | Pre-builds AVIF/WebP variants from `assets/images/` into `public/img/` |
 | `npm run cursors` | Rebuilds the pixel cursors (6 skins × 3 sizes × 7 variants) and their CSS |
 | `npm run globe` | Rebuilds the Lab globe's land dots (`public/data/land-dots.json`) from the bundled Natural Earth land file |
@@ -225,9 +226,19 @@ the holo-foil. The JD scanner's "not on the save file yet" vocabulary is in the 
 
 ## Testing
 
-`npm run test:smoke` (after `npm run build`) serves `out/` like a static host and checks, in the installed Chrome: the
-home page loads with no console errors and every world id exists, Speedrun Mode shows every fact, the contact form
-validates and builds the right `mailto:` link, an unknown address renders GAME OVER with status 404, and nothing is
-requested from anywhere but the site itself. On a machine without Chrome: `npx playwright install chromium` and remove
-the `channel` line in `playwright.config.ts`. CI (`.github/workflows/ci.yml`) runs `check`, `build` and the smoke test
-on every push.
+`npm test` (after `npm run build`) serves `out/` like a static host and plays the site in the installed Chrome — pointer
+first, and everything that can be replayed is played twice (`tests/*.spec.ts`, ~8 minutes):
+
+- `smoke` — no console errors, every world id, every fact in Speedrun Mode, the contact form's `mailto:`, the 404, and
+  nothing requested from anywhere but the site itself;
+- `launchpad` — three slingshot shots by mouse, Play again and more, a finger pull on a phone, the keyboard, Reset, Skip;
+- `arcade` — all six games: start, real input, pause, restart into a second round, exit; Token Squeeze to its results
+  and Play again;
+- `worlds` — every world's toys and hidden coins, the scrolls, cartridges, the page scan, the Prize Counter, the Skill
+  Tree's tabs and JD scanner, the Trophy Room, two invites in a row, the credits;
+- `game-layer` — the boot, the HUD, every pause-menu tab, the map / rail / number keys, the terminal, Ask BYTE, eggs;
+- `phone` — the handheld controller (◀ ▶, START, A at the Launchpad) and Ask BYTE's sheet.
+
+`npm run test:smoke` runs the smoke test alone. On a machine without Chrome: `npx playwright install chromium` and
+remove the `channel` line in `playwright.config.ts`. CI (`.github/workflows/ci.yml`) runs `check`, `build` and `npm
+test` on every push and deploys nothing.

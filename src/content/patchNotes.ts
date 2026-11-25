@@ -4,6 +4,17 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "1.1.1",
+    date: "2026-11-26",
+    title: "Second shot",
+    notes: [
+      "The Launchpad: BYTE is back in the launcher and ready to grab — with the mouse or a finger — for every shot, and after Play again.",
+      "Reset and Play again keep the page where it is (in Firefox they scrolled BYTE's launcher off the screen).",
+      "Scan this page waits for anything still fading in, so it never reports a half-faded word.",
+      "Behind the scenes: every world, game and control now gets played through automatically on every change, the way you'd play it.",
+    ],
+  },
+  {
     version: "1.1.0",
     date: "2026-11-20",
     title: "Ask BYTE",

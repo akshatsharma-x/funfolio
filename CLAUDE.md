@@ -9,7 +9,8 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
 - `npm run build` — static export to `out/`, then `scripts/check-export.mjs` (R1 raw-TODO check, R10 third-party check, §10 JS budget)
 - `npm run preview` — serve `out/` locally (http://localhost:4173)
 - `npm run check` — ESLint + TypeScript
-- `npm run test:smoke` — Playwright smoke test against `out/` (installed Chrome)
+- `npm test` — every Playwright suite against `out/` (installed Chrome): the whole site played like a visitor
+- `npm run test:smoke` — the smoke test alone
 - `npm run images` — pre-build AVIF/WebP variants from `assets/images/` into `public/img/`
 - `npm run cursors` — rebuild the pixel cursors (`src/components/cursor/{skins,cursor-art}.ts` → `public/cursors/`, `src/app/cursors.generated.css`)
 
@@ -162,7 +163,9 @@ Choices made on top of the Bible live in @docs/DECISIONS.md (append, never rewri
   — change both together. The CSP allows only the site itself (R10): nothing may load from another origin; `eval`
   exists only for axe-core. Never hand-write `-webkit-backdrop-filter` (the minifier then drops the standard property
   and Chrome / Firefox lose the blur — the build adds prefixes).
-- `npm run test:smoke` (after a build) is the in-repo Playwright smoke test; CI runs check, build and the smoke test.
+- `npm test` (after a build) runs the in-repo Playwright suites (`tests/*.spec.ts`, shared helpers in `tests/helpers.ts`);
+  CI runs check, build and `npm test`. Play the way visitors do — a real pointer first (keyboard paths hid PART 19's
+  slingshot bug), and everything replayable at least twice. A fix gets a test that fails without it.
 - Content that changes in place (a form that becomes something smaller) can leave its replacement off screen: call
   `revealElement(el)` from `src/lib/scroll.ts` (the least scroll that shows it under the HUD, through Lenis).
 - Cascade layers: a continuous loop declared outside `@layer` (it needs `#world:not([data-offscreen])`) beats every
