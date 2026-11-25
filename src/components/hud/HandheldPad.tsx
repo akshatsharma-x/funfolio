@@ -52,10 +52,13 @@ export function HandheldPad() {
       else if (dy > 6) el.setAttribute("data-tucked", "");
     });
   }, []);
-  const hold = () => {
-    held.current = performance.now() + 1500;
+  /** Up for at least 1.5s — and, through `landed`, until a moment after the flight ends (a slow phone's flight can
+   *  outlast 1.5s, and its last downward steps tucked the pad away: CI caught it). */
+  const hold = (ms = 1500) => {
+    held.current = Math.max(held.current, performance.now() + ms);
     ref.current?.removeAttribute("data-tucked");
   };
+  const landed = () => hold(400);
 
   const current = () => worlds().find((s) => s.dataset.world === world) ?? null;
   const go = (step: number) => {
@@ -65,14 +68,14 @@ export function HandheldPad() {
     if (!list.length) return;
     const i = Math.max(0, list.findIndex((s) => s.dataset.world === world));
     const target = list[Math.max(0, Math.min(list.length - 1, i + step))];
-    if (target) scrollToElement(target, { focus: true });
+    if (target) scrollToElement(target, { focus: true, onComplete: landed });
   };
   const primary = () => {
     haptic(14);
     hold();
     const t = [...(current()?.querySelectorAll<HTMLElement>("[data-primary]") ?? [])].find(shown);
     if (!t) return;
-    scrollToElement(t, { block: "center" });
+    scrollToElement(t, { block: "center", onComplete: landed });
     if (t.matches("input, textarea, select")) {
       t.focus({ preventScroll: true });
       return;
@@ -104,7 +107,7 @@ export function HandheldPad() {
     pressedB.current = null;
     if (press ? press.done : escape()) return; // the keyboard (Enter / Space on B) has no pointerdown
     const sec = current();
-    if (sec && sec.getBoundingClientRect().top < -40) scrollToElement(sec, { focus: true });
+    if (sec && sec.getBoundingClientRect().top < -40) scrollToElement(sec, { focus: true, onComplete: landed });
     else go(-1);
   };
   const start = () => {

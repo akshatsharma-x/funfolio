@@ -313,7 +313,12 @@ export function startLaunchpad({ screen, handle, onHud, onEnd, onAnnounce }: Lau
   // QA hook (inert unless a test pre-registers it): the sim + the same preview the player sees, in world units
   const qa = (window as unknown as { __QA_LAUNCHPAD?: (api: unknown) => void }).__QA_LAUNCHPAD;
   qa?.({ sim, preview: () => previewDots(sim.shot().start, sim.shot().v0), toPage, scale: () => scale });
-  void document.fonts?.load(`${CRATE_TEXT.weight} ${CRATE_TEXT.one}px ${font}`).then(() => render());
+  // draw again once the crate labels' face is in; where a fallback face can't load (next/font's fallbacks are
+  // local(Arial) — not on Linux or Android) the promise rejects: draw anyway, and no unhandled "network error"
+  void document.fonts?.load(`${CRATE_TEXT.weight} ${CRATE_TEXT.one}px ${font}`).then(
+    () => render(),
+    () => render(),
+  );
 
   return {
     reset,
