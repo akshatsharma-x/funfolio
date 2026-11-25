@@ -11,6 +11,7 @@ const shotsLeft = (page: Page) => page.locator(".lp__shot[data-on]").count();
 async function handleCenter(page: Page) {
   const handle = page.locator(".lp__handle");
   await expect(handle, "BYTE can be grabbed for the next shot").toBeVisible({ timeout: 20_000 });
+  await handle.scrollIntoViewIfNeeded(); // a visitor scrolls to see BYTE (clicking Reset scrolls the HUD row into view)
   const box = (await handle.boundingBox())!;
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }

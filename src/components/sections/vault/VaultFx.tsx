@@ -410,6 +410,14 @@ export function VaultFx() {
       view.scrollTo({ top: view.scrollTop + r.top - v.top - 12, behavior: reduced() ? "auto" : "smooth" });
     };
 
+    /** One-shot animations and transitions still running (a screen fading in, a card popping): axe would read their
+     *  text mid-fade and report a contrast failure that's gone a moment later (Firefox, a scan right as a cartridge's
+     *  screen appeared: 1 run in 4). Wait for them — at most 1.2s, inside the laser's 1.5s; endless loops don't count. */
+    const settled = () => {
+      const oneShots = document.getAnimations().filter((a) => a.playState === "running" && Number.isFinite(a.effect?.getComputedTiming().endTime));
+      return Promise.race([Promise.allSettled(oneShots.map((a) => a.finished)), wait(1200)]);
+    };
+
     const scan = async (btn: HTMLButtonElement) => {
       scanning = true;
       btn.setAttribute("aria-disabled", "true"); // not `disabled`: that would drop the keyboard focus on the page body
@@ -425,6 +433,7 @@ export function VaultFx() {
       const started = performance.now();
       try {
         const axe = (await import("axe-core")).default;
+        await settled();
         const res = await axe.run({ exclude: [[".scan-laser"]] }, { resultTypes: ["violations"] });
         const left = 1500 - (performance.now() - started);
         if (left > 0 && sweep) await wait(left);

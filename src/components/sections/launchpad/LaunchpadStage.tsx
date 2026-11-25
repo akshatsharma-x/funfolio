@@ -81,7 +81,9 @@ export function LaunchpadStage({ poster }: { poster: ReactNode }) {
   const playAgain = () => {
     setResult(null);
     ctl.current?.reset();
-    screen.current?.focus();
+    // the stage is on screen (Play again sits on it, Reset just above): keep the page still — Firefox scrolls a focused
+    // element that isn't wholly in view, and that pushed BYTE's launcher below the fold
+    screen.current?.focus({ preventScroll: true });
   };
 
   const shots = hud?.shots ?? SHOTS;

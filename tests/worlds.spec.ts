@@ -9,9 +9,15 @@ test("Title Screen: Peek behind the tower reveals coin #2; a landmark flies to i
   const w = watch(page);
   await seed(page);
   await open(page, "/");
+  // the 3D island (where the GPU allows one) takes a moment to start; the flat island's buttons are there at once
+  await page.waitForFunction(() => !!document.querySelector(".title__island[data-live]") || !document.querySelector("#title canvas"), null, { timeout: 15_000 }).catch(() => {});
   await page.getByRole("button", { name: /^Peek behind the tower/ }).click();
   const coin = page.locator('[data-coin-id="quest-tower"]');
   await expect(coin).toBeVisible({ timeout: 8_000 });
+  // the island is still turning, and the coin with it: click once it's (nearly) still, where it is
+  await expect
+    .poll(async () => { const a = await coin.boundingBox(); await page.waitForTimeout(250); const b = await coin.boundingBox(); return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 99; }, { timeout: 10_000 })
+    .toBeLessThan(3);
   await coin.click();
   await expect.poll(() => coins(page)).toContain("quest-tower");
   await page.getByRole("button", { name: /^Player House/ }).click();
