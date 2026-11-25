@@ -1,5 +1,6 @@
 # Checks every push and pull request: lint + types, the static build (with its R1 / R10 / budget checks) and the
-# Playwright smoke test against the export. Deploys nothing.
+# Playwright suites against the export (the smoke test plus every world, game and control, played like a visitor).
+# Deploys nothing.
 name: CI
 on:
   push:
@@ -16,4 +17,4 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run build
-      - run: npm run test:smoke
+      - run: npm test

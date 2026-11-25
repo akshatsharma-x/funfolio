@@ -13,7 +13,8 @@
     "images": "node scripts/optimize-images.mjs",
     "cursors": "node --experimental-strip-types --no-warnings scripts/build-cursors.mjs",
     "globe": "node --experimental-strip-types --no-warnings scripts/globe-dots.mjs",
-    "test:smoke": "playwright test"
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/smoke.spec.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
