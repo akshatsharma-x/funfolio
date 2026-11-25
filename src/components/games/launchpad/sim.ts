@@ -20,6 +20,9 @@ export type SimEvents = {
   launch: () => void;
   shotEnd: (shot: number, popped: number) => void;
   end: (cleared: boolean) => void;
+  /** Every phase change (aim → flying → settling → aim … → over): the HUD — and the grab handle, shown only while
+   *  aiming — follow it. (The step back to "aim" between shots happens inside step(), so nothing else reports it.) */
+  phase: (phase: Phase) => void;
 };
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -117,13 +120,19 @@ export class LaunchpadSim {
     this.bugs.forEach((b) => (b.startY = b.body.position.y));
   }
 
+  private setPhase(p: Phase) {
+    if (this.phase === p) return;
+    this.phase = p;
+    this.on.phase(p);
+  }
+
   reset(coinTaken: boolean) {
     this.build(coinTaken);
-    this.phase = "aim";
     this.mood = "idle";
     this.shots = SHOTS;
     this.score = 0;
     this.pending = [];
+    this.setPhase("aim"); // last, so the HUD it refreshes reads the fresh round
   }
 
   get bugsLeft() {
@@ -150,7 +159,7 @@ export class LaunchpadSim {
     Composite.add(this.engine.world, this.byte);
     Body.setVelocity(this.byte, v0);
     this.shots -= 1;
-    this.phase = "flying";
+    this.setPhase("flying");
     this.mood = "thrilled";
     this.flightTicks = 0;
     this.stillTicks = 0;
@@ -231,7 +240,7 @@ export class LaunchpadSim {
       const speed = Math.hypot(this.byte.velocity.x, this.byte.velocity.y);
       this.stillTicks = speed < 0.25 ? this.stillTicks + 1 : 0;
       if (this.stillTicks > 45 || this.outOfStage(this.byte.position) || this.flightTicks > 60 * 7) {
-        this.phase = "settling";
+        this.setPhase("settling");
         this.settleTicks = 0;
         if (!this.hitThisShot) this.mood = "idle";
         this.on.shotEnd(3 - this.shots, this.poppedThisShot);
@@ -247,20 +256,20 @@ export class LaunchpadSim {
           // the next BYTE waits in the launcher: the spent one leaves the world (no invisible obstacle)
           if (this.byte) Composite.remove(this.engine.world, this.byte);
           this.byte = null;
-          this.phase = "aim";
           this.mood = "idle";
+          this.setPhase("aim");
         }
       }
     }
     if (this.bugsLeft === 0 && this.phase === "flying") {
       // every bug down mid-flight: let the dust settle, then celebrate
-      this.phase = "settling";
+      this.setPhase("settling");
       this.settleTicks = 40;
     }
   }
 
   private finish(cleared: boolean) {
-    this.phase = "over";
+    this.setPhase("over");
     this.on.end(cleared);
   }
 

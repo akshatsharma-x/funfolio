@@ -89,6 +89,8 @@ export function startLaunchpad({ screen, handle, onHud, onEnd, onAnnounce }: Lau
         hud();
       },
       shotEnd: (shot, popped) => onAnnounce(`Shot ${shot} of 3: ${popped ? `${popped} bug${popped === 1 ? "" : "s"} popped` : "no bugs this time"}. Score ${sim.score}.`),
+      // the stage shows the grab handle only while aiming — without this, the next shot couldn't be grabbed by pointer
+      phase: () => hud(),
       end: (cleared) => {
         const { best: newBest, highScore } = useSave.getState().recordScore("launchpad", sim.score);
         if (cleared) {
