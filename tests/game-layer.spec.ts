@@ -118,7 +118,7 @@ test("Ask BYTE: a topic, a typed question, Esc — and the conversation is still
   const chat = page.locator("[data-chat]");
   await expect(chat.locator("[data-chip]").first()).toBeVisible({ timeout: 8_000 });
   await chat.locator("[data-chip]", { hasText: "Best project?" }).click();
-  await expect(chat.locator(".chat__line--byte").last()).toContainText("5 projects", { timeout: 5_000 });
+  await expect(chat.locator(".chat__line--byte").last()).toContainText(/\d+ projects/, { timeout: 5_000 });
   await page.fill("#chat-input", "what's his cgpa?");
   await page.press("#chat-input", "Enter");
   await expect(chat.locator(".chat__line--byte").last()).toContainText("CGPA", { timeout: 5_000 });

@@ -1316,3 +1316,30 @@ change an entry only when the decision itself changes.
      a flight on a slow device outlasted that, and its last downward steps tucked the pad off screen; the hold now lasts
      until 400ms after the flight lands. The workflows moved to `actions/checkout` and `actions/setup-node` v5 (v4 ran on
      the deprecated Node 20).
+
+## Content drop — 2026-11-26
+
+234. **Projects from the GitHub repositories, certificates from LinkedIn, the photo** (Akshat's notes of 2026-11-25/26).
+     Six new projects — NEXUS, ResearchX, BBC News Retrieval, Vistara, CabinMUJ, MyHUB — after the five résumé ones;
+     QuizMUJ, Automated Resume Screening (the CV-Scan repo, with its held-out evaluation numbers) and the churn model
+     link to their repos. The new projects' bullets say what each one does, not "built": whether each was solo or a team
+     is still open. ResearchX says it's a fork of Adyashas/ResearchX and what Akshat's commits did; CabinMUJ says its seed
+     cabin locations start unverified (its README: they were assigned at random); QuizMUJ lost Tailwind CSS from its
+     stack and first bullet (the repo's front end is plain HTML, CSS and JavaScript). Screenshots aren't in yet (`media`
+     stays "TODO"), and the Vault has no "featured" split — every project is a cartridge. 15 certificates as LinkedIn
+     lists them, dates as LinkedIn shows them (month only; the three it shows without one get no date on the card) and
+     skills as far as LinkedIn names them (its "+1 skill" aren't guessed); Smart India Hackathon stays the honor it
+     already is. Every credential link opens the LinkedIn certifications page, which asks for a sign-in. The photo is
+     the iPhone JPEG turned upright, cropped to the Character Card's 26:22 around the face, resized to 1300px and saved
+     without its EXIF data (camera, time, orientation) as `assets/images/me.jpg`; `npm run images` makes the variants
+     and the card uses `/img/me-960.webp`. The JD scanner's "not on the save file yet" words lost Redis and Three.js —
+     they're in stacks now, and one term never names two things (#141).
+235. **A current role with nothing on the save file yet.** Merck Group (Associate Analyst – Clinical and Digital
+     Innovation and Applications, intern) from Dec 2026; United Airlines ran Jun 2026 – Nov 2026, and its first bullet
+     is past tense now. The schema lets only the current role have no bullets; its active-quest card says "Quest
+     accepted — objectives coming soon." instead of empty sections, and BYTE's "now" answer is the role, company and
+     dates. The illustrative widgets and coin #6 belong to the role they restate, not to "the active quest": they stay on
+     United Airlines' card among the completed quests, and coin #6's location reads "the $0.08 on the United Airlines
+     quest card" (its id stays `active-quest` — saves keep it). BYTE's routes for "Cartographer" and "monitoring" follow
+     United Airlines too.
+236. **v1.2.0** ("New loot").

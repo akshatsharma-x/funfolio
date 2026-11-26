@@ -4,6 +4,18 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "1.2.0",
+    date: "2026-11-26",
+    title: "New loot",
+    notes: [
+      "Six new cartridges in the Vault — NEXUS, ResearchX, BBC News Retrieval, Vistara, CabinMUJ and MyHUB — with links to try them and to their code.",
+      "QuizMUJ, the résumé screener and the churn model link to their code now, and the screener shows its evaluation numbers.",
+      "The Trophy Room's packs are open: 15 certificates as trading cards.",
+      "A new active quest: Merck Group, from December 2026. United Airlines is a completed quest now — its widgets and the $0.08 coin are still on its card.",
+      "The Character Card shows Akshat's photo.",
+    ],
+  },
+  {
     version: "1.1.1",
     date: "2026-11-26",
     title: "Second shot",
