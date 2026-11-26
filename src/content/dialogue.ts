@@ -256,7 +256,7 @@ const starters: DialogueOption[] = [
 ];
 nodes.hub.options = starters;
 
-/** Distinctive words of a name (lower case, no stop words) — "Cognivault AI" → cognivault. */
+/** Distinctive words of a name (lower case, no stop words) — "BBC News Retrieval" → bbc, news, retrieval. */
 const nameWords = (name: string) =>
   name
     .toLowerCase()

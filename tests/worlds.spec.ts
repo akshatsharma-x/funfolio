@@ -89,7 +89,7 @@ test("Cartridge Vault: insert, eject, insert another; the filter; the locked car
   await seed(page);
   await open(page, "/#vault");
   const funsole = page.locator("[data-funsole]");
-  for (const id of ["cognivault", "quizmuj", "cognivault"]) {
+  for (const id of ["researchx", "quizmuj", "researchx"]) {
     await show(page, `[data-cart-btn="${id}"]`);
     await page.locator(`[data-cart-btn="${id}"]`).click();
     await expect(funsole).toHaveAttribute("data-cart", id, { timeout: 8_000 });

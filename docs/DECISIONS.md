@@ -1343,3 +1343,12 @@ change an entry only when the decision itself changes.
      quest card" (its id stays `active-quest` — saves keep it). BYTE's routes for "Cartographer" and "monitoring" follow
      United Airlines too.
 236. **v1.2.0** ("New loot").
+237. **ResearchX replaces Cognivault AI** (Akshat, 2026-11-26 — the open question of #234). Cognivault AI is gone from
+     content.ts; ResearchX takes its place as the first cartridge, with RAG Catcher as its side quest, whose lines are
+     rebuilt from ResearchX's own bullets: "Multi-agent research · ResearchX" and "Real life: ResearchX — a LangGraph
+     pipeline of 17 agents, where a citation can only point to a source that exists." (no "Akshat's real build": it's a
+     fork). Cognivault's résumé details were not moved onto ResearchX (R1 — the repo doesn't say them), so the skills
+     only its stack named (RAG, A2A, FAISS, HyDE, Ragas, Gemini 1.5 / Vision) stay on the skills list without a role or
+     project behind them, and the focus radar's buckets now list the stacks as they are (plus the new projects'
+     items). BYTE's A2A quip became one about ResearchX's critic. The résumé screener links to its Streamlit app.
+     v1.2.1.

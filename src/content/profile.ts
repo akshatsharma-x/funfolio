@@ -180,10 +180,10 @@ export const quickStats = () => [
  * classification, not a self-rating — edit the buckets here (schema.ts checks every item exists in some stack).
  */
 export const FOCUS_DOMAINS: readonly { id: string; label: string; items: readonly string[] }[] = [
-  { id: "genai", label: "GenAI", items: ["LangGraph", "GPT-4.1", "Claude Sonnet 4.5", "LLM Monitoring", "Knowledge Graphs", "Token Compression", "SHA256 Caching", "LangChain", "Gemini 1.5", "Gemini Vision", "A2A", "RAG", "FAISS", "HyDE", "Ragas"] },
-  { id: "ml", label: "ML & Data", items: ["Python", "Streamlit", "Transformers", "BERT", "TF-IDF", "XAI", "PCA", "TensorFlow", "KerasTuner", "SMOTE", "Stacking Ensemble", "Feature Importance", "Power BI"] },
-  { id: "backend", label: "Backend", items: ["Django REST Framework", "JWT", "REST APIs", "PostgreSQL", "Postman", "MongoDB", "FastAPI", "Node.js", "Express.js", "Socket.io", "Docker"] },
-  { id: "frontend", label: "Frontend", items: ["Next.js", "TypeScript", "React", "Tailwind CSS", "WCAG 2.1", "Headless DOM Crawler"] },
+  { id: "genai", label: "GenAI", items: ["LangGraph", "GPT-4.1", "Claude Sonnet 4.5", "LLM Monitoring", "Knowledge Graphs", "Token Compression", "SHA256 Caching", "LangChain", "Gemini", "Tavily", "Anthropic SDK"] },
+  { id: "ml", label: "ML & Data", items: ["Python", "Streamlit", "Transformers", "BERT", "Sentence-BERT", "Sentence Transformers", "TF-IDF", "BM25", "LinearSVC", "NLTK", "XAI", "PCA", "Plotly", "Altair", "ONNX", "TensorFlow", "KerasTuner", "SMOTE", "Stacking Ensemble", "Feature Importance", "Power BI"] },
+  { id: "backend", label: "Backend", items: ["Django REST Framework", "JWT", "REST APIs", "PostgreSQL", "Postman", "MongoDB", "FastAPI", "Celery", "Redis", "Upstash Redis", "Alembic", "Node.js", "Express.js", "Socket.io", "Nodemailer", "Docker"] },
+  { id: "frontend", label: "Frontend", items: ["Next.js", "TypeScript", "React", "Tailwind CSS", "HTML5", "CSS", "JavaScript", "Framer Motion", "Three.js", "React Three Fiber", "transformers.js", "WCAG 2.1", "Headless DOM Crawler"] },
   { id: "java", label: "Java & OOP", items: ["Java", "OOP"] },
   { id: "research", label: "Research", items: [] },
 ];

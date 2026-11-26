@@ -30,7 +30,7 @@ const BASED_ON: Readonly<Record<string, { kind: Entry["kind"]; id: string; topic
   "token-squeeze": { kind: "experience", id: "united", topic: "token compression" },
   "cache-hit": { kind: "experience", id: "united", topic: "SHA256 caching" },
   "bug-whack": { kind: "experience", id: "truechip", topic: "debugging" },
-  "rag-catcher": { kind: "project", id: "cognivault", topic: "RAG" },
+  "rag-catcher": { kind: "project", id: "researchx", topic: "multi-agent research" },
   pipeline: { kind: "experience", id: "walkingtree", topic: "data aggregation pipelines" },
   "gradient-descent": { kind: "project", id: "churn", topic: "churn" },
 };
@@ -80,8 +80,12 @@ function factFor(id: string): { fact: string | null; target: number | null; band
     return { fact: says(tc, `${coverage} test coverage`, "post-integration defects") && defects ? `Real life: ${coverage} test coverage and ${defects} post-integration defects.` : null, target: null, band: null };
   }
   if (id === "rag-catcher") {
-    const cv = entry("project", "cognivault");
-    return { fact: cv && says(cv, "multi-agent RAG system", "FAISS + HyDE retrieval") ? `Akshat's real build: ${cv.label} — a multi-agent RAG system with FAISS + HyDE retrieval.` : null, target: null, band: null };
+    const rx = entry("project", "researchx");
+    return {
+      fact: rx && says(rx, "LangGraph pipeline of 17 agents", "can only point to a source that exists") ? `Real life: ${rx.label} — a LangGraph pipeline of 17 agents, where a citation can only point to a source that exists.` : null,
+      target: null,
+      band: null,
+    };
   }
   if (id === "pipeline") {
     const wt = entry("experience", "walkingtree");

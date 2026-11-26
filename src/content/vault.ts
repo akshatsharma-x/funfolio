@@ -18,7 +18,6 @@ export const vaultTabs = () => TABS.filter((t) => t.id === "all" || projects.som
 
 /** Label monograms (game labels, like the Quest Log's guild emblems); anything new falls back to its initials. */
 const CODES: Readonly<Record<string, string>> = {
-  cognivault: "CV",
   quizmuj: "QZ",
   "resume-screener": "RS",
   churn: "CH",

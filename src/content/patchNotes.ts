@@ -4,6 +4,15 @@ export type PatchNote = { version: string; date: string; title: string; notes: s
 
 export const PATCH_NOTES: readonly PatchNote[] = [
   {
+    version: "1.2.1",
+    date: "2026-11-26",
+    title: "ResearchX",
+    notes: [
+      "ResearchX takes Cognivault AI's place at the front of the Vault, with RAG Catcher as its side quest.",
+      "The résumé screener's cartridge links to its live app.",
+    ],
+  },
+  {
     version: "1.2.0",
     date: "2026-11-26",
     title: "New loot",

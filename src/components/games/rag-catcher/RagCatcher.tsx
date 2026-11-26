@@ -18,7 +18,7 @@ type Chunk = { id: number; kind: Kind; text: string; parts: [string, string, str
 type QaHook = Record<string, unknown>;
 
 /**
- * RAG CATCHER (Cognivault AI · RAG with FAISS + HyDE): document chunks fall under a query banner. Relevant ones glow
+ * RAG CATCHER (ResearchX · multi-agent research that only cites real sources): document chunks fall under a query banner. Relevant ones glow
  * cyan on the keyword they share with the query; junk is grey; hallucinations are jittery red glitches. Move the
  * RETRIEVER (mouse, ←/→, touch drag): good chunks fill the context window, junk pollutes it, a hallucination costs a
  * life. Ends when the window is full, the lives are gone or the time is up; the results grade precision and recall.

@@ -80,9 +80,9 @@ const QUIPS = build([
   { mood: "cool", values: [counts.projects], say: (n) => `${n} cartridges in the vault. Blow on them first. It helps. (It doesn't.)` },
   {
     mood: "love",
-    values: [project("cognivault")?.title],
-    uses: ["A2A communication"],
-    say: (t) => `${t} has agents that talk to each other over A2A. Finally, someone else to chat with.`,
+    values: [project("researchx")?.title],
+    uses: ["17 agents", "send weak drafts back for revision"],
+    say: (t) => `${t} runs 17 agents, and a critic sends weak drafts back for revision. Harsh. Fair.`,
   },
   {
     mood: "surprised",
