@@ -126,7 +126,7 @@ export const player: Player = {
   handle: "AKSHAT.EXE",
   tagline: "Don't read my résumé. Play it.",
   classes: ["AI/ML Engineer", "GenAI Builder", "Full-Stack Developer", "Research Author", "Bug Exterminator"],
-  status: "AI & ML Intern (Generative AI) @ United Airlines",
+  status: "Associate Analyst – Clinical and Digital Innovation and Applications (Intern) @ Merck Group",
   email: "akshatsharma.data@gmail.com",
   phone: "", // kept out of git while showPhone is false (docs/DECISIONS.md #1) — paste the number here if you flip showPhone
   showPhone: false, // off by default (spam); reveal-on-click when true
@@ -138,7 +138,7 @@ export const player: Player = {
   base: "TODO",         // "spawn point" city
   bio: "TODO",          // 2–3 lines; a DRAFT built only from these facts is OK until Akshat sends his own
   availability: "TODO", // roles + start date
-  photo: "TODO",
+  photo: "/img/me-960.webp", // from assets/images/me.jpg (`npm run images`)
   funFacts: [], // TODO
   researchInterests: [], // TODO (optional): chips in The Lab — hidden while empty
 };
@@ -157,15 +157,28 @@ export const education: Education = {
 
 export const experience: Experience[] = [
   {
+    id: "merck",
+    company: "Merck Group",
+    emblem: "MG",
+    role: "Associate Analyst – Clinical and Digital Innovation and Applications (Intern)",
+    period: "Dec 2026 – Present",
+    current: true,
+    mode: "TODO",
+    bullets: [], // TODO: what the role involves, once Akshat sends it
+    stats: [],
+    stack: [],
+    sideQuest: null,
+  },
+  {
     id: "united",
     company: "United Airlines",
     emblem: "UA",
     role: "AI & ML Intern (Generative AI)",
-    period: "Jun 2026 – Present",
-    current: true,
+    period: "Jun 2026 – Nov 2026",
+    current: false,
     mode: "TODO",
     bullets: [
-      "Working on LLM Model Monitoring and automation for enterprise-level ML models.",
+      "Worked on LLM Model Monitoring and automation for enterprise-level ML models.",
       "Built Cartographer using LangGraph, GPT-4.1, and Claude Sonnet 4.5, automating generation of 6 documentation artifacts in 2 LLM calls.",
       "Developed a code knowledge graph extracting dependencies, API surfaces, and architectural relationships across large codebases.",
       "Cut inference cost to $0.08–0.11/run via 22–25% token compression and SHA256 caching across 35 eval scenarios.",
@@ -270,14 +283,17 @@ export const projects: Project[] = [
     genre: "Real-Time Full-Stack",
     category: "fullstack",
     bullets: [
-      "Developed a full-stack, role-based examination platform using Node.js, Express, MongoDB, and Tailwind CSS.",
+      "Developed a full-stack, role-based examination platform using Node.js, Express and MongoDB, with an HTML, CSS and JavaScript front end.",
       "Architected a real-time Live Exam Room using Socket.io, enabling proctoring features such as browser tab-switch tracking.",
       "Containerized the app using Docker and built admin tools including CSV bulk uploads and an analytics API for result export.",
       "Ensured scalability, data integrity, and secure session handling through backend design and system architecture.",
+      "Focus-mode exams with a server-controlled timer and autosave to the server and the device, so a reload, crash or device switch resumes the attempt.",
+      "Tab switches, leaving the window, exiting full screen, copy attempts and disconnects stream live to faculty; more than 3 violations flags the attempt.",
+      "Sign-up takes only university email addresses, verified by one-time codes; sockets use the same JWT auth as the REST API.",
     ],
     stats: [],
-    stack: ["Node.js", "Express.js", "MongoDB", "Tailwind CSS", "Socket.io", "Docker"],
-    links: { demo: "TODO", repo: "TODO" },
+    stack: ["HTML5", "CSS", "JavaScript", "Node.js", "Express.js", "MongoDB", "Socket.io", "Nodemailer", "JWT", "Docker"],
+    links: { demo: "TODO", repo: "https://github.com/akshatsharma-x/Quiz-App" },
     media: "TODO",
     sideQuest: "tab-switch-egg",
   },
@@ -291,10 +307,18 @@ export const projects: Project[] = [
       "Built an NLP-based screening system using Python, Streamlit, and Transformers for automated classification and data extraction.",
       "Developed a hybrid model (TF-IDF + BERT) and optimized a weighted ensemble to improve candidate matching.",
       "Designed a robust NLP pipeline and XAI dashboard with PCA visualizations for interpretability.",
+      "Ranks resumes against a job description with a hybrid TF-IDF + Sentence-BERT score, shows which skills drive each score, and benchmarks candidates against 2,361 historical resumes.",
+      "Batch-screens PDF, DOCX and TXT resumes into a ranked leaderboard with CSV export; a calibrated SVM predicts each resume's domain out of 24.",
     ],
-    stats: [],
-    stack: ["Python", "Streamlit", "Transformers", "BERT", "TF-IDF", "XAI", "PCA"],
-    links: { demo: "TODO", repo: "TODO" },
+    stats: [
+      { label: "Category accuracy (hybrid)", value: "0.786" },
+      { label: "Category accuracy (TF-IDF alone)", value: "0.704" },
+      { label: "Ranking ROC-AUC", value: "0.892" },
+      { label: "MRR", value: "0.832" },
+      { label: "nDCG@10", value: "0.666" },
+    ],
+    stack: ["Python", "Streamlit", "Transformers", "BERT", "Sentence-BERT", "TF-IDF", "LinearSVC", "XAI", "PCA", "NLTK", "Plotly"],
+    links: { demo: "TODO", repo: "https://github.com/akshatsharma-x/cv-scan" },
     media: "TODO",
     sideQuest: "jd-scanner",
   },
@@ -314,7 +338,7 @@ export const projects: Project[] = [
       { label: "ROC-AUC", value: "0.98" },
     ],
     stack: ["TensorFlow", "KerasTuner", "SMOTE", "Stacking Ensemble", "Feature Importance"],
-    links: { demo: "TODO", repo: "TODO" },
+    links: { demo: "TODO", repo: "https://github.com/akshatsharma-x/customer-churn-prediction" },
     media: "TODO",
     sideQuest: "gradient-descent",
   },
@@ -333,6 +357,134 @@ export const projects: Project[] = [
     links: { demo: "TODO", repo: "TODO" },
     media: "TODO",
     sideQuest: "a11y-scan",
+  },
+  {
+    id: "nexus",
+    title: "NEXUS",
+    subtitle: "Personalized Learning for Career Transitions",
+    genre: "Adaptive Learning Platform",
+    category: "fullstack",
+    bullets: [
+      "A personalized learning platform for career transitions: conversational onboarding, an adaptive learning path, a 3D skill map, assessments and an offline tutor.",
+      "Onboarding is a conversation: it extracts the target role, timeline, experience and skills, and shows the profile it's building as you talk.",
+      "A staged journey of skills, resources, projects and assessments; steps unlock as their prerequisites complete, and assessment results are written back into per-skill mastery.",
+      "The Skill Universe draws every skill as a 3D knowledge map, coloured by mastery.",
+      "The tutor answers from the learner's own progress and runs fully offline by default (Claude is optional); there are no accounts, and all data stays in the browser.",
+    ],
+    stats: [],
+    stack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Framer Motion", "Three.js", "React Three Fiber", "Anthropic SDK"],
+    links: { demo: "https://nexus-opal-phi-60.vercel.app", repo: "https://github.com/akshatsharma-x/nexus" },
+    media: "TODO",
+    sideQuest: null,
+  },
+  {
+    id: "researchx",
+    title: "ResearchX",
+    subtitle: "Autonomous Multi-Agent Research Platform",
+    genre: "Multi-Agent Research",
+    category: "ai",
+    bullets: [
+      "An autonomous multi-agent research platform: a LangGraph pipeline of 17 agents plans the research, searches the web, academic sources and news in parallel, fact-checks claims against the evidence, hunts for counter-evidence, and writes a report in which every citation points to a real, numbered source.",
+      "Two budgeted feedback loops: a replanner adds searches for unanswered sub-questions, and a critic and a citation verifier send weak drafts back for revision.",
+      "Durable jobs: the graph's state is checkpointed to PostgreSQL after every step, so a job whose worker dies resumes where it stopped.",
+      "Grounded citations: the reference list is generated from the source data, not by the model, and a citation can only point to a source that exists.",
+      "Bounded cost: the research workers make no LLM calls, a run takes about 13 Gemini calls, and the public API has per-IP and daily job limits.",
+      "Forked from Adyashas/ResearchX; wired up the full research pipeline and made the app deployable.",
+    ],
+    stats: [
+      { label: "Agents", value: "17" },
+      { label: "Gemini calls per run", value: "~13" },
+    ],
+    stack: ["LangGraph", "LangChain", "Gemini", "Tavily", "FastAPI", "Celery", "Redis", "PostgreSQL", "Alembic", "Next.js", "React", "Tailwind CSS"],
+    links: { demo: "TODO", repo: "https://github.com/akshatsharma-x/ResearchX" },
+    media: "TODO",
+    sideQuest: null,
+  },
+  {
+    id: "bbc-news-retrieval",
+    title: "BBC News Retrieval",
+    subtitle: "Lexical, Semantic & Hybrid News Search",
+    genre: "Information Retrieval",
+    category: "ai",
+    bullets: [
+      "Lexical, semantic and hybrid search over the BBC News archive, with a purpose-built test collection, a full evaluation and a news-desk search interface — an Information Retrieval course project.",
+      "Four rankers over one inverted index: TF-IDF, BM25, a Sentence Transformer (best-passage cosine), and a hybrid that fuses BM25 and the Sentence Transformer by Reciprocal Rank Fusion.",
+      "A TREC-style test collection built from scratch: 25 topics, 12 of them deliberately paraphrased, with 957 graded relevance judgments.",
+      "The live app runs entirely in the browser: a JavaScript port of the engine, with the encoder as a half-precision ONNX model through transformers.js — it matches the Python engine (TF-IDF and BM25 exactly, the neural models' MAP to 3 decimals).",
+      "On 2,066 known-item queries the hybrid leads every other model (p < 0.001), at about 4 ms per hybrid query.",
+    ],
+    stats: [
+      { label: "Hybrid MAP", value: "0.811" },
+      { label: "Recall@100", value: "0.992" },
+      { label: "Known-item MRR (hybrid)", value: "0.812" },
+      { label: "Per hybrid query", value: "~4 ms" },
+    ],
+    stack: ["Python", "Sentence Transformers", "BM25", "TF-IDF", "NLTK", "Streamlit", "Altair", "transformers.js", "ONNX"],
+    links: { demo: "https://akshatsharma-x.github.io/BBC-News-Retrieval/app/", repo: "https://github.com/akshatsharma-x/BBC-News-Retrieval" },
+    media: "TODO",
+    sideQuest: null,
+  },
+  {
+    id: "vistara",
+    title: "Vistara",
+    subtitle: "Credit Scoring from Life's Rhythms",
+    genre: "Fintech Prototype",
+    category: "fullstack",
+    bullets: [
+      "Credit scoring for thin-file applicants that reads only the timing of recurring life events (vehicle service, UPI mandates, utility bills, phone recharges, FASTag), never amounts — a prototype built for the TVS Credit hackathon on synthetic data.",
+      "Five signals, each with an expected cadence and a weight, each scored on how steady its gaps are; coherence across signals carries 25% of the score, so being evenly consistent beats excelling at one habit.",
+      "The result is a 300–900 score with a tier, a loan offer, a recommended EMI date and a dated path to the next tier; thin files get a rhythm-building path instead.",
+      "A loan officer's queue ranks the twelve sample applicants; the engine is plain, seeded TypeScript with no ML library, so the same input always gives the same score.",
+    ],
+    stats: [
+      { label: "Score range", value: "300–900" },
+      { label: "Signals", value: "5" },
+      { label: "Coherence weight", value: "25%" },
+    ],
+    stack: ["Next.js", "TypeScript"],
+    links: { demo: "https://vistara-delta-fawn.vercel.app", repo: "https://github.com/akshatsharma-x/Vistara" },
+    media: "TODO",
+    sideQuest: null,
+  },
+  {
+    id: "cabinmuj",
+    title: "CabinMUJ",
+    subtitle: "Faculty Cabin Finder",
+    genre: "Campus Directory",
+    category: "fullstack",
+    bullets: [
+      "Find any Manipal University Jaipur faculty member, and their block, floor and cabin, in seconds; students search and browse, and an admin maintains the data.",
+      "Live search shows block, floor and cabin as you type; a directory filters by department, block, floor, designation or HoD; a campus map goes block by block and floor by floor.",
+      "Students report outdated locations; the admin panel tracks verification, resolves those reports, keeps a full change history with restore, and backs up all data as JSON.",
+      "The seed data's cabin locations start as unverified until they're checked.",
+    ],
+    stats: [],
+    stack: ["Next.js", "TypeScript", "Upstash Redis", "Vercel", "Python"],
+    links: { demo: "https://cabin-muj.vercel.app", repo: "https://github.com/akshatsharma-x/CabinMUJ" },
+    media: "TODO",
+    sideQuest: null,
+  },
+  {
+    id: "myhub",
+    title: "MyHUB",
+    subtitle: "Your Life, In Receipts",
+    genre: "Data Storytelling",
+    category: "fullstack",
+    bullets: [
+      "Three public datasets (162,588 rows) read as one person's decade: 2,411 receipts in nine kinds, the connections between them, and a story about what they add up to; none of the rows is Akshat's, and the app says so on its sources page.",
+      "Eight routes: searchable receipts, 120 threads with the reason printed on every link, a constellation of 131 entities, six eras, rhythms with 14 findings, a ten-beat story, and the sources.",
+      "A deterministic build-time ETL, and no server or runtime network calls at all: every page is static, on GitHub Pages.",
+      "A verification suite drives the production build in headless Chrome across 8 pages × 4 widths × 2 themes, checking overflow, an 11px type floor, keyboard paths, WCAG contrast and layout shift.",
+    ],
+    stats: [
+      { label: "Rows", value: "162,588" },
+      { label: "Receipts", value: "2,411" },
+      { label: "Threads", value: "120" },
+    ],
+    stack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Framer Motion", "GitHub Pages"],
+    links: { demo: "https://akshatsharma-x.github.io/MyHub/", repo: "https://github.com/akshatsharma-x/MyHub" },
+    media: "TODO",
+    sideQuest: null,
   },
 ];
 
@@ -372,7 +524,28 @@ export const honors: Honor[] = [
   { id: "sci-2026", title: "2 papers presented at SCI-2026", year: "2026", org: "Springer LNNS", detail: "International Conference-SCI · Swinburne Vietnam, Hanoi", trophy: "scroll" },
 ];
 
-export const certificates: Certificate[] = []; // TODO: Akshat will send the list
+/** Every "Show credential" on LinkedIn opens the certifications page (it asks for a sign-in). */
+const CERTS_URL = "https://www.linkedin.com/in/akshatsharma-in/details/certifications/";
+
+export const certificates: Certificate[] = [
+  // from LinkedIn (2026-11-25), in LinkedIn's order; dates as LinkedIn shows them (month only; "TODO" where it shows none).
+  // Smart India Hackathon (Internal Round) is already an honor, so it isn't repeated here.
+  { id: "claude-code-in-action", name: "Claude Code in Action", issuer: "Anthropic", date: "Jul 2026", credentialId: "A3WZHUFAVB2T", credentialUrl: CERTS_URL, skills: ["Claude Code"] },
+  { id: "rh134", name: "Red Hat System Administration II (RH134 - RHA) - Ver. 9.3", issuer: "Red Hat", date: "Mar 2025", credentialUrl: CERTS_URL },
+  { id: "rh124", name: "Red Hat System Administration I (RH124 - RHA) - Ver. 9.3", issuer: "Red Hat", date: "Mar 2025", credentialUrl: CERTS_URL },
+  { id: "ibm-containers", name: "Introduction to Containers w/ Docker, Kubernetes & OpenShift", issuer: "IBM", date: "Mar 2026", credentialId: "Z8JB88YRGJCV", credentialUrl: CERTS_URL },
+  { id: "devops-git", name: "Introduction to DevOps and Git for Beginners", issuer: "Simplilearn", date: "Mar 2026", credentialId: "EO663YJ19PUX", credentialUrl: CERTS_URL },
+  { id: "aws-cloud-practitioner", name: "AWS Cloud Practitioner Essentials", issuer: "Amazon Web Services (AWS)", date: "Jul 2026", credentialId: "CO9GMSYMB8XC", credentialUrl: CERTS_URL, skills: ["Amazon Web Services (AWS)"] },
+  { id: "cisco-network-fundamentals", name: "Network Fundamentals", issuer: "Cisco", date: "TODO", credentialId: "UOTYMANQCF0A", credentialUrl: CERTS_URL },
+  { id: "data-analytics-workshop", name: "Data Analytics Workshop", issuer: "Coding Ninjas 10X Club", date: "TODO", credentialUrl: CERTS_URL, skills: ["Data Analysis", "Microsoft Power BI"] },
+  { id: "ibm-java", name: "Java Programming for Beginners", issuer: "IBM", date: "Jul 2025", credentialUrl: CERTS_URL, skills: ["Java", "Object-Oriented Programming (OOP)"] },
+  { id: "oracle-database-design", name: "Database Design", issuer: "Oracle", date: "Nov 2024", credentialUrl: CERTS_URL, skills: ["Oracle Database", "Database Design"] },
+  { id: "oracle-sql", name: "Database Programming with SQL", issuer: "Oracle", date: "Nov 2024", credentialUrl: CERTS_URL, skills: ["Oracle Database", "SQL"] },
+  { id: "codechef-dsa-lab", name: "Data Structures & Algorithms lab", issuer: "CodeChef", date: "Nov 2024", credentialId: "6d3d989", credentialUrl: CERTS_URL, skills: ["Data Structures", "C (Programming Language)"] },
+  { id: "gfg-oop-java", name: "Object Oriented Programming Using JAVA", issuer: "GeeksforGeeks", date: "TODO", credentialUrl: CERTS_URL, skills: ["Java", "Object-Oriented Programming (OOP)"] },
+  { id: "nptel-daa", name: "Design and analysis of algorithms", issuer: "NPTEL", date: "Apr 2025", credentialUrl: CERTS_URL, skills: ["Data Structures", "Algorithm Design"] },
+  { id: "nptel-dsa-java", name: "Data Structures and Algorithms using Java", issuer: "NPTEL", date: "Nov 2024", credentialUrl: CERTS_URL, skills: ["Data Structures", "Java"] },
+];
 
 export const skills: Skills = {
   weapons: { label: "Languages", items: ["C/C++", "Java", "Python", "TypeScript", "JavaScript", "SQL", "Kotlin", "HTML5", "CSS"] },

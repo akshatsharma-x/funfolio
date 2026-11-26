@@ -75,6 +75,12 @@
 }
 
 @layer components {
+  /* an active quest that has just begun (nothing on the save file yet): one calm line */
+  .quest-fresh {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--text-sm);
+  }
   /* the columns never grow past the screen (an auto column takes its widest min-content: "Technologies" at 28px is
      wider than a 320px card); stamps thumping in and spinning emblems can't widen the page either */
   #quests {

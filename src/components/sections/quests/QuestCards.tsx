@@ -2,7 +2,7 @@
 // Server components; every fact comes from content.ts via src/content/quests.ts (R1).
 
 import type { CSSProperties, ReactNode } from "react";
-import { activeWidgets, loot, regulated, sideQuest, workMode, type Quest } from "@/content/quests";
+import { activeWidgets, loot, questWidgets, regulated, sideQuest, workMode, type Quest } from "@/content/quests";
 import { ArcadeButton } from "@/components/ui/ArcadeButton";
 import { Chip } from "@/components/ui/Chip";
 import { PeelDoodle, PeelFact } from "@/components/ui/PeelSecrets";
@@ -70,25 +70,34 @@ export function ActiveQuestCard({ q }: { q: Quest }) {
         </p>
       </QuestHead>
       <div className="active-quest__body">
-        <div className="quest-part active-quest__objectives">
-          <SubHead id={`${id}-objectives`} game="Objectives" plain="What I'm doing" />
-          <Objectives items={q.bullets} labelledBy={`${id}-objectives`} />
-        </div>
-        <div className="quest-part active-quest__xp">
-          <SubHead id={`${id}-xp`} game="XP earned" plain="Results" />
-          {w ? (
-            <>
-              <p className="widgets__note">Illustrative widgets — every number on them is from the résumé.</p>
-              <ActiveWidgets w={w} />
-            </>
-          ) : (
-            <StatList stats={q.stats} label={`${q.company} results`} />
-          )}
-        </div>
-        <div className="quest-part quest-loot active-quest__loot">
-          <SubHead id={`${id}-loot`} game="Loot" plain="Stack" />
-          <LootList items={loot(q)} labelledBy={`${id}-loot`} />
-        </div>
+        {/* a quest that has just begun has nothing to list yet: say so, instead of empty sections */}
+        {q.bullets.length ? (
+          <div className="quest-part active-quest__objectives">
+            <SubHead id={`${id}-objectives`} game="Objectives" plain="What I'm doing" />
+            <Objectives items={q.bullets} labelledBy={`${id}-objectives`} />
+          </div>
+        ) : (
+          <p className="quest-part active-quest__objectives quest-fresh">Quest accepted — objectives coming soon.</p>
+        )}
+        {w || q.stats.length ? (
+          <div className="quest-part active-quest__xp">
+            <SubHead id={`${id}-xp`} game="XP earned" plain="Results" />
+            {w ? (
+              <>
+                <p className="widgets__note">Illustrative widgets — every number on them is from the résumé.</p>
+                <ActiveWidgets w={w} />
+              </>
+            ) : (
+              <StatList stats={q.stats} label={`${q.company} results`} />
+            )}
+          </div>
+        ) : null}
+        {q.stack.length ? (
+          <div className="quest-part quest-loot active-quest__loot">
+            <SubHead id={`${id}-loot`} game="Loot" plain="Stack" />
+            <LootList items={loot(q)} labelledBy={`${id}-loot`} />
+          </div>
+        ) : null}
         <footer className="quest-foot active-quest__foot">
           <SideQuestButton q={q} />
         </footer>
@@ -101,6 +110,7 @@ export function ActiveQuestCard({ q }: { q: Quest }) {
 export function CompletedQuestCard({ q, index }: { q: Quest; index: number }) {
   const id = q.id;
   const sq = sideQuest(q);
+  const w = questWidgets(q); // United Airlines keeps its illustrative widgets (and coin #6) after the role ended
   return (
     <StickerCard
       as="li"
@@ -129,7 +139,13 @@ export function CompletedQuestCard({ q, index }: { q: Quest; index: number }) {
         <SubHead id={`${id}-loot`} game="Loot" plain="Stack" />
         <LootList items={loot(q)} labelledBy={`${id}-loot`} />
       </div>
-      {q.stats.length ? (
+      {w ? (
+        <div className="quest-part">
+          <SubHead id={`${id}-xp`} game="XP earned" plain="Results" />
+          <p className="widgets__note">Illustrative widgets — every number on them is from the résumé.</p>
+          <ActiveWidgets w={w} />
+        </div>
+      ) : q.stats.length ? (
         <div className="quest-part">
           <SubHead id={`${id}-xp`} game="XP earned" plain="Results" />
           <StatList stats={q.stats} label={`${q.company} results`} />

@@ -26,7 +26,8 @@ export type CertCard = {
   id: string;
   name: string;
   issuer: string;
-  date: string;
+  /** null when content.ts doesn't have it (some certificates carry no date). */
+  date: string | null;
   /** Issuer initials for the card's emblem (text — never an issuer's logo, R4). */
   monogram: string;
   credentialId: string | null;
@@ -58,7 +59,7 @@ export const certCards = (): CertCard[] =>
     id: c.id,
     name: c.name,
     issuer: c.issuer,
-    date: c.date,
+    date: known(c.date) ? c.date : null,
     monogram: monogramOf(c.issuer),
     credentialId: c.credentialId && known(c.credentialId) ? c.credentialId : null,
     skills: (c.skills ?? []).filter(known),

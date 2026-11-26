@@ -74,8 +74,8 @@ if (now) {
   node(
     "now",
     "happy",
-    `Right now ${first} is ${article} ${now.role} at ${now.company} (${now.period}). ${lead}`,
-    [first, now.role, now.company, now.period, lead],
+    `Right now ${first} is ${article} ${now.role} at ${now.company} (${now.period}).${lead ? ` ${lead}` : ""}`,
+    [first, now.role, now.company, now.period, ...(lead ? [lead] : [])],
     [
       ...(now.bullets.length > 1 ? [{ label: "What did he build there?", next: "now-built" }] : []),
       ...(now.stats.length ? [{ label: "Any numbers?", next: "now-stats" }] : []),
@@ -262,16 +262,19 @@ const nameWords = (name: string) =>
     .toLowerCase()
     .replace(/[()]/g, " ")
     .split(/[^a-z0-9.+#]+/)
-    .filter((w) => w.length > 2 && !["the", "and", "for", "with", "pvt", "ltd", "inc", "analysis", "system", "using", "solutions", "technologies", "web"].includes(w));
+    .filter((w) => w.length > 2 && !["the", "and", "for", "with", "pvt", "ltd", "inc", "analysis", "system", "using", "solutions", "technologies", "web", "group"].includes(w));
+
+/** What a role's own work is called, so a question about it finds the role (whether it's current or not). */
+const ROLE_WORDS: Record<string, string[]> = { united: ["cartographer", "monitoring"] };
 
 const intents: DialogueIntent[] = [
   // specific names first (they win ties); "resume" alone is the Save File, "resume screening" the project
   { node: "resume", words: ["resume", "résumé", "cv", "save file", "pdf"] },
   ...projects.map((p) => ({ node: `project-${p.id}`, words: [...nameWords(p.title), p.id] })),
   ...research.map((r) => ({ node: `paper-${r.id}`, words: [...nameWords(r.boss.name), ...r.keywords.flatMap(nameWords), r.id] })),
-  ...before.map((e) => ({ node: `job-${e.id}`, words: [...nameWords(e.company), e.emblem.toLowerCase(), e.id] })),
-  ...(now ? [{ node: "now", words: [...nameWords(now.company), now.emblem.toLowerCase(), "current", "currently", "now", "doing", "cartographer", "monitoring", "right now", "job"] }] : []),
-  { node: "now-stats", words: ["numbers", "metrics", "stats", "results", "impact", "cost"] },
+  ...before.map((e) => ({ node: `job-${e.id}`, words: [...nameWords(e.company), e.emblem.toLowerCase(), e.id, ...(ROLE_WORDS[e.id] ?? [])] })),
+  ...(now ? [{ node: "now", words: [...nameWords(now.company), now.emblem.toLowerCase(), ...(ROLE_WORDS[now.id] ?? []), "current", "currently", "now", "doing", "right now", "job"] }] : []),
+  ...(nodes["now-stats"] ? [{ node: "now-stats", words: ["numbers", "metrics", "stats", "results", "impact", "cost"] }] : []),
   { node: "experience", words: ["experience", "internship", "internships", "intern", "previous", "before", "companies", "career", "worked", "jobs", "history"] },
   { node: "projects", words: ["project", "projects", "built", "build", "portfolio", "cartridge", "cartridges", "best", "favourite", "favorite", "side projects"] },
   { node: "research", words: ["research", "paper", "papers", "publication", "publications", "published", "conference", "springer", "lnns", ...codes.map((c) => c.toLowerCase())] },

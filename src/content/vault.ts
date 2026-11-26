@@ -17,7 +17,19 @@ const TABS: readonly { id: "all" | ProjectCategory; label: string; plain: string
 export const vaultTabs = () => TABS.filter((t) => t.id === "all" || projects.some((p) => p.category === t.id));
 
 /** Label monograms (game labels, like the Quest Log's guild emblems); anything new falls back to its initials. */
-const CODES: Readonly<Record<string, string>> = { cognivault: "CV", quizmuj: "QZ", "resume-screener": "RS", churn: "CH", "a11y-analyzer": "WA" };
+const CODES: Readonly<Record<string, string>> = {
+  cognivault: "CV",
+  quizmuj: "QZ",
+  "resume-screener": "RS",
+  churn: "CH",
+  "a11y-analyzer": "WA",
+  nexus: "NX",
+  researchx: "RX",
+  "bbc-news-retrieval": "BN",
+  vistara: "VS",
+  cabinmuj: "CM",
+  myhub: "MH",
+};
 const initials = (title: string) =>
   title
     .split(/\s+/)

@@ -17,7 +17,7 @@ export const COINS = [
   { id: "title-k", number: 3, name: "Kerning Coin", location: "Title Screen — hover the K in the name", hint: "One letter in the name is worth more than the others." },
   { id: "mystery-crate", number: 4, name: "Crate Coin", location: "Player Profile — the mystery crate", hint: "Some crates rattle." },
   { id: "bug-fortress", number: 5, name: "Fortress Coin", location: "Launchpad — above the Bug Fortress", hint: "Aim higher than the bugs." },
-  { id: "active-quest", number: 6, name: "Cost Coin", location: "Quest Log — the $0.08 in the active quest", hint: "Cheap inference, rich reward." },
+  { id: "active-quest", number: 6, name: "Cost Coin", location: "Quest Log — the $0.08 on the United Airlines quest card", hint: "Cheap inference, rich reward." },
   { id: "cleared-smog", number: 7, name: "Clear-Sky Coin", location: "The Lab — after the smog clears", hint: "Beat the golem, breathe the air." },
   { id: "locked-cartridge", number: 8, name: "Cartridge Coin", location: "Cartridge Vault — the locked cartridge", hint: "Not every cartridge is a project." },
   { id: "arcade-target", number: 9, name: "High-Score Coin", location: "Arcade — first target score in any game", hint: "Beat any game's target." },

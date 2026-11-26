@@ -127,12 +127,18 @@ function widgetsFor(q: Quest | null): ActiveWidgets | null {
   };
 }
 
-export const activeWidgets = (): ActiveWidgets | null => widgetsFor(activeQuest());
+/** The role the widgets restate (United Airlines) — they stay on its card, active or completed, and coin #6 with them. */
+const widgetQuest = (): Quest | null => experience.find((e) => e.id === ACTIVE_WIDGETS.quest) ?? null;
+export const questWidgets = (q: Quest): ActiveWidgets | null => (q.id === ACTIVE_WIDGETS.quest ? widgetsFor(q) : null);
+export const activeWidgets = (): ActiveWidgets | null => {
+  const q = activeQuest();
+  return q ? questWidgets(q) : null;
+};
 
 /** Build check (schema.ts): why the widgets would be missing, or [] when they're fine. */
 export function activeWidgetIssues(): string[] {
-  const q = activeQuest();
-  if (!q || q.id !== ACTIVE_WIDGETS.quest) return []; // a different current role: a plain active-quest card
+  const q = widgetQuest();
+  if (!q) return []; // no such role any more: no widgets
   const issues: string[] = [];
   for (const label of [ACTIVE_WIDGETS.cost, ACTIVE_WIDGETS.tokens, ACTIVE_WIDGETS.cache, ACTIVE_WIDGETS.map]) {
     if (!q.stats.some((s) => s.label === label)) issues.push(`stat "${label}" is missing on ${q.id}`);

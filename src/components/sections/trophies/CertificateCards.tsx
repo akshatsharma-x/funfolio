@@ -47,7 +47,7 @@ export function CertificateCards({ cards }: { cards: CertCard[] }) {
                       </span>
                       <span className="tcard__name">{c.name}</span>
                       <span className="tcard__issuer">{c.issuer}</span>
-                      <span className="tcard__date">{c.date}</span>
+                      {c.date ? <span className="tcard__date">{c.date}</span> : null}
                     </span>
                     <span className="tcard__foil" aria-hidden="true" />
                   </div>

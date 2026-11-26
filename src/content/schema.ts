@@ -65,10 +65,14 @@ const experience = z.strictObject({
   period: text,
   current: z.boolean(),
   mode: textOrTodo,
-  bullets: z.array(text).min(1),
+  bullets: z.array(text),
   stats: z.array(stat),
   stack: z.array(text),
   sideQuest,
+});
+// a role that has just begun may not have its objectives yet; every other role needs them
+const experienceEntry = experience.superRefine((e, ctx) => {
+  if (!e.current && e.bullets.length === 0) ctx.addIssue({ code: "custom", message: "a past role needs at least one bullet", path: ["bullets"] });
 });
 
 const project = z.strictObject({
@@ -143,7 +147,7 @@ const schema = z
   .strictObject({
     player,
     education,
-    experience: z.array(experience).min(1).refine(uniqueIds, "duplicate experience id"),
+    experience: z.array(experienceEntry).min(1).refine(uniqueIds, "duplicate experience id"),
     projects: z.array(project).min(1).refine(uniqueIds, "duplicate project id"),
     research: z.array(paper).refine(uniqueIds, "duplicate research id"),
     honors: z.array(honor).refine(uniqueIds, "duplicate honor id"),
